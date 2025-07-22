@@ -8,8 +8,8 @@ class LoginUsecase {
 
   LoginUsecase(this._authRepository);
 
-Future<Either<AuthFailure, UserEntity>> call({required String email, required String password}) {
-    return _authRepository.login(email: email, password: password);
+Future<Either<AuthFailure, UserEntity>> call({required String email, required String password, }) {
+    return _authRepository.login(email: email, password: password,);
   }
 
  

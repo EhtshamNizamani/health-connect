@@ -7,7 +7,9 @@ import 'package:health_connect/core/shared/widgets/custom_text_widget.dart';
 import 'package:health_connect/core/shared/widgets/custom_textbutton.dart';
 import 'package:health_connect/core/shared/widgets/custom_textfield.dart';
 import 'package:health_connect/core/utils/form_validator.dart';
+import 'package:health_connect/features/auth/presentation/doctor_dashboard/doctor_dashboard_screen.dart';
 import 'package:health_connect/features/dashboard/screens/dashboard_screen.dart';
+
 import '../blocs/auth_bloc.dart';
 import '../blocs/auth_event.dart';
 import '../blocs/auth_state.dart';
@@ -26,6 +28,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  String selectedRole = 'patient'; // default role
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,19 +38,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w),
           child: BlocConsumer<AuthBloc, AuthState>(
-            listener: (context, state) {
-              if (state is Authenticated) {
-               Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const DashboardScreen()), (route) => false);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Welcome UID: ${state.user.id}')),
-                );
-              } else if (state is AuthFailure) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(state.message)));
-              }
-              
-            },
+          listener: (context, state) {
+  print("login state: $state");
+  if (state is AuthFailure) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(state.message)),
+    );
+  } else if (state is Authenticated) {
+    final role = state.user.role;
+    if (role == 'doctor') {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const DoctorDashboardScreen()),
+        (route) => false,
+      );
+    } else if (role == 'patient') {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        (route) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Unknown role!")),
+      );
+    }
+  }
+},
             builder: (context, state) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,6 +109,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           maxLine: 1,
                           validator: FormValidator.validatePassword,
                         ),
+                        SizedBox(height: 24.h),
+
+                        // 👇 Role Selection (Radio Buttons)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ListTile(
+                                title: const Text('Patient'),
+                                leading: Radio<String>(
+                                  value: 'patient',
+                                  groupValue: selectedRole,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedRole = value!;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: ListTile(
+                                title: const Text('Doctor'),
+                                leading: Radio<String>(
+                                  value: 'doctor',
+                                  groupValue: selectedRole,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedRole = value!;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -112,6 +165,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             name: name,
                             email: email,
                             password: password,
+                            selectedRole: selectedRole, // 👈 pass selected role
                           ),
                         );
                       }

@@ -24,10 +24,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           password: event.password,
         );
         result.fold(
-          (failure) {
+          (auth.AuthFailure failure) {
             emit(AuthFailure(message: failure.message));
           },
-          (user) {
+          (UserEntity user) {
             print("User logged in: ${user.id}");
             emit(Authenticated(user));
           },
@@ -36,7 +36,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         print("Login failed: $e");
         emit(AuthFailure(message: e.toString()));
       }
-      print("Login failed: final");
     });
     on<RegisterRequested>((event, emit) async {
       emit(AuthLoading());
@@ -46,6 +45,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
               name: event.name,
               email: event.email,
               password: event.password,
+              selectedRole: event.selectedRole,
             );
         result.fold(
           (f) {
@@ -63,7 +63,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     });
 
     on<AuthCheckRequested>((event, emit) async {
-      final currentUser = getCurrentUserUseCase.getCurrentUser();
+      final currentUser = await getCurrentUserUseCase.getCurrentUser();
       if (currentUser != null) {
         emit(Authenticated(currentUser));
       } else {

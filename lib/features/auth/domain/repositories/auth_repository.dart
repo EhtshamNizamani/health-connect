@@ -12,11 +12,12 @@ abstract class AuthRepository{
     required String name,
     required String email,
     required String password,
+    required String selectedRole, // 'doctor' or 'patient'
   });
 
   Future<void> logout();
 
-  UserEntity? getCurrentUser();
+  Future<UserEntity?> getCurrentUser();
 
   Future<void> updateUser(UserEntity user);
 }

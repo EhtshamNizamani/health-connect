@@ -7,6 +7,7 @@ import 'package:health_connect/core/themes/theme_manager.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_event.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_state.dart';
 import 'package:health_connect/features/auth/presentation/auth/screens/login_screen..dart';
+import 'package:health_connect/features/auth/presentation/doctor_dashboard/doctor_dashboard_screen.dart';
 import 'package:health_connect/features/dashboard/screens/dashboard_screen.dart';
 
 import 'core/di/service_locator.dart';
@@ -27,7 +28,6 @@ void main() async {
         },
       ),);
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -36,7 +36,9 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<ThemeCubit>(create: (_) => sl<ThemeCubit>()),
-        BlocProvider<AuthBloc>(create: (_) => sl<AuthBloc>()..add(AuthCheckRequested())),
+        BlocProvider<AuthBloc>(
+          create: (_) => sl<AuthBloc>()..add(AuthCheckRequested()),
+        ),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {
@@ -46,13 +48,19 @@ class MyApp extends StatelessWidget {
             home: BlocBuilder<AuthBloc, AuthState>(
               builder: (context, authState) {
                 if (authState is AuthInitial) {
-                  return const Scaffold(body: Center(child: Text("Splash Screen")),); // show logo or loading
+                  return const Scaffold(
+                    body: Center(child: Text("Splash Screen")),
+                  );
                 } else if (authState is Authenticated) {
-                  return DashboardScreen(); // replace with your authenticated home screen
+                  if (authState.user.role == 'doctor') {
+                    return const DoctorDashboardScreen();
+                  } else {
+                    return const DashboardScreen(); // Patient dashboard
+                  }
                 } else if (authState is Unauthenticated) {
-                  return const LoginScreen(); // show login screen
+                  return const LoginScreen();
                 } else {
-                  return const LoginScreen(); // handled internally
+                  return const LoginScreen();
                 }
               },
             ),

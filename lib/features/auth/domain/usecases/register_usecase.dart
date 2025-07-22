@@ -12,11 +12,13 @@ class RegisterUsecase {
     required String name,
     required String email,
     required String password,
+    required String selectedRole,
   }) {
     return _authRepository.register(
       name: name,
       email: email,
       password: password,
+      selectedRole: selectedRole
     );
   }
 }
