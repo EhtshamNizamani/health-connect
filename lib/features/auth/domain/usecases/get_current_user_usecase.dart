@@ -6,7 +6,7 @@ class GetCurrentUserUseCase {
 
   GetCurrentUserUseCase(this._authRepository);
 
-   Future<UserEntity?> getCurrentUser() {
+   Future<UserEntity?> call() {
     return _authRepository.getCurrentUser();
   }
 }

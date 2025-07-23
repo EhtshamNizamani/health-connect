@@ -7,7 +7,9 @@ abstract class Failure {
 class AuthFailure extends Failure {
   AuthFailure(super.message);
 }
-
+class DoctorProfileFailure extends Failure {
+  DoctorProfileFailure(super.message);
+}
 class ServerFailure extends Failure {
   ServerFailure(super.message);
 }

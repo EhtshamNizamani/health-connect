@@ -1,8 +1,6 @@
 // lib/shared/widgets/custom_button.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:health_connect/core/constants/app_color.dart';
-import 'package:health_connect/core/shared/widgets/custom_text_widget.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -32,43 +30,57 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: onTap,
-      child: Container(
-        width: width ?? double.infinity,
-        height: height?.h ?? 48.h,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: onTap == null
-              ? AppColors.grey
-              : isBorder
-                  ? Colors.transparent
-                  : buttonColor ?? AppColors.primary,
-          border: isBorder
-              ? Border.all(color: buttonColor ?? AppColors.primary)
-              : null,
-          borderRadius: BorderRadius.circular(borderRadius ?? 8.r),
+    // Get the current theme from the context
+    final theme = Theme.of(context);
+
+    // Common style for both button types
+    final ButtonStyle baseStyle = ButtonStyle(
+      padding: WidgetStateProperty.all<EdgeInsets>(
+        EdgeInsets.symmetric(vertical: height != null ? 0 : 16.h),
+      ),
+      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+        RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
         ),
-        child: isLoading
-            ? SizedBox(
-                height: 20.h,
-                width: 20.w,
-                child: const CircularProgressIndicator.adaptive(
-                  backgroundColor: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            : CustomTextWidget(
-                text: text,
-                fontSize: fontSize,
-                fontWeight: FontWeight.w600,
-                color: textColor ?? 
-                    (isBorder
-                        ? AppColors.primary
-                        : AppColors.white),
-              ),
+      ),
+      minimumSize: WidgetStateProperty.all<Size>(
+        Size(width ?? double.infinity, height?.h ?? 50.h),
       ),
     );
+
+    // The content of the button (either text or a loader)
+    final Widget buttonChild = isLoading
+        ? SizedBox(
+            height: 20.h,
+            width: 20.w,
+            child: CircularProgressIndicator(
+              // Use the button's foreground color for the loader
+              // This will be white in filled buttons and primary in outlined buttons
+              color: 
+                  theme.colorScheme.onPrimary,
+              strokeWidth: 2,
+            ),
+          )
+        : Text(
+            text,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16.sp,
+            ),
+          );
+
+    // Return an OutlinedButton or ElevatedButton based on the 'isOutlined' flag
+    return  ElevatedButton(
+            style: baseStyle.copyWith(
+              // Define specific styles for the elevated (filled) button
+              backgroundColor:
+                  WidgetStateProperty.all(theme.colorScheme.primary),
+              foregroundColor:
+                  WidgetStateProperty.all(theme.colorScheme.onPrimary),
+            ),
+            // Disable the button if it's loading or if onTap is null
+            onPressed: isLoading ? null : onTap,
+            child: buttonChild,
+          );
   }
 }

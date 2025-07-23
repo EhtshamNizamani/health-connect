@@ -25,15 +25,9 @@ class ProfileScreen extends StatelessWidget {
       },
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
-          String displayName = "";
-          if (state is Authenticated) {
-            displayName = state.user.name.isNotEmpty
-                ? state.user.name
-                : state.user.email;
-          }
+        
 
           return Scaffold(
-            backgroundColor: AppColors.background,
             appBar: AppBar(
               title: const Text("Profile"),
               centerTitle: true,
@@ -49,16 +43,14 @@ class ProfileScreen extends StatelessWidget {
                     radius: 40.r,
                     backgroundColor: AppColors.primary,
                     child: Text(
-                      displayName.isNotEmpty
-                          ? displayName[0].toUpperCase()
-                          : '?',
+                      '?',
                       style: TextStyle(
                           fontSize: 32.sp, color: AppColors.white),
                     ),
                   ),
                   SizedBox(height: 16.h),
                   CustomTextWidget(
-                    text: displayName,
+                    text: "displayName",
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),

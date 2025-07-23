@@ -1,31 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:health_connect/core/constants/app_color.dart';
 import 'package:health_connect/core/shared/widgets/custom_text_widget.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_event.dart';
 
-class DoctorDashboardScreen extends StatelessWidget {
-  const DoctorDashboardScreen({super.key});
+class DoctorHomeScreen extends StatelessWidget {
+  const DoctorHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Get the current theme from the context
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      // Use scaffoldBackgroundColor from the theme
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        title: const Text(
+        // Use appBarTheme from the theme
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        title: Text(
           'Doctor Dashboard',
-          style: TextStyle(color: Colors.white),
+          // Use appBarTheme's titleTextStyle from the theme
+          style: theme.appBarTheme.titleTextStyle,
         ),
         centerTitle: true,
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            // Use appBarTheme's iconTheme from the theme for consistent icon color
+            icon: Icon(Icons.logout, color: theme.appBarTheme.iconTheme?.color),
             onPressed: () {
-             context.read<AuthBloc>().add(LogoutRequested());
-           
+              context.read<AuthBloc>().add(LogoutRequested());
             },
           ),
         ],
@@ -35,22 +40,28 @@ class DoctorDashboardScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const CustomTextWidget(
+            // This widget already uses theme colors, which is good.
+             CustomTextWidget(
               text: "Welcome Doctor 👨‍⚕️",
               fontSize: 24,
               fontWeight: FontWeight.bold,
+              color: theme.textTheme.bodyLarge?.color,
             ),
             const SizedBox(height: 16),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                // Use a color from the theme's colorScheme. 'primaryContainer'
+                // is a good choice for backgrounds that are related to the primary color.
+                color: theme.colorScheme.primaryContainer.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const CustomTextWidget(
+              child: CustomTextWidget(
                 text: "📅 Upcoming Appointments: 3\n🧑‍🤝‍🧑 Total Patients: 12",
                 fontSize: 16,
+                // Use a color from the theme's colorScheme that is meant for text on 'primaryContainer'.
+                color: theme.colorScheme.onPrimaryContainer,
               ),
             ),
             const SizedBox(height: 20),
@@ -74,30 +85,38 @@ class DoctorDashboardScreen extends StatelessWidget {
       ),
     );
   }
-
- 
 }
 
 class ActionCard extends StatelessWidget {
   const ActionCard({
     super.key,
-   required this.title,
-   required this.icon
+    required this.title,
+    required this.icon,
   });
-final String title;
-final IconData icon;
+  final String title;
+  final IconData icon;
+
   @override
   Widget build(BuildContext context) {
+    // Get the current theme from the context
+    final theme = Theme.of(context);
+
     return Container(
       width: 160,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        // Use a background color from the theme. 'surface' is a good
+        // choice for card-like elements.
+        color: theme.colorScheme.surface,
+        border: Border.all(
+          // The border color can be 'outline' or a faint primary color
+          color: theme.colorScheme.outline.withOpacity(0.5),
+        ),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.grey.withOpacity(0.1),
+            // The shadow color should be very faint
+            color: theme.shadowColor.withOpacity(0.05),
             blurRadius: 6,
             offset: const Offset(0, 3),
           )
@@ -106,13 +125,14 @@ final IconData icon;
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 28, color: AppColors.primary),
+          // The icon color should be the primary theme color
+          Icon(icon, size: 28, color: theme.colorScheme.primary),
           const SizedBox(height: 8),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 14,
+            // Use the text theme for consistency
+            style: theme.textTheme.bodyLarge?.copyWith(
               fontWeight: FontWeight.w500,
             ),
           ),

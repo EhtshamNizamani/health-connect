@@ -1,8 +1,7 @@
-// lib/shared/widgets/custom_text_field.dart
+// lib/core/shared/widgets/custom_text_field.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:health_connect/core/constants/app_color.dart';
 
 class CustomTextField extends StatelessWidget {
   final String hintText;
@@ -13,6 +12,8 @@ class CustomTextField extends StatelessWidget {
   final bool isReadOnly;
   final int maxLine;
   final int? maxLength;
+  final bool isObscure; // Added for password fields
+  final Widget? suffixIcon; // Added for things like password visibility toggle
 
   const CustomTextField({
     super.key,
@@ -24,10 +25,28 @@ class CustomTextField extends StatelessWidget {
     this.isReadOnly = false,
     this.maxLine = 1,
     this.maxLength,
+    this.isObscure = false,
+    this.suffixIcon,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Get the current theme from the context
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    // Define a base text style using GoogleFonts and merge it with theme styles
+    final textStyle = GoogleFonts.inter(
+      // Use the theme's default text color
+      color: colorScheme.onSurface,
+      fontWeight: FontWeight.w500,
+    );
+    
+    final hintStyle = GoogleFonts.inter(
+      // Use a less prominent color for hints
+      color: colorScheme.onSurface.withOpacity(0.5),
+    );
+
     return TextFormField(
       readOnly: isReadOnly,
       controller: controller,
@@ -36,44 +55,45 @@ class CustomTextField extends StatelessWidget {
       validator: validator,
       maxLines: maxLine,
       maxLength: maxLength,
-      style: GoogleFonts.inter(
-        fontSize: 14.sp,
-        color: AppColors.text,
-        fontWeight: FontWeight.w500,
-      ),
-      cursorColor: AppColors.primary,
+      obscureText: isObscure,
+      style: textStyle.copyWith(fontSize: 14.sp),
+      cursorColor: colorScheme.primary, // Use theme's primary color
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: GoogleFonts.inter(
-          fontSize: 14.sp,
-          color: AppColors.grey,
-        ),
+        hintStyle: hintStyle.copyWith(fontSize: 14.sp),
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         filled: true,
-        fillColor: AppColors.background,
+        // The background of the text field should be the card/surface color
+        fillColor: colorScheme.surface,
+        suffixIcon: suffixIcon,
+        
+        // Define a common border style to avoid repetition
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.r),
-          borderSide: BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12.r), // A slightly larger radius looks more modern
+          // Use the theme's outline color for the border
+          borderSide: BorderSide(color: colorScheme.outline.withOpacity(0.7)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.r),
-          borderSide: BorderSide(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: BorderSide(color: colorScheme.outline.withOpacity(0.7)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.r),
-          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+          borderRadius: BorderRadius.circular(12.r),
+          // Use the primary color for the border when focused
+          borderSide: BorderSide(color: colorScheme.primary, width: 2.0),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.r),
-          borderSide: BorderSide(color: AppColors.error),
+          borderRadius: BorderRadius.circular(12.r),
+          // Use the error color for the border on validation error
+          borderSide: BorderSide(color: colorScheme.error, width: 1.0),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.r),
-          borderSide: BorderSide(color: AppColors.error, width: 1.5),
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: BorderSide(color: colorScheme.error, width: 2.0),
         ),
         errorStyle: GoogleFonts.inter(
           fontSize: 12.sp,
-          color: AppColors.error,
+          color: colorScheme.error,
         ),
       ),
     );

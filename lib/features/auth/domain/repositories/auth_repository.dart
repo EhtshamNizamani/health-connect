@@ -14,7 +14,7 @@ abstract class AuthRepository{
     required String password,
     required String selectedRole, // 'doctor' or 'patient'
   });
-
+  Future<Either<AuthFailure, bool>> isDoctorProfileExists(String uid);
   Future<void> logout();
 
   Future<UserEntity?> getCurrentUser();

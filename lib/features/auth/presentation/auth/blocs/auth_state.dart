@@ -12,9 +12,25 @@ class AuthFailure extends AuthState {
   AuthFailure({required this.message});
 }
 
-class Authenticated extends AuthState {
+class AuthenticatedPatient extends AuthState {
   final UserEntity user;
-  Authenticated(this.user);
+   AuthenticatedPatient(this.user);
+  @override
+  List<Object> get props => [user];
+}
+
+class AuthenticatedDoctorProfileExists extends AuthState {
+  final UserEntity user;
+   AuthenticatedDoctorProfileExists(this.user);
+  @override
+  List<Object> get props => [user];
+}
+
+class AuthenticatedDoctorProfileNotExists extends AuthState {
+  final UserEntity user;
+   AuthenticatedDoctorProfileNotExists(this.user);
+  @override
+  List<Object> get props => [user];
 }
 
 class Unauthenticated extends AuthState {}

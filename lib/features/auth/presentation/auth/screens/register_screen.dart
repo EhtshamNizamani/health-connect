@@ -7,8 +7,9 @@ import 'package:health_connect/core/shared/widgets/custom_text_widget.dart';
 import 'package:health_connect/core/shared/widgets/custom_textbutton.dart';
 import 'package:health_connect/core/shared/widgets/custom_textfield.dart';
 import 'package:health_connect/core/utils/form_validator.dart';
-import 'package:health_connect/features/auth/presentation/doctor_dashboard/doctor_dashboard_screen.dart';
-import 'package:health_connect/features/dashboard/screens/dashboard_screen.dart';
+import 'package:health_connect/features/doctor/doctor_dashboard/screen/doctor_main_screen.dart';
+import 'package:health_connect/features/doctor/home/doctor_home_screen.dart';
+import 'package:health_connect/features/patient/dashboard/screens/dashboard_screen.dart';
 
 import '../blocs/auth_bloc.dart';
 import '../blocs/auth_event.dart';
@@ -25,197 +26,241 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  final confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   String selectedRole = 'patient'; // default role
+  bool _isPasswordObscured = true;
 
   @override
   Widget build(BuildContext context) {
+    // Get the current theme from the context
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      // Use scaffoldBackgroundColor from the theme
+      backgroundColor: theme.scaffoldBackgroundColor,
+      // Add an AppBar for back navigation
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: BackButton(color: theme.colorScheme.onBackground),
+      ),
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.w),
-          child: BlocConsumer<AuthBloc, AuthState>(
-          listener: (context, state) {
-  print("login state: $state");
-  if (state is AuthFailure) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(state.message)),
-    );
-  } else if (state is Authenticated) {
-    final role = state.user.role;
-    if (role == 'doctor') {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const DoctorDashboardScreen()),
-        (route) => false,
-      );
-    } else if (role == 'patient') {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const DashboardScreen()),
-        (route) => false,
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Unknown role!")),
-      );
-    }
-  }
-},
-            builder: (context, state) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 60.h),
+        child: SingleChildScrollView(
+          // Use SingleChildScrollView to prevent overflow
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            child: BlocConsumer<AuthBloc, AuthState>(
+              listener: (context, state) {
+                if (state is AuthFailure) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.message),
+                      backgroundColor: theme.colorScheme.error,
+                    ),
+                  );
+                }
+                // Navigation is handled globally, so no need for it here.
+              },
+              builder: (context, state) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 20.h),
 
-                  CustomTextWidget(
-                    text: "Create Account",
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  SizedBox(height: 8.h),
-                  CustomTextWidget(
-                    text: "Fill the details below to register",
-                    fontSize: 14,
-                    color: AppColors.grey,
-                  ),
+                    const CustomTextWidget(
+                      text: "Create Account",
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    SizedBox(height: 8.h),
+                    CustomTextWidget(
+                      text: "Fill the details below to register",
+                      fontSize: 14,
+                      color: theme.textTheme.bodyMedium?.color,
+                    ),
 
-                  SizedBox(height: 32.h),
+                    SizedBox(height: 32.h),
 
-                  Form(
-                    key: _formKey,
-                    child: Column(
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          CustomTextField(
+                            controller: nameController,
+                            hintText: 'Full Name',
+                            keyboardType: TextInputType.name,
+                            validator: FormValidator.validateName,
+                          ),
+                          SizedBox(height: 16.h),
+                          CustomTextField(
+                            controller: emailController,
+                            hintText: 'Email',
+                            keyboardType: TextInputType.emailAddress,
+                            validator: FormValidator.validateEmail,
+                          ),
+                          SizedBox(height: 16.h),
+                          CustomTextField(
+                            controller: passwordController,
+                            hintText: 'Password',
+                            isObscure: _isPasswordObscured,
+                            maxLine: 1,
+                            validator: FormValidator.validatePassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isPasswordObscured
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: theme.colorScheme.outline,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isPasswordObscured = !_isPasswordObscured;
+                                });
+                              },
+                            ),
+                          ),
+                          SizedBox(height: 24.h),
+
+                          // Role Selection (Styled with Theme)
+                          const CustomTextWidget(
+                            text: "I am a:",
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          SizedBox(height: 8.h),
+                          Row(
+                            children: [
+                              _buildRoleSelector(
+                                context: context,
+                                title: 'Patient',
+                                value: 'patient',
+                              ),
+                              SizedBox(width: 16.w),
+                              _buildRoleSelector(
+                                context: context,
+                                title: 'Doctor',
+                                value: 'doctor',
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 24.h),
+
+                    CustomButton(
+                      text: 'Sign Up',
+                      isLoading: state is AuthLoading,
+                      onTap: () {
+                        if (state is AuthLoading) return;
+                        if (_formKey.currentState!.validate()) {
+                          final name = nameController.text.trim();
+                          final email = emailController.text.trim();
+                          final password = passwordController.text.trim();
+
+                          context.read<AuthBloc>().add(
+                            RegisterRequested(
+                              name: name,
+                              email: email,
+                              password: password,
+                              selectedRole: selectedRole,
+                            ),
+                          );
+                        }
+                      },
+                    ),
+
+                    SizedBox(height: 24.h),
+
+                    // ... (OR and Google Button section)
+
+                    // No need for a Spacer if we use SingleChildScrollView
+                    SizedBox(height: 24.h),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CustomTextField(
-                          controller: nameController,
-                          hintText: 'Full Name',
-                          keyboardType: TextInputType.name,
-                          validator: FormValidator.validateName,
+                        CustomTextWidget(
+                          text: "Already have an account? ",
+                          fontSize: 14,
+                          color: theme.textTheme.bodyMedium?.color,
                         ),
-                        SizedBox(height: 16.h),
-                        CustomTextField(
-                          controller: emailController,
-                          hintText: 'Email',
-                          keyboardType: TextInputType.emailAddress,
-                          validator: FormValidator.validateEmail,
-                        ),
-                        SizedBox(height: 16.h),
-                        CustomTextField(
-                          controller: passwordController,
-                          hintText: 'Password',
-                          maxLine: 1,
-                          validator: FormValidator.validatePassword,
-                        ),
-                        SizedBox(height: 24.h),
-
-                        // 👇 Role Selection (Radio Buttons)
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ListTile(
-                                title: const Text('Patient'),
-                                leading: Radio<String>(
-                                  value: 'patient',
-                                  groupValue: selectedRole,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedRole = value!;
-                                    });
-                                  },
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: ListTile(
-                                title: const Text('Doctor'),
-                                leading: Radio<String>(
-                                  value: 'doctor',
-                                  groupValue: selectedRole,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedRole = value!;
-                                    });
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
+                        CustomTextButton(
+                          buttonName: "Login",
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          textColor: theme.colorScheme.primary,
                         ),
                       ],
                     ),
-                  ),
 
-                  SizedBox(height: 24.h),
+                    SizedBox(height: 20.h),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-                  CustomButton(
-                    textColor: AppColors.white,
-                    text: 'Sign Up',
-                    isLoading: state is AuthLoading,
-                    onTap: () {
-                      if (_formKey.currentState!.validate()) {
-                        final name = nameController.text.trim();
-                        final email = emailController.text.trim();
-                        final password = passwordController.text.trim();
+  // Helper widget to build a styled role selector
+  Widget _buildRoleSelector({
+    required BuildContext context,
+    required String title,
+    required String value,
+  }) {
+    final theme = Theme.of(context);
+    final bool isSelected = selectedRole == value;
 
-                        context.read<AuthBloc>().add(
-                          RegisterRequested(
-                            name: name,
-                            email: email,
-                            password: password,
-                            selectedRole: selectedRole, // 👈 pass selected role
-                          ),
-                        );
-                      }
-                    },
-                  ),
-
-                  SizedBox(height: 24.h),
-
-                  Center(
-                    child: CustomTextWidget(
-                      text: "OR",
-                      fontSize: 14,
-                      color: AppColors.grey,
-                    ),
-                  ),
-
-                  SizedBox(height: 16.h),
-
-                  CustomButton(
-                    text: 'Continue with Google',
-                    textColor: AppColors.primary,
-                    onTap: () {
-                      // TODO: Implement Google Sign-Up
-                    },
-                    isBorder: true,
-                  ),
-
-                  const Spacer(),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CustomTextWidget(
-                        text: "Already have an account?",
-                        fontSize: 14,
-                      ),
-                      CustomTextButton(
-                        buttonName: "Login",
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        textColor: AppColors.primary,
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 20.h),
-                ],
-              );
-            },
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            selectedRole = value;
+          });
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? theme.colorScheme.primaryContainer
+                : theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(
+              color: isSelected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outline,
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Radio<String>(
+                value: value,
+                groupValue: selectedRole,
+                onChanged: (val) {
+                  setState(() {
+                    selectedRole = val!;
+                  });
+                },
+                // Use theme colors for the radio button
+                activeColor: theme.colorScheme.primary,
+              ),
+              CustomTextWidget(
+                text: title,
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected
+                    ? theme.colorScheme.onPrimaryContainer
+                    : theme.colorScheme.onSurface,
+              ),
+            ],
           ),
         ),
       ),
@@ -227,7 +272,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
-    confirmPasswordController.dispose();
     super.dispose();
   }
 }

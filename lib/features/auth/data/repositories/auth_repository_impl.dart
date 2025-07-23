@@ -52,7 +52,6 @@ class AuthRepositoryImpl extends AuthRepository {
     }
   }
 
-
   @override
   Future<Either<AuthFailure, UserEntity>> register({
     required String name,
@@ -126,6 +125,20 @@ class AuthRepositoryImpl extends AuthRepository {
     if (firebaseUser != null) {
       await firebaseUser.updateProfile(displayName: user.name);
       await firebaseUser.reload();
+    }
+  }
+
+  @override
+  Future<Either<AuthFailure, bool>> isDoctorProfileExists(String uid) async {
+    try {
+      final doc = await _firebaseFirestore.collection('doctors').doc(uid).get();
+      if (doc.exists) {
+        return Right(true);
+      } else {
+        return Right(false);
+      }
+    } catch (e) {
+      return Left(AuthFailure('Failed to check doctor profile existence: $e'));
     }
   }
 }
