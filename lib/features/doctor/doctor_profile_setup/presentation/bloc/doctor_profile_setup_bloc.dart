@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/available_slot.dart';
-import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_entity.dart';
+import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_profile_entity.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/usecase/save_doctor_usecase.dart';
 import 'doctor_profile_setup_event.dart';
 import 'doctor_profile_setup_state.dart';
@@ -41,7 +41,7 @@ class DoctorProfileSetupBloc
       );
 
       // SaveDoctorProfileUseCase ko DoctorEntity aur File chahiye
-      final Either<profile.DoctorProfileFailure, void> result =
+      final Either<profile.Failure, void> result =
           await saveDoctorProfile.saveDoctorProfile(doctor, event.photoFile);
       result.fold(
         (failure) {

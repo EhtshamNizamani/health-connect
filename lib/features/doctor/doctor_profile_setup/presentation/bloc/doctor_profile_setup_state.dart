@@ -1,7 +1,7 @@
 // lib/features/doctor_profile/presentation/bloc/doctor_profile_setup_state.dart
 
 import 'package:equatable/equatable.dart';
-import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_entity.dart';
+import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_profile_entity.dart';
 
 abstract class DoctorProfileSetupState extends Equatable {
   @override

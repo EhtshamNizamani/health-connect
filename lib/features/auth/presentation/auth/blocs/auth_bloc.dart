@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:health_connect/core/error/failures.dart' as auth;
 import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 import 'package:health_connect/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:health_connect/features/auth/domain/usecases/is_doctor_profile_exists_usecase.dart';
@@ -62,17 +61,11 @@ on<LoginRequested>((event, emit) async {
     email: event.email,
     password: event.password,
   );
-
-  // Yahan 'fold' ki jagah is pattern ka istemaal karein
-  if (result.isRight()) {
-    // Agar success hai, to user nikalein aur async function call karein
-    final user = result.getOrElse(() => throw Exception('Should not happen'));
+ await result.fold((l)async => emit(AuthFailure(message: l.message)), (user) async {
+    // Agar login successful hai, to user ko handle karo
     await handleAuthentication(user, emit);
-  } else {
-    // Agar failure hai, to failure nikal kar emit karein
-    final failure = result.swap().getOrElse(() => auth.AuthFailure('Unknown error'));
-    emit(AuthFailure(message: (failure as AuthFailure).message));
-  }
+  });
+
 });
 
     // --- LOGIC #2: Jab naya user register kare ---

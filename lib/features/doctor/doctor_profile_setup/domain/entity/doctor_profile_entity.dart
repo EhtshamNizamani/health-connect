@@ -8,7 +8,7 @@ class DoctorEntity extends Equatable {
   final String specialization;
   final String bio;
   final int experience;
-  final List<AvailableSlot> availableSlots;
+  final List<AvailableSlot> availableSlots; // Note: This is a list of ENTITIES
   final String photoUrl;
   final String clinicAddress;
   final int consultationFee;

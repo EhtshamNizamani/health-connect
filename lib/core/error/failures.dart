@@ -1,4 +1,5 @@
 
+
 abstract class Failure {
   final String message;
   Failure(this.message);
@@ -16,4 +17,8 @@ class ServerFailure extends Failure {
 
 class NetworkFailure extends Failure {
   NetworkFailure(super.message);
+}
+
+class FirestoreFailure extends Failure{
+  FirestoreFailure(super.message);
 }

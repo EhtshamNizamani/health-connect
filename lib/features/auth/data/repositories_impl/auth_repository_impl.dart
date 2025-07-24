@@ -1,14 +1,15 @@
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:health_connect/core/error/failures.dart';
+import 'package:health_connect/features/auth/data/models/json_user.dart';
 import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 import 'package:health_connect/features/auth/domain/repositories/auth_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class AuthRepositoryImpl extends AuthRepository {
+class FirebaseAuthRepositoryImpl extends AuthRepository {
   final FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firebaseFirestore;
-  AuthRepositoryImpl(this._firebaseAuth, this._firebaseFirestore);
+  FirebaseAuthRepositoryImpl(this._firebaseAuth, this._firebaseFirestore);
 
   @override
   Future<Either<AuthFailure, UserEntity>> login({
@@ -35,12 +36,12 @@ class AuthRepositoryImpl extends AuthRepository {
         final name = data['name'] ?? user.displayName ?? '';
 
         return Right(
-          UserEntity(
+          UserModel(
             id: user.uid,
             name: name,
             email: user.email ?? '',
             role: role,
-          ),
+          ).toDomain(),
         );
       } else {
         return Left(AuthFailure('User not found'));
@@ -73,12 +74,12 @@ class AuthRepositoryImpl extends AuthRepository {
         });
 
         return Right(
-          UserEntity(
+          UserModel(
             id: user.uid,
             name: name,
             email: email,
             role: selectedRole,
-          ),
+          ).toDomain(),
         );
       } else {
         return Left(AuthFailure('User not found'));
@@ -111,12 +112,12 @@ class AuthRepositoryImpl extends AuthRepository {
         ? userDoc['role'] as String
         : 'patient'; // default fallback
 
-    return UserEntity(
+    return UserModel(
       id: user.uid,
       name: user.displayName ?? '',
       email: user.email ?? '',
       role: role,
-    );
+    ).toDomain();
   }
 
   @override
