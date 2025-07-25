@@ -5,7 +5,7 @@ import 'package:health_connect/core/di/service_locator.dart';
 import 'package:health_connect/features/patient/doctor_list/presentation/bloc/doctor_list_bloc.dart';
 import 'package:health_connect/features/patient/doctor_list/presentation/bloc/doctor_list_bloc_state.dart';
 import 'package:health_connect/features/patient/doctor_list/presentation/bloc/doctor_list_event.dart';
-import 'package:health_connect/features/patient/home/presentation/widget/doctor_card.dart';
+import 'package:health_connect/features/patient/home/presentation/widgets/doctor_card.dart';
 
 class DoctorListScreen extends StatelessWidget {
   const DoctorListScreen({super.key});
