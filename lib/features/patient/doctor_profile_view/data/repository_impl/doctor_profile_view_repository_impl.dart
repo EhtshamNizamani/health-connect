@@ -21,4 +21,29 @@ class DoctorProfileViewRepositoryImpl implements DoctorProfileViewRepository {
       return Left(FirestoreFailure(e.toString()));
     }
   }
+  
+  @override
+  Future<Either<Failure, List<DateTime>>> getAvailableSlots(String doctorId, DateTime date)async {
+    try {
+      final startOfDay = DateTime(date.year, date.month, date.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1));
+
+      final querySnapshot = await _firestore
+          .collection('appointments')
+          .where('doctorId', isEqualTo: doctorId)
+          .where('appointmentDateTime', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('appointmentDateTime', isLessThan: Timestamp.fromDate(endOfDay))
+          .get();
+          
+      final bookedSlots = querySnapshot.docs.map((doc) {
+        final timestamp = doc['appointmentDateTime'] as Timestamp;
+        return timestamp.toDate();
+      }).toList();
+      
+      return Right(bookedSlots);
+    } catch (e) {
+      return Left(FirestoreFailure(e.toString()));
+    }
+  }
+  
 }

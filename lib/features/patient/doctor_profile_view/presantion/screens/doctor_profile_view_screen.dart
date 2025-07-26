@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/di/service_locator.dart'; // get_it ke liye
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_bloc.dart';
-import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_bloc_event.dart';
-import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_bloc_state%202.dart';
+import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_event.dart';
+import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_state.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/widget/about_section.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/widget/book_appointment_button.dart';
+import 'package:health_connect/features/patient/doctor_profile_view/presantion/widget/date_and_time_selector.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/widget/doctor_profile_header.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/widget/info_card.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/widget/review_card.dart';
@@ -35,17 +36,17 @@ class DoctorProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) =>
-          sl<DoctorProfileViewBloc>()..add(FetchDoctorDetails(doctorId)),
+          sl<DoctorProfileViewBloc>()..add(FetchDoctorDetailsViewEvent(doctorId)),
       child: Scaffold(
         // AppBar ko aasan rakhein ya use header mein hi merge kar dein
         appBar: AppBar(elevation: 0, backgroundColor: Colors.transparent),
         body: BlocBuilder<DoctorProfileViewBloc, DoctorProfileViewState>(
           builder: (context, state) {
-            if (state is DoctorProfileLoading ||
-                state is DoctorProfileInitial) {
+            if (state is DoctorProfileViewLoading ||
+                state is DoctorProfileViewInitial) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (state is DoctorProfileLoaded) {
+            if (state is DoctorProfileViewLoaded) {
               final doctor = state.doctor;
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
@@ -76,7 +77,11 @@ class DoctorProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
 
-                    // TODO: Add Date & Time Slot Selection UI
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: DateAndTimeSelector(doctorId: doctor.uid),
+                    ),
+                    const SizedBox(height: 24),
                     // List of ReviewCards
                     ...dummyReviews.map((reviewData) {
                       return ReviewCard(
@@ -92,7 +97,7 @@ class DoctorProfileScreen extends StatelessWidget {
                 ),
               );
             }
-            if (state is DoctorProfileError) {
+            if (state is DoctorProfileViewError) {
               return Center(child: Text(state.message));
             }
             return const SizedBox.shrink();
@@ -102,7 +107,7 @@ class DoctorProfileScreen extends StatelessWidget {
         bottomNavigationBar:
             BlocBuilder<DoctorProfileViewBloc, DoctorProfileViewState>(
               builder: (context, state) {
-                if (state is DoctorProfileLoaded) {
+                if (state is DoctorProfileViewLoaded) {
                   return BookAppointmentButton(
                     onTap: () {
                       // TODO: Navigate to booking confirmation screen

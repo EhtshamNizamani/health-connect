@@ -1,8 +1,7 @@
 // lib/features/doctor_profile_setup/data/models/doctor_model.dart
-import 'package:health_connect/features/doctor/doctor_profile_setup/data/models/available_slot.dart';
+import 'package:health_connect/core/data/model/daily_availability_model.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_profile_entity.dart';
 
-// This class no longer extends DoctorEntity
 class DoctorModel {
   final String uid;
   final String name;
@@ -10,10 +9,11 @@ class DoctorModel {
   final String specialization;
   final String bio;
   final int experience;
-  final List<AvailableSlotModel> availableSlots; // Note: This is a list of MODELS
   final String photoUrl;
   final String clinicAddress;
   final int consultationFee;
+  // The old list is replaced with the new map of MODELS
+  final Map<String, DailyAvailabilityModel> weeklyAvailability;
 
   const DoctorModel({
     required this.uid,
@@ -22,13 +22,19 @@ class DoctorModel {
     required this.specialization,
     required this.bio,
     required this.experience,
-    required this.availableSlots,
     required this.photoUrl,
     required this.clinicAddress,
     required this.consultationFee,
+    required this.weeklyAvailability,
   });
 
   factory DoctorModel.fromMap(Map<String, dynamic> map) {
+    // Logic to parse the nested weeklyAvailability map from Firestore
+    final availabilityData = map['weeklyAvailability'] as Map<String, dynamic>? ?? {};
+    final weeklyAvailability = availabilityData.map(
+      (day, dailyData) => MapEntry(day, DailyAvailabilityModel.fromMap(dailyData)),
+    );
+
     return DoctorModel(
       uid: map['uid'] as String? ?? '',
       name: map['name'] as String? ?? '',
@@ -39,10 +45,7 @@ class DoctorModel {
       photoUrl: map['photoUrl'] as String? ?? '',
       clinicAddress: map['clinicAddress'] as String? ?? '',
       consultationFee: map['consultationFee'] as int? ?? 0,
-      // Create a list of AvailableSlotModel from the map data
-      availableSlots: (map['availableSlots'] as List<dynamic>?)
-          ?.map((slotMap) => AvailableSlotModel.fromMap(slotMap as Map<String, dynamic>))
-          .toList() ?? [],
+      weeklyAvailability: weeklyAvailability,
     );
   }
 
@@ -57,13 +60,13 @@ class DoctorModel {
       'photoUrl': photoUrl,
       'clinicAddress': clinicAddress,
       'consultationFee': consultationFee,
-      // Convert the list of AvailableSlotModel back to a list of maps
-      'availableSlots': availableSlots.map((slot) => slot.toMap()).toList(),
+      // Convert the map of DailyAvailabilityModel back to a map of Maps for Firestore
+      'weeklyAvailability': weeklyAvailability.map(
+        (day, dailyModel) => MapEntry(day, dailyModel.toMap()),
+      ),
     };
   }
 
-  // THE MOST IMPORTANT METHOD:
-  // Converts this Data Model into a pure Domain Entity
   DoctorEntity toDomain() {
     return DoctorEntity(
       uid: uid,
@@ -75,52 +78,54 @@ class DoctorModel {
       photoUrl: photoUrl,
       clinicAddress: clinicAddress,
       consultationFee: consultationFee,
-      // Convert the list of models to a list of entities by calling .toDomain() on each
-      availableSlots: availableSlots.map((slotModel) => slotModel.toDomain()).toList(),
+      // Convert the map of Models to a map of Entities
+      weeklyAvailability: weeklyAvailability.map(
+        (day, dailyModel) => MapEntry(day, dailyModel.toDomain()),
+      ),
     );
   }
-factory DoctorModel.fromEntity(DoctorEntity entity) {
-  return DoctorModel(
-    uid: entity.uid,
-    name: entity.name,
-    email: entity.email,
-    specialization: entity.specialization,
-    bio: entity.bio,
-    experience: entity.experience,
-    photoUrl: entity.photoUrl,
-    clinicAddress: entity.clinicAddress,
-    consultationFee: entity.consultationFee,
-    // We also need to convert the list of entities to a list of models
-    availableSlots: entity.availableSlots
-        .map((slotEntity) => AvailableSlotModel.fromEntity(slotEntity))
-        .toList(),
-  );
-}
 
-DoctorModel copyWith({
-  String? uid,
-  String? name,
-  String? email,
-  String? specialization,
-  String? bio,
-  int? experience,
-  List<AvailableSlotModel>? availableSlots, 
-  String? photoUrl,
-  String? clinicAddress,
-  int? consultationFee,
-}) {
-  return DoctorModel(
-    uid: uid ?? this.uid,
-    name: name ?? this.name,
-    email: email ?? this.email,
-    specialization: specialization ?? this.specialization,
-    bio: bio ?? this.bio,
-    experience: experience ?? this.experience,
-    // Now the types match perfectly.
-    availableSlots: availableSlots ?? this.availableSlots,
-    photoUrl: photoUrl ?? this.photoUrl,
-    clinicAddress: clinicAddress ?? this.clinicAddress,
-    consultationFee: consultationFee ?? this.consultationFee,
-  );
-}
+  factory DoctorModel.fromEntity(DoctorEntity entity) {
+    return DoctorModel(
+      uid: entity.uid,
+      name: entity.name,
+      email: entity.email,
+      specialization: entity.specialization,
+      bio: entity.bio,
+      experience: entity.experience,
+      photoUrl: entity.photoUrl,
+      clinicAddress: entity.clinicAddress,
+      consultationFee: entity.consultationFee,
+      // Convert the map of Entities to a map of Models
+      weeklyAvailability: entity.weeklyAvailability.map(
+        (day, dailyEntity) => MapEntry(day, DailyAvailabilityModel.fromEntity(dailyEntity)),
+      ),
+    );
+  }
+
+  DoctorModel copyWith({
+    String? uid,
+    String? name,
+    String? email,
+    String? specialization,
+    String? bio,
+    int? experience,
+    String? photoUrl,
+    String? clinicAddress,
+    int? consultationFee,
+    Map<String, DailyAvailabilityModel>? weeklyAvailability,
+  }) {
+    return DoctorModel(
+      uid: uid ?? this.uid,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      specialization: specialization ?? this.specialization,
+      bio: bio ?? this.bio,
+      experience: experience ?? this.experience,
+      photoUrl: photoUrl ?? this.photoUrl,
+      clinicAddress: clinicAddress ?? this.clinicAddress,
+      consultationFee: consultationFee ?? this.consultationFee,
+      weeklyAvailability: weeklyAvailability ?? this.weeklyAvailability,
+    );
+  }
 }

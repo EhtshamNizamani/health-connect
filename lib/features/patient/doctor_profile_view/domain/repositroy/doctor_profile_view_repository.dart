@@ -5,5 +5,5 @@ import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entit
 abstract class DoctorProfileViewRepository {
 
   Future<Either<Failure, DoctorEntity>> getDoctorById(String id);
-
+  Future<Either<Failure, List<DateTime>>> getAvailableSlots(String doctorId, DateTime date);
 }

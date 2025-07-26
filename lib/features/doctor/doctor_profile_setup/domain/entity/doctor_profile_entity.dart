@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'available_slot.dart'; 
+import 'package:health_connect/core/data/entities/daily_availability_entity.dart';
 
 class DoctorEntity extends Equatable {
   final String uid;
@@ -8,10 +8,11 @@ class DoctorEntity extends Equatable {
   final String specialization;
   final String bio;
   final int experience;
-  final List<AvailableSlot> availableSlots; // Note: This is a list of ENTITIES
   final String photoUrl;
   final String clinicAddress;
   final int consultationFee;
+  // The old 'availableSlots' is replaced with the new 'weeklyAvailability' map
+  final Map<String, DailyAvailability> weeklyAvailability;
 
   const DoctorEntity({
     required this.uid,
@@ -20,15 +21,15 @@ class DoctorEntity extends Equatable {
     required this.specialization,
     required this.bio,
     required this.experience,
-    required this.availableSlots,
     required this.photoUrl,
     required this.clinicAddress,
     required this.consultationFee,
+    required this.weeklyAvailability,
   });
 
   @override
   List<Object?> get props => [
     uid, name, email, specialization, bio, experience,
-    availableSlots, photoUrl, clinicAddress, consultationFee,
+    photoUrl, clinicAddress, consultationFee, weeklyAvailability,
   ];
 }

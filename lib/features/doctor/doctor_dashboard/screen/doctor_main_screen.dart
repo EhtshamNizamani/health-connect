@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:health_connect/features/doctor/doctor_dashboard/cubit/doctor_nav_cubit.dart';
 import 'package:health_connect/features/doctor/home/doctor_home_screen.dart';
-import 'package:health_connect/features/doctor/setings/preesntaion/setings_screen.dart';
+import 'package:health_connect/features/doctor/setings/preesntaion/screens/setings_screen.dart';
 
 class DoctorMainScreen extends StatelessWidget {
   const DoctorMainScreen({super.key});

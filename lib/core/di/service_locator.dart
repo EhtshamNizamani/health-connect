@@ -14,14 +14,21 @@ import 'package:health_connect/features/auth/domain/usecases/register_usecase.da
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/data/repositories_impl/doctor_profile_repository_impl.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/repositories/doctor_profile_repository.dart';
+import 'package:health_connect/features/doctor/doctor_profile_setup/domain/usecase/get_current_doctor_profile_usecase.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/usecase/save_doctor_usecase.dart';
+import 'package:health_connect/features/doctor/doctor_profile_setup/domain/usecase/update_doctor_profile_usecase.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/bloc/doctor_profile_setup_bloc.dart';
+import 'package:health_connect/features/doctor/manage_availability/data/repository/firebase_%20manage_availability_repository_impl.dart';
+import 'package:health_connect/features/doctor/manage_availability/domain/repository/manage_availability_repository.dart';
+import 'package:health_connect/features/doctor/manage_availability/domain/usecase/save_doctor_availability_usecase.dart';
+import 'package:health_connect/features/doctor/manage_availability/presantation/bloc/manage_availability_bloc.dart';
 import 'package:health_connect/features/patient/doctor_list/data/repository_impl/doctor_repository_impl.dart';
 import 'package:health_connect/features/patient/doctor_list/domain/repositories/doctor_repository.dart';
 import 'package:health_connect/features/patient/doctor_list/domain/usecases/get_doctors_usecase.dart';
 import 'package:health_connect/features/patient/doctor_list/presentation/bloc/doctor_list_bloc.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/data/repository_impl/doctor_profile_view_repository_impl.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/domain/repositroy/doctor_profile_view_repository.dart';
+import 'package:health_connect/features/patient/doctor_profile_view/domain/usecase/get_available_slots_usecase.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/domain/usecase/get_doctor_by_id_usecase.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_bloc.dart';
 
@@ -37,6 +44,8 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<DoctorRepository>(()=> FirebaseDoctorRepositoryImpl(sl()));
   sl.registerLazySingleton<DoctorProfileRepository>(() => FirebaseDoctorProfileRepositoryImpl(sl(), sl(), sl()));
   sl.registerLazySingleton<DoctorProfileViewRepository>(() => DoctorProfileViewRepositoryImpl( sl()));
+  sl.registerLazySingleton<ManageAvailabilityRepository>(()=>FirebaseManageAvailabilityRepositoryImpl(sl(),sl())); 
+  
   // UseCase
   sl.registerLazySingleton<LoginUsecase>(() => LoginUsecase(sl()));
   sl.registerLazySingleton<RegisterUsecase>(() => RegisterUsecase(sl()));
@@ -46,13 +55,16 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<IsDoctorProfileExistsUseCase>(() => IsDoctorProfileExistsUseCase(sl())); 
   sl.registerLazySingleton<GetDoctorByIdUseCase>(() => GetDoctorByIdUseCase(sl()));
   sl.registerLazySingleton<GetDoctorsUseCase>(()=> GetDoctorsUseCase(sl()));
-  
+  sl.registerLazySingleton<GetCurrentDoctorProfileUseCase>(()=>GetCurrentDoctorProfileUseCase(sl()));
+  sl.registerLazySingleton<SaveDoctorAvailabilityUseCase>(()=>SaveDoctorAvailabilityUseCase(sl()));
+  sl.registerLazySingleton<UpdateDoctorProfileUseCase>(() => UpdateDoctorProfileUseCase(sl()));
+  sl.registerLazySingleton<GetAvailableSlotsUseCase>(()=>GetAvailableSlotsUseCase(sl()));
   // Bloc
   sl.registerFactory(() => AuthBloc(sl<LoginUsecase>(), sl<RegisterUsecase>(), sl<GetCurrentUserUseCase>(), sl<LogoutUseCase>(), sl<IsDoctorProfileExistsUseCase>()));
-  sl.registerFactory(() => DoctorProfileSetupBloc(sl()));
+  sl.registerFactory(() => DoctorProfileSetupBloc(sl(),sl(),sl()));
   sl.registerFactory(() => DoctorListBloc(sl<GetDoctorsUseCase>()));
-  sl.registerFactory(() => DoctorProfileViewBloc(sl<GetDoctorByIdUseCase>()));
-
+  sl.registerFactory(() => DoctorProfileViewBloc(sl<GetDoctorByIdUseCase>(),sl()));
+  sl.registerFactory(() => ManageAvailabilityBloc(sl<GetCurrentDoctorProfileUseCase>(), sl<SaveDoctorAvailabilityUseCase>()));
   // Theme Cubit
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit());
 

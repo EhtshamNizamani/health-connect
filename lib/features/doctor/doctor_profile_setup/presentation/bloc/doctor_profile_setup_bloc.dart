@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/available_slot.dart';
+import 'package:health_connect/core/data/entities/daily_availability_entity.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_profile_entity.dart';
+import 'package:health_connect/features/doctor/doctor_profile_setup/domain/usecase/get_current_doctor_profile_usecase.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/usecase/save_doctor_usecase.dart';
+import 'package:health_connect/features/doctor/doctor_profile_setup/domain/usecase/update_doctor_profile_usecase.dart';
 import 'doctor_profile_setup_event.dart';
 import 'doctor_profile_setup_state.dart';
 import 'package:dartz/dartz.dart';
@@ -10,8 +12,18 @@ import 'package:health_connect/core/error/failures.dart' as profile;
 class DoctorProfileSetupBloc
     extends Bloc<DoctorProfileSetupEvent, DoctorProfileSetupState> {
   final SaveDoctorProfileUseCase saveDoctorProfile;
-
-  DoctorProfileSetupBloc(this.saveDoctorProfile)
+  final GetCurrentDoctorProfileUseCase getCurrentDoctorProfileUsecase;
+  final UpdateDoctorProfileUseCase updateDoctorProfileUseCase;
+       final defaultAvailability = {
+      'monday': const DailyAvailability(isWorking: false, slots: []),
+      'tuesday': const DailyAvailability(isWorking: false, slots: []),
+      'wednesday': const DailyAvailability(isWorking: false, slots: []),
+      'thursday': const DailyAvailability(isWorking: false, slots: []),
+      'friday': const DailyAvailability(isWorking: false, slots: []),
+      'saturday': const DailyAvailability(isWorking: false, slots: []),
+      'sunday': const DailyAvailability(isWorking: false, slots: []),
+    };
+  DoctorProfileSetupBloc(this.saveDoctorProfile, this.getCurrentDoctorProfileUsecase, this.updateDoctorProfileUseCase)
     : super(DoctorProfileInitial()) {
     on<SubmitDoctorProfile>(_onSubmitProfile);
     on<GetCurrentDoctorProfile>(_onGetCurrentDoctorProfile);
@@ -24,6 +36,8 @@ class DoctorProfileSetupBloc
   ) async {
     emit(DoctorProfileLoading());
     try {
+  
+
       final doctor = DoctorEntity(
         uid: "", // Ye Repository mein set hoga
         name: event.name,
@@ -34,10 +48,7 @@ class DoctorProfileSetupBloc
         clinicAddress: event.clinicAddress,
         consultationFee: event.consultationFee,
         photoUrl: "", // Ye bhi Repository mein set hoga
-        availableSlots: [
-          // SAHI: Ab hum saaf suthra 'AvailableSlot' Entity use kar rahe hain
-          AvailableSlot(startTime: event.startTime, endTime: event.endTime),
-        ],
+        weeklyAvailability: defaultAvailability,
       );
 
       // SaveDoctorProfileUseCase ko DoctorEntity aur File chahiye
@@ -69,12 +80,10 @@ class DoctorProfileSetupBloc
     clinicAddress: event.clinicAddress,
     consultationFee: event.consultationFee,
     photoUrl: event.existingPhotoUrl, // Purani photo ka URL pass karein
-    availableSlots: [
-      AvailableSlot(startTime: event.startTime, endTime: event.endTime),
-    ],
+    weeklyAvailability: defaultAvailability,
   );
 
-      final Either<profile.Failure, DoctorEntity> result = await saveDoctorProfile.updateDoctorProfile(doctorToUpdate, event.newPhotoFile);
+      final Either<profile.Failure, DoctorEntity> result = await updateDoctorProfileUseCase(doctorToUpdate, event.newPhotoFile);
     result.fold((l)=> emit(DoctorProfileFailure(l.message)), 
       (r) => emit(DoctorProfileLoaded(r)));
     }catch(e){
@@ -89,7 +98,7 @@ class DoctorProfileSetupBloc
     emit(DoctorProfileLoading());
     try {
       final Either<profile.DoctorProfileFailure, DoctorEntity> result =
-          await saveDoctorProfile.getCurrentDoctorProfile();
+          await getCurrentDoctorProfileUsecase();
       result.fold(
         (failure) {
           emit(DoctorProfileFailure(failure.message));
