@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:health_connect/core/constants/app_color.dart';
 import 'package:health_connect/core/data/entities/time_slot_entity.dart';
 import 'package:health_connect/core/di/service_locator.dart';
 import 'package:health_connect/features/doctor/manage_availability/presantation/bloc/manage_availability_bloc.dart';
@@ -24,7 +25,7 @@ class ManageAvailabilityScreen extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text("Schedule updated successfully!"),
-                backgroundColor: Colors.green,
+                backgroundColor: AppColors.primary,
               ),
             );
             // Optionally, navigate back after saving

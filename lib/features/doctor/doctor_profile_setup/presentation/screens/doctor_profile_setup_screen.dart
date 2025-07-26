@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:health_connect/core/constants/app_color.dart';
 import 'package:health_connect/features/doctor/doctor_dashboard/screen/doctor_main_screen.dart';
 import 'package:health_connect/features/doctor/home/doctor_home_screen.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/bloc/doctor_profile_setup_bloc.dart';
@@ -67,14 +68,14 @@ class _DoctorProfileSetupScreenState extends State<DoctorProfileSetupScreen> {
           if (state is DoctorProfileSuccess) {
             Future.delayed(const Duration(milliseconds: 100), () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Profile saved successfully!")),
+                const SnackBar(backgroundColor: AppColors.primary, content: Text("Profile saved successfully!")),
               );
               Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=> const DoctorMainScreen()));
             });
           } else if (state is DoctorProfileFailure) {
             Future.delayed(const Duration(milliseconds: 100), () {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Error: ${state.message}")),
+                SnackBar(backgroundColor: AppColors.error, content: Text("Error: ${state.message}")),
               );
             });
           }
@@ -141,7 +142,7 @@ class _DoctorProfileSetupScreenState extends State<DoctorProfileSetupScreen> {
                         endTime == null ||
                         pickedImage == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Please fill all mandatory fields and pick an image.")),
+                        const SnackBar(backgroundColor: AppColors.error, content: Text("Please fill all mandatory fields and pick an image.")),
                       );
                       return;
                     }

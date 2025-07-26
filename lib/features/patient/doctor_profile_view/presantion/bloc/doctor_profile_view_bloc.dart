@@ -12,6 +12,7 @@ class DoctorProfileViewBloc extends Bloc<DoctorProfileViewEvent, DoctorProfileVi
       : super(DoctorProfileViewInitial()) {
     on<FetchDoctorDetailsViewEvent>(_onFetchDoctorDetails);
     on<FetchAvailableSlotsViewEvent>(_onFetchAvailableSlots);
+    on<TimeSlotSelected>(_onTimeSlotSelected);
   }
 
   Future<void> _onFetchDoctorDetails(
@@ -47,6 +48,13 @@ class DoctorProfileViewBloc extends Bloc<DoctorProfileViewEvent, DoctorProfileVi
           emit(currentState.copyWith(areSlotsLoading: false, availableSlots: slots));
         },
       );
+    }
+  }
+
+  Future<void> _onTimeSlotSelected(TimeSlotSelected event, Emitter<DoctorProfileViewState> emit)async{
+    if(state is DoctorProfileViewLoaded){
+      final currentState = state as DoctorProfileViewLoaded;
+      emit(currentState.copyWith(selectedSlot: event.slot));
     }
   }
 }

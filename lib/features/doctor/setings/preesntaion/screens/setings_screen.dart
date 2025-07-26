@@ -71,7 +71,7 @@ class SettingsScreen extends StatelessWidget {
             onTap: () {
               // TODO: Navigate to UpdateDoctorProfileScreen
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Edit Profile Screen coming soon!")),
+                const SnackBar( content: Text("Edit Profile Screen coming soon!")),
               );
             },
           ),

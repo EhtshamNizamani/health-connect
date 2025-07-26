@@ -21,12 +21,14 @@ class DoctorProfileViewLoaded extends DoctorProfileViewState {
   final List<DateTime>? availableSlots;
   final bool areSlotsLoading;
   final String? slotsError;
+  final DateTime? selectedSlot;
 
   const DoctorProfileViewLoaded({
     required this.doctor,
     this.availableSlots,
     this.areSlotsLoading = false,
     this.slotsError,
+    this.selectedSlot,
   });
   
   DoctorProfileViewLoaded copyWith({
@@ -35,15 +37,17 @@ class DoctorProfileViewLoaded extends DoctorProfileViewState {
     bool? areSlotsLoading,
     String? slotsError,
     bool clearSlotsError = false,
+    DateTime? selectedSlot,
   }) {
     return DoctorProfileViewLoaded(
       doctor: doctor ?? this.doctor,
       availableSlots: availableSlots ?? this.availableSlots,
       areSlotsLoading: areSlotsLoading ?? this.areSlotsLoading,
       slotsError: clearSlotsError ? null : slotsError ?? this.slotsError,
+      selectedSlot: selectedSlot ?? this.selectedSlot,
     );
   }
   
   @override
-  List<Object?> get props => [doctor, availableSlots, areSlotsLoading, slotsError];
+  List<Object?> get props => [doctor, availableSlots, areSlotsLoading, slotsError, selectedSlot];
 }

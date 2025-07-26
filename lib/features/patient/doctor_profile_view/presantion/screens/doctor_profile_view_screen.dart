@@ -5,7 +5,7 @@ import 'package:health_connect/features/patient/doctor_profile_view/presantion/b
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_event.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_state.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/widget/about_section.dart';
-import 'package:health_connect/features/patient/doctor_profile_view/presantion/widget/book_appointment_button.dart';
+import 'package:health_connect/features/patient/doctor_profile_view/presantion/widget/appointment_booking_bottom_bar.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/widget/date_and_time_selector.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/widget/doctor_profile_header.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/widget/info_card.dart';
@@ -108,10 +108,8 @@ class DoctorProfileScreen extends StatelessWidget {
             BlocBuilder<DoctorProfileViewBloc, DoctorProfileViewState>(
               builder: (context, state) {
                 if (state is DoctorProfileViewLoaded) {
-                  return BookAppointmentButton(
-                    onTap: () {
-                      // TODO: Navigate to booking confirmation screen
-                    },
+                  return AppointmentBookingBottomBar(
+                  
                   );
                 }
                 return const SizedBox.shrink(); // Hide button if not loaded

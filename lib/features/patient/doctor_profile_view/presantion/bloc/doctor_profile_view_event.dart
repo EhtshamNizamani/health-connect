@@ -20,3 +20,11 @@ class FetchAvailableSlotsViewEvent extends DoctorProfileViewEvent {
   @override
   List<Object> get props => [doctorId, date];
 }
+
+class TimeSlotSelected extends DoctorProfileViewEvent {
+  final DateTime? slot; 
+  const TimeSlotSelected(this.slot);
+
+  @override
+  List<Object> get props => [slot ?? ''];
+}

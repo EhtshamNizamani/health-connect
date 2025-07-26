@@ -10,6 +10,7 @@ import 'package:health_connect/features/auth/presentation/auth/screens/login_scr
 import 'package:health_connect/features/doctor/doctor_dashboard/screen/doctor_main_screen.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/bloc/doctor_profile_setup_bloc.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/screens/doctor_profile_setup_screen.dart';
+import 'package:health_connect/features/patient/appointment/presentation/blocs/booking_bloc.dart';
 import 'package:health_connect/features/patient/dashboard/screens/dashboard_screen.dart';
 
 import 'core/di/service_locator.dart';
@@ -33,6 +34,7 @@ void main() async {
         BlocProvider<DoctorProfileSetupBloc>(
           create: (_) => sl<DoctorProfileSetupBloc>(),
         ),
+        BlocProvider<BookingBloc>(create: (_) => sl<BookingBloc>()),
       ],
       child: const MyApp(),
     ),
@@ -75,7 +77,9 @@ class MyApp extends StatelessWidget {
                   );
                 } else if (state is AuthenticatedDoctorProfileNotExists) {
                   navigator.pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const DoctorProfileSetupScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const DoctorProfileSetupScreen(),
+                    ),
                     (route) => false,
                   );
                 }
@@ -102,10 +106,6 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }
