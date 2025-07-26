@@ -4,10 +4,10 @@ import 'package:health_connect/core/constants/app_color.dart';
 import 'package:health_connect/core/shared/widgets/custom_button.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_state.dart';
-import 'package:health_connect/features/patient/appointment/domain/entities/appointment_entity.dart';
-import 'package:health_connect/features/patient/appointment/presentation/blocs/booking_bloc.dart';
-import 'package:health_connect/features/patient/appointment/presentation/blocs/booking_event.dart';
-import 'package:health_connect/features/patient/appointment/presentation/blocs/booking_state.dart';
+import 'package:health_connect/features/appointment/domain/entities/appointment_entity.dart';
+import 'package:health_connect/features/appointment/presentation/blocs/booking_bloc.dart';
+import 'package:health_connect/features/appointment/presentation/blocs/booking_event.dart';
+import 'package:health_connect/features/appointment/presentation/blocs/booking_state.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_bloc.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_state.dart';
 
@@ -36,6 +36,16 @@ class AppointmentBookingBottomBar extends StatelessWidget {
             if(bookingState is BookingSuccess){
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: AppColors.primary, content: Text("Appointment booked successfully!")));
             }
+             if (bookingState is BookingFailure) {
+              // If the state is BookingFailure, show a SnackBar with the error message
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(bookingState.message), // The message comes directly from the state
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
+            }
+            // <<< ----------------------------------------------
           },
           child: BlocBuilder<BookingBloc, BookingState>(
             builder: (context, bookingState) {

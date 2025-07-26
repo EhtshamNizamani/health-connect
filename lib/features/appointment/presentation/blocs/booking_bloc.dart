@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:health_connect/features/patient/appointment/domain/usecases/book_appointment_usecase.dart';
+import 'package:health_connect/features/appointment/domain/usecases/book_appointment_usecase.dart';
 import 'booking_event.dart';
 import 'booking_state.dart';
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:health_connect/features/doctor/appointment/presantation/screen/doctor_appointments_screen.dart';
 import 'package:health_connect/features/doctor/doctor_dashboard/cubit/doctor_nav_cubit.dart';
 import 'package:health_connect/features/doctor/home/doctor_home_screen.dart';
 import 'package:health_connect/features/doctor/setings/preesntaion/screens/setings_screen.dart';
@@ -11,7 +12,7 @@ class DoctorMainScreen extends StatelessWidget {
   // The list of screens for the navigation tabs
   final List<Widget> screens = const [
     DoctorHomeScreen(),
-    Text("Appointments"),
+    DoctorAppointmentsScreen(),
     Text("DoctorPatientsScreen"),
     SettingsScreen(),
   ];

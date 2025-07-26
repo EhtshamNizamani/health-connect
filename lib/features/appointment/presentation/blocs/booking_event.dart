@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:health_connect/features/patient/appointment/domain/entities/appointment_entity.dart';
+import 'package:health_connect/features/appointment/domain/entities/appointment_entity.dart';
 
 abstract class BookingEvent extends Equatable {
   const BookingEvent();

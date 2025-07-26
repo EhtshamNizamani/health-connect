@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/themes/theme_manager.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_event.dart';
+import 'package:health_connect/features/patient/appointment/presentation/screen/patient_appointment_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -73,7 +74,9 @@ class ProfileScreen extends StatelessWidget {
             subtitle: const Text('View your appointment history'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              // TODO: Navigate to AppointmentHistoryScreen
+              Navigator.push(context, MaterialPageRoute(
+                builder: (context) => const PatientAppointmentsScreen(),
+              ));
             },
           ),
 
