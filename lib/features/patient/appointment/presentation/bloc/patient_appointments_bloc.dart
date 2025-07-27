@@ -1,6 +1,7 @@
-
-
+import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:health_connect/core/error/failures.dart';
+import 'package:health_connect/features/appointment/domain/entities/appointment_entity.dart';
 // Import your centralized Use Cases
 import 'package:health_connect/features/appointment/domain/usecases/get_patient_appointments_usecase.dart';
 import 'package:health_connect/features/appointment/domain/usecases/update_appointment_status_usecase.dart';
@@ -34,16 +35,40 @@ class PatientAppointmentsBloc
       return;
     }
 
-    final result = await _getAppointmentsUseCase(user.id);
-    result.fold(
-      (failure) => emit(PatientAppointmentsError(failure.message)),
-      (appointments) {
-        // Categorize appointments for the patient
-        final upcoming = appointments.where((a) => (a.status == 'pending' || a.status == 'confirmed') && a.appointmentDateTime.isAfter(DateTime.now())).toList();
-        final past = appointments.where((a) => a.status == 'completed' || a.status == 'cancelled' || a.appointmentDateTime.isBefore(DateTime.now())).toList();
-        
-        emit(PatientAppointmentsLoaded(upcoming: upcoming, past: past));
+    // Listen to the stream of appointments
+    await emit.forEach<Either<Failure, List<AppointmentEntity>>>(
+      _getAppointmentsUseCase(user.id),
+      onData: (result) {
+        return result.fold(
+          (failure) => PatientAppointmentsError(failure.message),
+          (appointments) {
+            final now = DateTime.now();
+
+            // UPCOMING: Appointments that are confirmed and are in the future.
+            final upcoming = appointments
+                .where(
+                  (a) =>
+                      a.status == 'confirmed' &&
+                      a.appointmentDateTime.isAfter(now),
+                )
+                .toList();
+
+            final past = appointments
+                .where(
+                  (a) =>
+                      a.status == 'completed' ||
+                      a.status == 'cancelled' ||
+                      (a.status == 'confirmed' &&
+                          a.appointmentDateTime.isBefore(now)),
+                )
+                .toList();
+
+            return PatientAppointmentsLoaded(upcoming: upcoming, past: past);
+          },
+        );
       },
+      onError: (error, stackTrace) =>
+          PatientAppointmentsError(error.toString()),
     );
   }
 

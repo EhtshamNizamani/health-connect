@@ -7,7 +7,7 @@ class GetPatientAppointmentsUseCase {
   final AppointmentRepository repository;
   GetPatientAppointmentsUseCase(this.repository);
 
-  Future<Either<Failure,List<AppointmentEntity>>> call(String patientId)async{
-    return await repository.getPatientAppointments(patientId);
+  Stream<Either<Failure,List<AppointmentEntity>>> call(String patientId){
+    return  repository.getPatientAppointments(patientId);
   }
 }

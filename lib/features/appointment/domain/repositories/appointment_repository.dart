@@ -10,9 +10,9 @@ abstract class AppointmentRepository {
   // Method to get booked appointment start times for a doctor on a specific day
   Future<Either<Failure, List<DateTime>>> getBookedSlots(String doctorId, DateTime date);
   
-  Future<Either<Failure, List<AppointmentEntity>>> getDoctorAppointments(String doctorId);
+  Stream<Either<Failure, List<AppointmentEntity>>> getDoctorAppointments(String doctorId);
 
-  Future<Either<Failure, List<AppointmentEntity>>> getPatientAppointments(String patientId);
+  Stream<Either<Failure, List<AppointmentEntity>>> getPatientAppointments(String patientId);
   
   Future<Either<Failure, void>> updateAppointmentStatus(String appointmentId, String newStatus);
 }

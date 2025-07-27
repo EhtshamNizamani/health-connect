@@ -92,47 +92,49 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
       return Left(FirestoreFailure(e.toString()));
     }
   }
-
   @override
-  Future<Either<Failure, List<AppointmentEntity>>> getDoctorAppointments(
-    String doctorId,
-  ) async {
+  Stream<Either<Failure, List<AppointmentEntity>>> getDoctorAppointments(String doctorId) {
     try {
-      final querySnapshot = await _firestore
+      // Get the stream of snapshots from Firestore
+      final snapshots = _firestore
           .collection('appointments')
           .where('doctorId', isEqualTo: doctorId)
-          .orderBy('appointmentDateTime', descending: true) // Show newest first
-          .get();
+          .orderBy('appointmentDateTime', descending: true)
+          .snapshots(); // <-- The key change: .get() becomes .snapshots()
 
-      final appointments = querySnapshot.docs
-          .map((doc) => AppointmentModel.fromSnapshot(doc).toDomain())
-          .toList();
-      return Right(appointments);
+      // Use .map to transform the stream of QuerySnapshots into a stream of our desired Either type
+      return snapshots.map((querySnapshot) {
+        final appointments = querySnapshot.docs
+            .map((doc) => AppointmentModel.fromSnapshot(doc).toDomain())
+            .toList();
+        return Right<Failure, List<AppointmentEntity>>(appointments);
+      });
     } catch (e) {
-      return Left(FirestoreFailure("Failed to fetch doctor appointments: $e"));
+      // If setting up the stream fails, return a stream with a single error
+      return Stream.value(Left(FirestoreFailure("Failed to listen to appointments: $e")));
     }
   }
 
+  // <<< --- NAYA STREAM-BASED METHOD FOR PATIENT ---
   @override
-  Future<Either<Failure, List<AppointmentEntity>>> getPatientAppointments(
-    String patientId,
-  ) async {
+  Stream<Either<Failure, List<AppointmentEntity>>> getPatientAppointments(String patientId) {
     try {
-      final querySnapshot = await _firestore
+      final snapshots = _firestore
           .collection('appointments')
           .where('patientId', isEqualTo: patientId)
           .orderBy('appointmentDateTime', descending: true)
-          .get();
+          .snapshots(); // <-- The key change
 
-      final appointments = querySnapshot.docs
-          .map((doc) => AppointmentModel.fromSnapshot(doc).toDomain())
-          .toList();
-      return Right(appointments);
+      return snapshots.map((querySnapshot) {
+        final appointments = querySnapshot.docs
+            .map((doc) => AppointmentModel.fromSnapshot(doc).toDomain())
+            .toList();
+        return Right<Failure, List<AppointmentEntity>>(appointments);
+      });
     } catch (e) {
-      return Left(FirestoreFailure("Failed to fetch patient appointments: $e"));
+      return Stream.value(Left(FirestoreFailure("Failed to listen to appointments: $e")));
     }
   }
-
   @override
   Future<Either<Failure, void>> updateAppointmentStatus(
     String appointmentId,

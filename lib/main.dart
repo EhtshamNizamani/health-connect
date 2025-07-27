@@ -28,7 +28,6 @@ void main() async {
       providers: [
         BlocProvider<ThemeCubit>(create: (_) => sl<ThemeCubit>()),
         BlocProvider<AuthBloc>(
-          // We will listen to this bloc from outside the MaterialApp
           create: (_) => sl<AuthBloc>()..add(AuthCheckRequested()),
         ),
         BlocProvider<DoctorProfileSetupBloc>(
