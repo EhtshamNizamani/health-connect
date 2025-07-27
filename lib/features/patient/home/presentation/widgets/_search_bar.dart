@@ -1,42 +1,35 @@
 part of '../screen/home_screen.dart'; // Make sure this path is correct
-
 class _SearchBar extends StatelessWidget {
   const _SearchBar();
 
   @override
   Widget build(BuildContext context) {
-    // Get the current theme from the context
     final theme = Theme.of(context);
-
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Row(
           children: [
-            // The main search text field
             Expanded(
               child: TextField(
                 decoration: InputDecoration(
-                  hintText: "Search by doctor, specialty...",
-                  hintStyle: TextStyle(color: theme.colorScheme.outline),
-                  // The search icon on the left
+                  hintText: "Search by doctor name or specialty...", // Updated hint
                   prefixIcon: Icon(Icons.search, color: theme.colorScheme.outline),
-                  // Styling
                   filled: true,
                   fillColor: theme.colorScheme.surface,
-                  // Border styling
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none, // No border by default
+                    borderSide: BorderSide.none,
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 14.0),
                 ),
+                // <<< --- CONNECT THE TEXTFIELD TO THE BLOC ---
                 onChanged: (value) {
-                  // TODO: Implement live search logic here
+                  // On every keystroke, add the SearchQueryChanged event
+                  context.read<DoctorListBloc>().add(SearchQueryChanged(value));
                 },
               ),
             ),
-            const SizedBox(width: 12),
             // The filter button on the right
             Container(
               decoration: BoxDecoration(
