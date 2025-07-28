@@ -16,7 +16,12 @@ class ConfirmAppointment extends DoctorAppointmentsEvent {
   @override
   List<Object> get props => [appointmentId];
 }
-
+class CompletedAppointment extends DoctorAppointmentsEvent {
+  final String appointmentId;
+  const CompletedAppointment(this.appointmentId);
+  @override
+  List<Object> get props => [appointmentId];
+}
 // Event to cancel/reject an appointment
 class CancelAppointment extends DoctorAppointmentsEvent {
   final String appointmentId;

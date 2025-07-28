@@ -75,15 +75,20 @@ class DoctorAppointmentsScreen extends StatelessWidget {
         final appointment = appointments[index];
         return AppointmentCard(
           appointment: appointment,
+          // Pending actions
           onConfirm: appointment.status == 'pending'
-              ? () => context.read<DoctorAppointmentsBloc>().add(
-                  ConfirmAppointment(appointment.id),
-                )
+              ? () => context.read<DoctorAppointmentsBloc>().add(ConfirmAppointment(appointment.id))
               : null,
           onCancel: appointment.status == 'pending'
-              ? () => context.read<DoctorAppointmentsBloc>().add(
-                  CancelAppointment(appointment.id),
-                )
+              ? () => context.read<DoctorAppointmentsBloc>().add(CancelAppointment(appointment.id))
+              : null,
+          
+          // --- NAYE ACTIONS FOR PAST APPOINTMENTS ---
+          onMarkAsCompleted: appointment.status == 'confirmed'
+              ? () => context.read<DoctorAppointmentsBloc>().add(CompletedAppointment(appointment.id))
+              : null,
+          onMarkAsNoShow: appointment.status == 'confirmed'
+              ? () => context.read<DoctorAppointmentsBloc>().add(CancelAppointment(appointment.id))
               : null,
         );
       },

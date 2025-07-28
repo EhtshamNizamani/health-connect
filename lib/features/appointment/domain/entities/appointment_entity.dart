@@ -11,7 +11,7 @@ class AppointmentEntity extends Equatable {
   final String status; // 'pending', 'confirmed', 'cancelled', 'completed'
   final int consultationFee;
   final DateTime createdAt;
-
+  final bool isReviewed;
   const AppointmentEntity({
     required this.id,
     required this.doctorId,
@@ -23,6 +23,7 @@ class AppointmentEntity extends Equatable {
     required this.status,
     required this.consultationFee,
     required this.createdAt,
+    this.isReviewed = false,
   });
 
   @override

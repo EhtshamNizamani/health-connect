@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/di/service_locator.dart';
 import 'package:health_connect/features/appointment/domain/entities/appointment_entity.dart';
+import 'package:health_connect/features/doctor/review/presantation/screen/review_screen.dart';
 import '../bloc/patient_appointments_bloc.dart';
 import '../bloc/patient_appointments_event.dart';
 import '../bloc/patient_appointments_state.dart';
@@ -90,6 +91,9 @@ class PatientAppointmentsScreen extends StatelessWidget {
                   ],
                 ),
               );
+            },
+            onRate: () {
+                Navigator.of(context).push(MaterialPageRoute(builder: (context)=> AddReviewScreen(doctorId: appointment.doctorId,appointmentId:appointment.id)));
             },
           );
         },

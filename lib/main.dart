@@ -11,6 +11,7 @@ import 'package:health_connect/features/doctor/doctor_dashboard/screen/doctor_ma
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/bloc/doctor_profile_setup_bloc.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/screens/doctor_profile_setup_screen.dart';
 import 'package:health_connect/features/appointment/presentation/blocs/booking_bloc.dart';
+import 'package:health_connect/features/doctor/review/presantation/bloc/review_bloc.dart';
 import 'package:health_connect/features/patient/dashboard/screens/dashboard_screen.dart';
 
 import 'core/di/service_locator.dart';
@@ -34,6 +35,8 @@ void main() async {
           create: (_) => sl<DoctorProfileSetupBloc>(),
         ),
         BlocProvider<BookingBloc>(create: (_) => sl<BookingBloc>()),
+        BlocProvider<ReviewBloc>(create: (_) => sl<ReviewBloc>()),
+
       ],
       child: const MyApp(),
     ),

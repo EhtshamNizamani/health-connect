@@ -50,6 +50,7 @@ dependencies:
   shared_preferences: ^2.5.3
   cached_network_image: ^3.4.1
   date_picker_timeline: ^1.2.7
+  flutter_rating_bar: ^4.0.1
 
 dev_dependencies:
   flutter_test:

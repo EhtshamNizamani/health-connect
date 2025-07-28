@@ -22,6 +22,8 @@ class DoctorAppointmentsBloc
     on<FetchDoctorAppointments>(_onFetchAppointments);
     on<ConfirmAppointment>(_onConfirmAppointment);
     on<CancelAppointment>(_onCancelAppointment);
+    on<CompletedAppointment>(_onCompletedAppointment);
+
   }
 Future<void> _onFetchAppointments(
   FetchDoctorAppointments event,
@@ -86,6 +88,14 @@ Future<void> _onFetchAppointments(
     Emitter<DoctorAppointmentsState> emit,
   ) async {
     await _updateStatusUseCase(event.appointmentId, 'cancelled');
+    add(FetchDoctorAppointments());
+  }
+
+   Future<void> _onCompletedAppointment(
+    CompletedAppointment event,
+    Emitter<DoctorAppointmentsState> emit,
+  ) async {
+    await _updateStatusUseCase(event.appointmentId, 'completed');
     add(FetchDoctorAppointments());
   }
 }

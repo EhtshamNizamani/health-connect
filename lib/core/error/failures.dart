@@ -22,3 +22,6 @@ class NetworkFailure extends Failure {
 class FirestoreFailure extends Failure{
   FirestoreFailure(super.message);
 }
+class ValidationError extends Failure {
+  ValidationError(super.message);
+}

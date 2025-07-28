@@ -30,6 +30,11 @@ import 'package:health_connect/features/appointment/data/repositories/appointmen
 import 'package:health_connect/features/appointment/domain/repositories/appointment_repository.dart';
 import 'package:health_connect/features/appointment/domain/usecases/book_appointment_usecase.dart';
 import 'package:health_connect/features/appointment/presentation/blocs/booking_bloc.dart';
+import 'package:health_connect/features/doctor/review/data/repository/review_repository_impl.dart';
+import 'package:health_connect/features/doctor/review/domain/repository/review_repository.dart';
+import 'package:health_connect/features/doctor/review/domain/usecase/get_doctor_review_usecase.dart';
+import 'package:health_connect/features/doctor/review/domain/usecase/submit_review_usecase.dart';
+import 'package:health_connect/features/doctor/review/presantation/bloc/review_bloc.dart';
 import 'package:health_connect/features/patient/appointment/presentation/bloc/patient_appointments_bloc.dart';
 import 'package:health_connect/features/patient/doctor_list/data/repository_impl/doctor_repository_impl.dart';
 import 'package:health_connect/features/patient/doctor_list/domain/repositories/doctor_repository.dart';
@@ -55,6 +60,7 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<DoctorProfileViewRepository>(() => DoctorProfileViewRepositoryImpl( sl()));
   sl.registerLazySingleton<ManageAvailabilityRepository>(()=>FirebaseManageAvailabilityRepositoryImpl(sl(),sl())); 
   sl.registerLazySingleton<AppointmentRepository>(() => AppointmentRepositoryImpl(sl()));
+  sl.registerLazySingleton<ReviewRepository>(() => ReviewRepositoryImpl(sl()));
   
   // UseCase
   sl.registerLazySingleton<LoginUsecase>(() => LoginUsecase(sl()));
@@ -69,10 +75,12 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<SaveDoctorAvailabilityUseCase>(()=>SaveDoctorAvailabilityUseCase(sl()));
   sl.registerLazySingleton<UpdateDoctorProfileUseCase>(() => UpdateDoctorProfileUseCase(sl()));
   sl.registerLazySingleton<GetAvailableSlotsUseCase>(()=>GetAvailableSlotsUseCase(sl(),sl()));
-  sl.registerLazySingleton(() => BookAppointmentUseCase(sl()));
-  sl.registerLazySingleton(() => UpdateAppointmentsStatusUseCase(sl()));
-  sl.registerLazySingleton(() => GetDoctorAppointmentsUseCase(sl()));
-  sl.registerLazySingleton(() => GetPatientAppointmentsUseCase(sl()));
+  sl.registerLazySingleton<BookAppointmentUseCase>(() => BookAppointmentUseCase(sl()));
+  sl.registerLazySingleton<UpdateAppointmentsStatusUseCase>(() => UpdateAppointmentsStatusUseCase(sl()));
+  sl.registerLazySingleton<GetDoctorAppointmentsUseCase>(() => GetDoctorAppointmentsUseCase(sl()));
+  sl.registerLazySingleton<GetPatientAppointmentsUseCase>(() => GetPatientAppointmentsUseCase(sl()));
+  sl.registerLazySingleton<SubmitReviewUseCase>(() => SubmitReviewUseCase(sl()));
+  sl.registerLazySingleton<GetDoctorReviewUseCase>(() => GetDoctorReviewUseCase(sl()));
 
   
   
@@ -85,6 +93,7 @@ Future<void> setupLocator() async {
   sl.registerFactory(() => BookingBloc(sl())); // Add this line
   sl.registerFactory(()=> DoctorAppointmentsBloc(sl(), sl(), sl()));
   sl.registerFactory(()=> PatientAppointmentsBloc(sl(), sl(), sl()));
+  sl.registerFactory(() => ReviewBloc(sl(), sl())); 
 
   // Theme Cubit
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit());
