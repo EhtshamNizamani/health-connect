@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/di/service_locator.dart';
@@ -10,7 +13,9 @@ import 'package:health_connect/features/chat/presentation/blocs/chat_room/chat_r
 import 'package:health_connect/features/chat/presentation/blocs/chat_room/chat_room_event.dart';
 import 'package:health_connect/features/chat/presentation/blocs/chat_room/chat_room_state.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_profile_entity.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+
 class ChatRoomScreen extends StatelessWidget {
   final String chatRoomId;
   final String chatPartnerName;
@@ -24,12 +29,12 @@ class ChatRoomScreen extends StatelessWidget {
     required this.chatPartnerName,
     required this.receiverId,
     required this.patient, // <<<--- NEW
-    required this.doctor,   // <<<--- NEW
+    required this.doctor, // <<<--- NEW
   });
 
   @override
   Widget build(BuildContext context) {
-       String currentUserId = '';
+    String currentUserId = '';
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthenticatedPatient) {
       currentUserId = authState.user.id;
@@ -40,7 +45,9 @@ class ChatRoomScreen extends StatelessWidget {
     }
     return BlocProvider(
       create: (context) => sl<ChatRoomBloc>()
-        ..add(SubscribeToMessages(chatRoomId)), // Subscribe to messages as soon as the BLoC is created
+        ..add(
+          SubscribeToMessages(chatRoomId),
+        ), // Subscribe to messages as soon as the BLoC is created
       child: Scaffold(
         appBar: AppBar(
           title: Text(chatPartnerName),
@@ -67,7 +74,9 @@ class ChatRoomScreen extends StatelessWidget {
                   }
                   if (state is ChatRoomLoaded) {
                     if (state.messages.isEmpty) {
-                      return const Center(child: Text("No messages yet. Say hello!"));
+                      return const Center(
+                        child: Text("No messages yet. Say hello!"),
+                      );
                     }
                     return ListView.builder(
                       padding: const EdgeInsets.all(16.0),
@@ -76,10 +85,7 @@ class ChatRoomScreen extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final message = state.messages[index];
                         final bool isMe = message.senderId == currentUserId;
-                        return MessageBubble(
-                          message: message,
-                          isMe: isMe,
-                        );
+                        return MessageBubble(message: message, isMe: isMe);
                       },
                     );
                   }
@@ -98,7 +104,7 @@ class ChatRoomScreen extends StatelessWidget {
             ChatInputField(
               chatRoomId: chatRoomId,
               receiverId: receiverId,
-              doctor:doctor,
+              doctor: doctor,
               patient: patient,
             ),
           ],
@@ -112,10 +118,16 @@ class ChatRoomScreen extends StatelessWidget {
 class ChatInputField extends StatefulWidget {
   final String chatRoomId;
   final String receiverId;
-    final UserEntity patient; // <<<--- NEW
+  final UserEntity patient; // <<<--- NEW
   final DoctorEntity doctor; // <<<--- NEW
 
-  const ChatInputField({super.key, required this.chatRoomId, required this.receiverId, required this.doctor, required this.patient});
+  const ChatInputField({
+    super.key,
+    required this.chatRoomId,
+    required this.receiverId,
+    required this.doctor,
+    required this.patient,
+  });
 
   @override
   State<ChatInputField> createState() => _ChatInputFieldState();
@@ -150,7 +162,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
 
     if (senderId == null) {
       // Show an error if the user is not properly authenticated
-     print("Please login");
+      print("Please login");
       return;
     }
 
@@ -167,10 +179,10 @@ class _ChatInputFieldState extends State<ChatInputField> {
     // Dispatch the updated event with all the required data
     context.read<ChatRoomBloc>().add(
       SendMessage(
-         widget.chatRoomId,
-         message,
-         widget.doctor,   // Pass the doctor entity
-         widget.patient, // Pass the patient entity
+        widget.chatRoomId,
+        message,
+        widget.doctor, // Pass the doctor entity
+        widget.patient, // Pass the patient entity
       ),
     );
 
@@ -178,49 +190,157 @@ class _ChatInputFieldState extends State<ChatInputField> {
     _messageController.clear();
     FocusScope.of(context).unfocus();
   }
-  // <<<--- END OF MODIFICATION ---
 
+  // <<<--- END OF MODIFICATION ---
+  void _showAttachmentPicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Pick Image from Gallery'),
+                onTap: () {
+                  Navigator.of(context).pop(); // Close the sheet
+                  _pickAndSendFile('image');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.description),
+                title: const Text('Pick Document (PDF)'),
+                onTap: () {
+                  Navigator.of(context).pop(); // Close the sheet
+                  _pickAndSendFile('pdf');
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // --- NEW METHOD TO HANDLE FILE PICKING AND SENDING ---
+  Future<void> _pickAndSendFile(String type) async {
+    File? file;
+
+    if (type == 'image') {
+      final pickedFile = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+      );
+      if (pickedFile != null) {
+        file = File(pickedFile.path);
+      }
+    } else if (type == 'pdf') {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+      if (result != null && result.files.single.path != null) {
+        file = File(result.files.single.path!);
+      }
+    }
+
+    if (file != null) {
+      // Dispatch the SendFileMessage event
+      context.read<ChatRoomBloc>().add(
+        SendFileMessage(
+          chatRoomId: widget.chatRoomId,
+          receiverId: widget.receiverId,
+          file: file,
+          messageType: type,
+          patient: widget.patient,
+          doctor: widget.doctor,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      // ... (decoration is the same)
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            offset: const Offset(0, -2),
-            blurRadius: 10,
-            color: theme.shadowColor.withOpacity(0.05),
-          )
-        ],
-      ),
-      child: SafeArea(
+    // A subtle top border to separate the input field from the messages
+    decoration: BoxDecoration(
+      color: theme.colorScheme.surface,
+      border: Border(top: BorderSide(color: theme.dividerColor, width: 0.5)),
+    ),
+    child: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            IconButton(icon: Icon(Icons.attach_file, color: theme.colorScheme.outline), onPressed: () {}),
+            // Attach Icon
+            IconButton(
+              icon: Icon(Icons.attach_file_rounded, color: theme.colorScheme.outline),
+              onPressed: _showAttachmentPicker,
+            ),
+            
+            // Text Field
             Expanded(
               child: TextField(
                 controller: _messageController,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   hintText: 'Type a message...',
-                  // ... (decoration is the same)
+                  // Use the main background color for a nice contrast
+                  filled: true,
+                  fillColor: theme.scaffoldBackgroundColor,
+                  // Remove all borders
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24), // Makes it pill-shaped
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
                 ),
-                onSubmitted: (_) => _sendMessage(), // Send on keyboard done button
+                onSubmitted: (_) => _sendMessage(),
               ),
             ),
             const SizedBox(width: 8),
+             BlocBuilder<ChatRoomBloc, ChatRoomState>(
+      builder: (context, state) {
+        if (state is MessageSending) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              children: [
+                SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                SizedBox(width: 12),
+                Text("Uploading attachment..."),
+              ],
+            ),
+          );
+        }
+        return const SizedBox.shrink(); // Hide if not sending
+      },
+    ),
+            // Send Button
             IconButton.filled(
-              // ... (style is the same)
-              icon: const Icon(Icons.send),
+              style: IconButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
+                padding: const EdgeInsets.all(12),
+              ),
+              icon: const Icon(Icons.send_rounded),
               onPressed: _sendMessage,
             ),
           ],
         ),
       ),
-    );
+    ),);
+
   }
 }
 
@@ -229,23 +349,19 @@ class MessageBubble extends StatelessWidget {
   final MessageEntity message; // Now takes the full entity
   final bool isMe;
 
-  const MessageBubble({
-    super.key,
-    required this.message,
-    required this.isMe,
-  });
+  const MessageBubble({super.key, required this.message, required this.isMe});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     // Format the timestamp
     final time = DateFormat('hh:mm a').format(message.timestamp.toDate());
-    
+
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         // ... (decoration is the same)
-         margin: const EdgeInsets.symmetric(vertical: 4.0),
+        margin: const EdgeInsets.symmetric(vertical: 4.0),
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.7,
@@ -266,14 +382,18 @@ class MessageBubble extends StatelessWidget {
           ),
         ),
         child: Column(
-          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isMe
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             // The message content
             Text(
               message.content,
               style: TextStyle(
-                color: isMe ? theme.colorScheme.onPrimary : theme.colorScheme.onSecondaryContainer,
+                color: isMe
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onSecondaryContainer,
               ),
             ),
             const SizedBox(height: 4),
@@ -282,8 +402,11 @@ class MessageBubble extends StatelessWidget {
               time,
               style: TextStyle(
                 fontSize: 10,
-                color: (isMe ? theme.colorScheme.onPrimary : theme.colorScheme.onSecondaryContainer)
-                    .withOpacity(0.7),
+                color:
+                    (isMe
+                            ? theme.colorScheme.onPrimary
+                            : theme.colorScheme.onSecondaryContainer)
+                        .withOpacity(0.7),
               ),
             ),
           ],

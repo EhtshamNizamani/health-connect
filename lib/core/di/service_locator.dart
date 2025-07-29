@@ -21,6 +21,7 @@ import 'package:health_connect/features/chat/domain/repositories/chat_repository
 import 'package:health_connect/features/chat/domain/usecases/get_chat_rooms_usecase.dart';
 import 'package:health_connect/features/chat/domain/usecases/get_messages_usecase.dart';
 import 'package:health_connect/features/chat/domain/usecases/send_message_usecase.dart';
+import 'package:health_connect/features/chat/domain/usecases/upload_file_usecase.dart';
 import 'package:health_connect/features/chat/presentation/blocs/chat_list/chat_list_bloc.dart';
 import 'package:health_connect/features/chat/presentation/blocs/chat_room/chat_room_bloc.dart';
 import 'package:health_connect/features/doctor/appointment/presantation/bloc/doctor_appointments_bloc.dart';
@@ -146,6 +147,7 @@ Future<void> setupLocator() async {
   );
   sl.registerLazySingleton<GetMessagesUseCase>(() => GetMessagesUseCase(sl()));
   sl.registerLazySingleton<SendMessageUseCase>(() => SendMessageUseCase(sl()));
+  sl.registerLazySingleton(() => UploadFileUseCase(sl()));
 
   // Bloc
   sl.registerFactory(
@@ -175,7 +177,7 @@ Future<void> setupLocator() async {
   sl.registerFactory(() => ReviewBloc(sl(), sl()));
   sl.registerFactory(() => DoctorProfileUpdateBloc(sl(), sl()));
   sl.registerFactory(() => ChatListBloc(sl()));
-  sl.registerFactory(() => ChatRoomBloc(sl(), sl()));
+  sl.registerFactory(() => ChatRoomBloc(sl(), sl(),sl()));
 
   // Theme Cubit
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit());

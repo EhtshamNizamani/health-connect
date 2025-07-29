@@ -21,11 +21,16 @@ class ChatRoomError extends ChatRoomState {
   @override
   List<Object> get props => [message];
 }
-class MessageSending extends ChatRoomState {}
 class MessageSendSuccess extends ChatRoomState {}
 class MessageSendFailure extends ChatRoomState {
   final String message;
   const MessageSendFailure(this.message);
   @override
   List<Object> get props => [message];
+}
+
+class MessageSending extends ChatRoomLoaded {
+  // It should EXTEND ChatRoomLoaded so that the old messages
+  // are still visible on the screen while the new one is sending.
+  const MessageSending(super.messages);
 }
