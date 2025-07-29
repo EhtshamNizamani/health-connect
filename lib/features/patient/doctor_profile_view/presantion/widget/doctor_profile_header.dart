@@ -46,15 +46,30 @@ class DoctorProfileHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        // Dummy Rating and Reviews
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.star, color: Colors.amber, size: 20),
-            const SizedBox(width: 8),
-            Text("4.8 (124 reviews)", style: theme.textTheme.titleMedium),
-          ],
-        ),
+        // yhan par latest rating dikhane hogi wo kaise dikhay ge ham 
+        if (doctor.reviewCount > 0)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.star, color: Colors.amber.shade600, size: 20),
+              const SizedBox(width: 8),
+              // Use the averageRating getter and format it to one decimal place
+              Text(
+                "${doctor.averageRating.toStringAsFixed(1)} (${doctor.reviewCount} reviews)",
+                style: theme.textTheme.titleMedium,
+              ),
+            ],
+          )
+        // Optional: Show a message if there are no reviews yet
+        else
+          Center(
+            child: Text(
+              "No reviews yet",
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onBackground.withOpacity(0.5),
+              ),
+            ),
+          ),
       ],
     );
   }

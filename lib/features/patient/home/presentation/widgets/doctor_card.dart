@@ -69,7 +69,7 @@ class DoctorCard extends StatelessWidget {
                           Icon(Icons.star, color: Colors.amber, size: 16),
                           const SizedBox(width: 4),
                           Text(
-                            "4.8 (124 reviews)", // Static for now
+                            "4.5 (1 reviews)", // Static for now
                             style: theme.textTheme.bodySmall,
                           ),
                         ],

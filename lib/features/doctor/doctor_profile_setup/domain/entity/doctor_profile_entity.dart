@@ -11,7 +11,8 @@ class DoctorEntity extends Equatable {
   final String photoUrl;
   final String clinicAddress;
   final int consultationFee;
-  // The old 'availableSlots' is replaced with the new 'weeklyAvailability' map
+  final int reviewCount;
+  final double totalRating;
   final Map<String, DailyAvailability> weeklyAvailability;
 
   const DoctorEntity({
@@ -25,11 +26,30 @@ class DoctorEntity extends Equatable {
     required this.clinicAddress,
     required this.consultationFee,
     required this.weeklyAvailability,
+    this.totalRating = 0.0, // Add default values
+    this.reviewCount = 0,
   });
+  // Helper getter for easy calculation in the UI
+  double get averageRating {
+    if (reviewCount == 0) {
+      return 0.0;
+    }
+    return totalRating / reviewCount;
+  }
 
   @override
   List<Object?> get props => [
-    uid, name, email, specialization, bio, experience,
-    photoUrl, clinicAddress, consultationFee, weeklyAvailability,
+    uid,
+    name,
+    email,
+    specialization,
+    bio,
+    experience,
+    photoUrl,
+    clinicAddress,
+    consultationFee,
+    weeklyAvailability,
+    totalRating,
+    reviewCount,
   ];
 }

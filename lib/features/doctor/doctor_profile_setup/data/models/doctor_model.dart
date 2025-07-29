@@ -12,6 +12,8 @@ class DoctorModel {
   final String photoUrl;
   final String clinicAddress;
   final int consultationFee;
+  final double totalRating;
+  final int reviewCount;
   // The old list is replaced with the new map of MODELS
   final Map<String, DailyAvailabilityModel> weeklyAvailability;
 
@@ -26,10 +28,11 @@ class DoctorModel {
     required this.clinicAddress,
     required this.consultationFee,
     required this.weeklyAvailability,
+    this.reviewCount =0,
+    this.totalRating=0,
   });
 
   factory DoctorModel.fromMap(Map<String, dynamic> map) {
-    // Logic to parse the nested weeklyAvailability map from Firestore
     final availabilityData = map['weeklyAvailability'] as Map<String, dynamic>? ?? {};
     final weeklyAvailability = availabilityData.map(
       (day, dailyData) => MapEntry(day, DailyAvailabilityModel.fromMap(dailyData)),
@@ -45,6 +48,8 @@ class DoctorModel {
       photoUrl: map['photoUrl'] as String? ?? '',
       clinicAddress: map['clinicAddress'] as String? ?? '',
       consultationFee: map['consultationFee'] as int? ?? 0,
+      totalRating: (map['totalRating'] as num?)?.toDouble() ?? 0.0,
+      reviewCount: map['reviewCount'] as int? ?? 0,
       weeklyAvailability: weeklyAvailability,
     );
   }
@@ -60,7 +65,8 @@ class DoctorModel {
       'photoUrl': photoUrl,
       'clinicAddress': clinicAddress,
       'consultationFee': consultationFee,
-      // Convert the map of DailyAvailabilityModel back to a map of Maps for Firestore
+      'totalRating': totalRating,
+      'reviewCount': reviewCount,
       'weeklyAvailability': weeklyAvailability.map(
         (day, dailyModel) => MapEntry(day, dailyModel.toMap()),
       ),
@@ -78,7 +84,8 @@ class DoctorModel {
       photoUrl: photoUrl,
       clinicAddress: clinicAddress,
       consultationFee: consultationFee,
-      // Convert the map of Models to a map of Entities
+      totalRating: totalRating,
+      reviewCount: reviewCount,
       weeklyAvailability: weeklyAvailability.map(
         (day, dailyModel) => MapEntry(day, dailyModel.toDomain()),
       ),
@@ -96,7 +103,8 @@ class DoctorModel {
       photoUrl: entity.photoUrl,
       clinicAddress: entity.clinicAddress,
       consultationFee: entity.consultationFee,
-      // Convert the map of Entities to a map of Models
+      totalRating: entity.totalRating,
+      reviewCount: entity.reviewCount,
       weeklyAvailability: entity.weeklyAvailability.map(
         (day, dailyEntity) => MapEntry(day, DailyAvailabilityModel.fromEntity(dailyEntity)),
       ),
@@ -113,6 +121,8 @@ class DoctorModel {
     String? photoUrl,
     String? clinicAddress,
     int? consultationFee,
+    double? totalRating,
+    int? reviewCount,
     Map<String, DailyAvailabilityModel>? weeklyAvailability,
   }) {
     return DoctorModel(
@@ -125,7 +135,8 @@ class DoctorModel {
       photoUrl: photoUrl ?? this.photoUrl,
       clinicAddress: clinicAddress ?? this.clinicAddress,
       consultationFee: consultationFee ?? this.consultationFee,
+      totalRating: totalRating ?? this.totalRating,
+      reviewCount: reviewCount ?? this.reviewCount,
       weeklyAvailability: weeklyAvailability ?? this.weeklyAvailability,
     );
-  }
-}
+  }}

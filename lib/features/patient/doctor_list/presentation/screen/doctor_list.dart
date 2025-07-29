@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/di/service_locator.dart';
+import 'package:health_connect/core/shared/widgets/search_bar.dart';
 import 'package:health_connect/features/patient/doctor_list/presentation/bloc/doctor_list_bloc.dart';
 import 'package:health_connect/features/patient/doctor_list/presentation/bloc/doctor_list_state.dart';
 import 'package:health_connect/features/patient/doctor_list/presentation/bloc/doctor_list_event.dart';
@@ -17,58 +18,64 @@ class DoctorListScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("All Doctors"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () { /* TODO: Implement search */ },
-          ),
-        ],
       ),
       body: BlocProvider(
         create: (context) => sl<DoctorListBloc>()..add(FetchDoctorsList()),
-        child: BlocBuilder<DoctorListBloc, DoctorListState>(
-          // Give the context a name so we can use it inside
-          builder: (builderContext, state) { 
-            if (state is DoctorListLoading ) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (state is DoctorListLoaded ) {
-              final doctors = state.allDoctors;
-              if (doctors.isEmpty) {
-                return const Center(child: Text("No doctors have registered yet."));
-              }
-
-              return RefreshIndicator(
-                onRefresh: () async {
-                  // THE FIX: Use the context from the BlocBuilder ('builderContext')
-                  builderContext.read<DoctorListBloc>().add(FetchDoctorsList());
-                },
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  itemCount: doctors.length,
-                  itemBuilder: (context, index) {
-                    final doctor = doctors[index];
-                    return DoctorCard(doctor: doctor);
-                  },
+        // Use a Builder widget to get a context that is below the BlocProvider
+        child: Builder(
+          builder: (builderContext) {
+            return Column(
+              children: [
+                // --- WIDGET 1: SEARCH BAR ---
+                // Now we need to pass the BLoC to the search bar.
+                // We use BlocProvider.value to provide the existing BLoC instance.
+                BlocProvider.value(
+                  value: BlocProvider.of<DoctorListBloc>(builderContext),
+                  child: const CustomSearchBar(),
                 ),
-              );
-            }
 
-            if (state is DoctorListError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    "Something went wrong:\n${state.message}",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: theme.colorScheme.error),
+                // --- WIDGET 2: THE LIST (inside BlocBuilder) ---
+                Expanded(
+                  child: BlocBuilder<DoctorListBloc, DoctorListState>(
+                    builder: (context, state) {
+                      if (state is DoctorListLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (state is DoctorListLoaded) {
+                        final doctors = state.filteredDoctors; // Use the filtered list
+                        if (doctors.isEmpty) {
+                          return const Center(child: Text("No doctors found."));
+                        }
+
+                        return RefreshIndicator(
+                          onRefresh: () async {
+                            context.read<DoctorListBloc>().add(FetchDoctorsList());
+                          },
+                          child: ListView.builder(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            itemCount: doctors.length,
+                            itemBuilder: (context, index) {
+                              final doctor = doctors[index];
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                child: DoctorCard(doctor: doctor),
+                              );
+                            },
+                          ),
+                        );
+                      }
+
+                      if (state is DoctorListError) {
+                        return Center(child: Text(state.message));
+                      }
+                      
+                      return const Center(child: Text("Fetching doctors..."));
+                    },
                   ),
                 ),
-              );
-            }
-            
-            return const Center(child: Text("Fetching doctors..."));
+              ],
+            );
           },
         ),
       ),

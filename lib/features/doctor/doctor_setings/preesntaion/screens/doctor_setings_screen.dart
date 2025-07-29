@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:health_connect/core/constants/app_color.dart'; // Apne app colors ke liye
 import 'package:health_connect/core/themes/theme_manager.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart'; // AuthBloc import karein
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_event.dart';
+import 'package:health_connect/features/doctor/doctor_profile_update/presantation/screen/doctor_profile_update_screen.dart';
 import 'package:health_connect/features/doctor/manage_availability/presantation/screen/manage_availability_screen.dart';
-import 'package:health_connect/features/doctor/setings/preesntaion/widgets/section_header.dart';
-import 'package:health_connect/features/doctor/setings/preesntaion/widgets/setings_tile.dart'; // AuthEvent import karein
+import 'package:health_connect/features/doctor/doctor_setings/preesntaion/widgets/section_header.dart';
+import 'package:health_connect/features/doctor/doctor_setings/preesntaion/widgets/setings_tile.dart'; // AuthEvent import karein
 
-
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
+class DoctorSettingsScreen extends StatelessWidget {
+  const DoctorSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +26,7 @@ class SettingsScreen extends StatelessWidget {
         children: [
           // Section: General
           const SectionHeader(title: "General"),
-          
+
           // Theme Toggle Switch
           SwitchListTile(
             title: const Text('Dark Mode'),
@@ -61,21 +60,22 @@ class SettingsScreen extends StatelessWidget {
               );
             },
           ),
+
           // <<< -----------------------------------
-          
           SettingsTile(
             icon: Icons.edit_outlined,
             iconColor: theme.colorScheme.primary,
-            title: "Edit Profile",
+            title: "Update Profile",
             subtitle: "Update your personal and professional details",
             onTap: () {
-              // TODO: Navigate to UpdateDoctorProfileScreen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar( content: Text("Edit Profile Screen coming soon!")),
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => DoctorProfileUpdateScreen(),
+                ),
               );
             },
           ),
-          
+
           SettingsTile(
             icon: Icons.logout,
             iconColor: theme.colorScheme.error,
@@ -105,7 +105,10 @@ class SettingsScreen extends StatelessWidget {
               context.read<AuthBloc>().add(LogoutRequested());
               Navigator.of(dialogContext).pop();
             },
-            child: Text('Logout', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            child: Text(
+              'Logout',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ),
         ],
       ),

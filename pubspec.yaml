@@ -51,7 +51,7 @@ dependencies:
   cached_network_image: ^3.4.1
   date_picker_timeline: ^1.2.7
   flutter_rating_bar: ^4.0.1
-
+  image: ^4.5.4
 dev_dependencies:
   flutter_test:
     sdk: flutter

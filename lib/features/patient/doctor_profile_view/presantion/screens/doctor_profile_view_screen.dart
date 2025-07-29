@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/di/service_locator.dart'; // get_it ke liye
+import 'package:health_connect/features/doctor/review/presantation/bloc/review_bloc.dart';
+import 'package:health_connect/features/doctor/review/presantation/bloc/review_event.dart';
+import 'package:health_connect/features/doctor/review/presantation/bloc/review_state.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_bloc.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_event.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_state.dart';
@@ -13,108 +16,136 @@ import 'package:health_connect/features/patient/doctor_profile_view/presantion/w
 
 class DoctorProfileScreen extends StatelessWidget {
   final String doctorId;
-  DoctorProfileScreen({super.key, required this.doctorId});
+  const DoctorProfileScreen({super.key, required this.doctorId});
 
-  // Dummy data for now
-  final List<Map<String, dynamic>> dummyReviews = [
-    {
-      'name': 'Ali Raza',
-      'review':
-          'Excellent care and very professional. Dr. Sharma explained everything clearly. Highly recommended!',
-      'rating': 5.0,
-      'date': 'July 15, 2024',
-    },
-    {
-      'name': 'Sana Mirza',
-      'review':
-          'Very kind and attentive doctor. The clinic was clean and the staff was helpful. Good experience overall.',
-      'rating': 4.0,
-      'date': 'June 28, 2024',
-    },
-  ];
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          sl<DoctorProfileViewBloc>()..add(FetchDoctorDetailsViewEvent(doctorId)),
+    final theme = Theme.of(context);
+
+    // Use MultiBlocProvider to provide both BLoCs at the top of the screen's widget tree.
+    // Both BLoCs will be created and will start fetching data as soon as this screen is built.
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => sl<DoctorProfileViewBloc>()..add(FetchDoctorDetailsViewEvent(doctorId)),
+        ),
+        BlocProvider(
+          create: (context) => sl<ReviewBloc>()..add(FetchReviews(doctorId)),
+        ),
+      ],
       child: Scaffold(
-        // AppBar ko aasan rakhein ya use header mein hi merge kar dein
-        appBar: AppBar(elevation: 0, backgroundColor: Colors.transparent),
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          // Use the theme's icon color for the back button
+          leading: BackButton(color: Theme.of(context).colorScheme.onSurface),
+        ),
+        // The main content of the screen is built by the DoctorProfileViewBloc
         body: BlocBuilder<DoctorProfileViewBloc, DoctorProfileViewState>(
-          builder: (context, state) {
-            if (state is DoctorProfileViewLoading ||
-                state is DoctorProfileViewInitial) {
+          builder: (context, doctorState) {
+            // --- Loading State ---
+            if (doctorState is DoctorProfileViewLoading || doctorState is DoctorProfileViewInitial) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (state is DoctorProfileViewLoaded) {
-              final doctor = state.doctor;
+            // --- Error State ---
+            if (doctorState is DoctorProfileViewError) {
+              return Center(child: Text(doctorState.message));
+            }
+            // --- Loaded State ---
+            if (doctorState is DoctorProfileViewLoaded) {
+              final doctor = doctorState.doctor;
               return SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    DoctorProfileHeader(doctor: doctor),
-                    const SizedBox(height: 24),
-                    AboutSection(bio: doctor.bio),
-                    const SizedBox(height: 24),
-                    InfoCard(
-                      icon: Icons.location_on,
-                      title: "Clinic Address",
-                      subtitle: doctor.clinicAddress,
-                    ),
-                    const SizedBox(height: 16),
-                    // Static for now
-                    const InfoCard(
-                      icon: Icons.calendar_today,
-                      title: "Availability",
-                      subtitle: "Mon - Sat | 10:00 AM - 04:00 PM",
-                    ),
-                    const SizedBox(height: 16),
-                    InfoCard(
-                      icon: Icons.money,
-                      title: "Consultation Fee",
-                      subtitle: "₹${doctor.consultationFee} / visit",
-                    ),
-                    const SizedBox(height: 24),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 100.0), // Add padding at the bottom
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // --- Doctor's Basic Info ---
+                      DoctorProfileHeader(doctor: doctor),
+                      const SizedBox(height: 24),
+                      AboutSection(bio: doctor.bio),
+                      const SizedBox(height: 24),
 
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: DateAndTimeSelector(doctorId: doctor.uid),
-                    ),
-                    const SizedBox(height: 24),
-                    // List of ReviewCards
-                    ...dummyReviews.map((reviewData) {
-                      return ReviewCard(
-                        patientName: reviewData['name'],
-                        reviewText: reviewData['review'],
-                        rating: reviewData['rating'],
-                        date: reviewData['date'],
-                      );
-                    }),
-                    // Add space at the bottom so content isn't hidden by the button
-                    const SizedBox(height: 80),
-                  ],
+                      // --- Doctor's Detailed Info Cards ---
+                      InfoCard(
+                        icon: Icons.location_on_outlined,
+                        title: "Clinic Address",
+                        subtitle: doctor.clinicAddress,
+                      ),
+                      const SizedBox(height: 16),
+                      InfoCard(
+                        icon: Icons.money_outlined,
+                        title: "Consultation Fee",
+                        subtitle: "₹${doctor.consultationFee} / visit",
+                      ),
+                      const SizedBox(height: 24),
+
+                      // --- Date and Time Slot Selector ---
+                      DateAndTimeSelector(doctorId: doctor.uid),
+                      const SizedBox(height: 32),
+
+                      // --- Reviews Section ---
+                       Text(
+                        "Ratings & Reviews",
+                       style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ), ),
+                      const SizedBox(height: 8),
+                      
+                      // This BlocBuilder handles only the review part of the UI
+                      BlocBuilder<ReviewBloc, ReviewState>(
+                        builder: (context, reviewState) {
+                          if (reviewState is ReviewLoadingState) {
+                            return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                          }
+                          if (reviewState is ReviewLoadedState) {
+                            if (reviewState.reviews.isEmpty) {
+                              return const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 24.0),
+                                  child: Text("No reviews yet. Be the first to review!"),
+                                ),
+                              );
+                            }
+                            // Use ListView.separated to automatically add dividers between reviews
+                            return ListView.separated(
+                              physics: const NeverScrollableScrollPhysics(),
+                              shrinkWrap: true,
+                              itemCount: reviewState.reviews.length,
+                              separatorBuilder: (context, index) => const Divider(height: 24),
+                              itemBuilder: (context, index) {
+                                final review = reviewState.reviews[index];
+                                // You need to create this ReviewCard widget
+                                return ReviewCard(review: review); 
+                              },
+                            );
+                          }
+                          if (reviewState is ReviewFailureState) {
+                            return Center(child: Text(reviewState.message));
+                          }
+                          // Return an empty box for the initial state
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               );
             }
-            if (state is DoctorProfileViewError) {
-              return Center(child: Text(state.message));
-            }
+            // Fallback for any other state
             return const SizedBox.shrink();
           },
         ),
-        // Use bottomNavigationBar for the fixed button
-        bottomNavigationBar:
-            BlocBuilder<DoctorProfileViewBloc, DoctorProfileViewState>(
-              builder: (context, state) {
-                if (state is DoctorProfileViewLoaded) {
-                  return AppointmentBookingBottomBar(
-                  
-                  );
-                }
-                return const SizedBox.shrink(); // Hide button if not loaded
-              },
-            ),
+        // The bottom navigation bar is also controlled by the DoctorProfileViewBloc
+        // It only shows up when the main profile data is loaded.
+        bottomNavigationBar: BlocBuilder<DoctorProfileViewBloc, DoctorProfileViewState>(
+          builder: (context, state) {
+            if (state is DoctorProfileViewLoaded) {
+              return AppointmentBookingBottomBar();
+            }
+            return const SizedBox.shrink(); // Hide the bar while loading/error
+          },
+        ),
       ),
     );
   }

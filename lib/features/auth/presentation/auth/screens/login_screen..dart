@@ -89,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: passwordController,
                           hintText: 'Password',
                           isObscure: true, // Passwords should be obscured
-                          maxLine: 1,
+                          maxLines: 1,
                           validator: FormValidator.validatePassword,
                         ),
                       ],

@@ -4,15 +4,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:health_connect/core/constants/app_color.dart';
+import 'package:health_connect/core/shared/widgets/label_textfield.dart';
 import 'package:health_connect/features/doctor/doctor_dashboard/screen/doctor_main_screen.dart';
-import 'package:health_connect/features/doctor/home/doctor_home_screen.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/bloc/doctor_profile_setup_bloc.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/bloc/doctor_profile_setup_event.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/bloc/doctor_profile_setup_state.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:health_connect/core/shared/widgets/custom_button.dart';
-import 'package:health_connect/core/shared/widgets/custom_textfield.dart';
 
 class DoctorProfileSetupScreen extends StatefulWidget {
   const DoctorProfileSetupScreen({super.key});
@@ -99,18 +99,44 @@ class _DoctorProfileSetupScreenState extends State<DoctorProfileSetupScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                CustomTextField(controller: nameController, hintText: "Full Name"),
-                const SizedBox(height: 16),
-                CustomTextField(controller: specializationController, hintText: "Specialization (e.g., Cardiologist)"),
-                const SizedBox(height: 16),
-                CustomTextField(controller: experienceController, hintText: "Experience (years)", keyboardType: TextInputType.number),
-                const SizedBox(height: 16),
-                CustomTextField(controller: consultationFeeController, hintText: "Consultation Fee", keyboardType: TextInputType.number),
-                const SizedBox(height: 16),
-                CustomTextField(controller: clinicAddressController, hintText: "Clinic Address"),
-                const SizedBox(height: 16),
-                CustomTextField(controller: bioController, hintText: "A short bio about yourself", maxLine: 3),
+                LabeledTextField(
+                  controller: nameController,
+                  label: "Full Name",
+                  hintText: "Enter your full name",
+                ),
+                SizedBox(height: 16.h),
+                LabeledTextField(
+                  controller: specializationController,
+                  label: "Specialization",
+                  hintText: "e.g., Cardiologist",
+                ),
+                SizedBox(height: 16.h),
+                LabeledTextField(
+                  controller: experienceController,
+                  label: "Experience (in years)",
+                  hintText: "e.g., 10",
+                  keyboardType: TextInputType.number,
+                ),
+                SizedBox(height: 16.h),
+                LabeledTextField(
+                  controller: consultationFeeController,
+                  label: "Consultation Fee",
+                  hintText: "e.g., 2000",
+                  keyboardType: TextInputType.number,
+                ),
+                SizedBox(height: 16.h),
+                LabeledTextField(
+                  controller: clinicAddressController,
+                  label: "Clinic Address",
+                  hintText: "Enter the full clinic address",
+                ),
+                SizedBox(height: 16.h),
+                LabeledTextField(
+                  controller: bioController,
+                  label: "About Yourself (Bio)",
+                  hintText: "Write a short bio...",
+                  maxLines: 4,
+                ),
                 const SizedBox(height: 16),
                 const Text("Set Available Timings", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),

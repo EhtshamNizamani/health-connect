@@ -2,20 +2,20 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/di/service_locator.dart';
+import 'package:health_connect/core/shared/widgets/search_bar.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_state.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_profile_entity.dart';
 import 'package:health_connect/features/patient/doctor_list/presentation/bloc/doctor_list_bloc.dart';
 import 'package:health_connect/features/patient/doctor_list/presentation/bloc/doctor_list_state.dart';
 import 'package:health_connect/features/patient/doctor_list/presentation/bloc/doctor_list_event.dart';
+import 'package:health_connect/features/patient/doctor_list/presentation/screen/doctor_list.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/screens/doctor_profile_view_screen.dart';
 import 'package:health_connect/features/patient/home/presentation/widgets/doctor_card.dart';
 part '../widgets/_section_header.dart';
 part '../widgets/_welcome_section.dart';
 part '../widgets/_specialties_section.dart';
 part '../widgets/_top_doctors_section.dart';
-part '../widgets/_search_bar.dart';
-
 
 class PatientHomeScreen extends StatelessWidget {
   const PatientHomeScreen({super.key});
@@ -25,7 +25,9 @@ class PatientHomeScreen extends StatelessWidget {
     final theme = Theme.of(context);
     // It's safer to use BlocBuilder for this to avoid errors when state is not AuthenticatedPatient
     final authState = context.watch<AuthBloc>().state;
-    final userName = authState is AuthenticatedPatient ? authState.user.name : "Guest";
+    final userName = authState is AuthenticatedPatient
+        ? authState.user.name
+        : "Guest";
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -43,8 +45,7 @@ class PatientHomeScreen extends StatelessWidget {
                   _WelcomeSection(userName: userName),
 
                   // Section 2: Search Bar
-                  const _SearchBar(),
-
+                  
                   // Section 3: Specialties
                   const _SectionHeader(title: "Specialties"),
                   const _SpecialtiesSection(),
@@ -54,39 +55,69 @@ class PatientHomeScreen extends StatelessWidget {
                   const _TopDoctorsSection(),
 
                   // Section 5: All Doctors
-                  const _SectionHeader(title: "All Doctors"),
+                  _SectionHeader(
+                    title: "All Doctors",
+                    // Add the "View All" button here
+                    actionWidget: TextButton(
+                      onPressed: () {
+                        // Navigate to the DoctorListScreen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DoctorListScreen(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        "View All",
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
                   BlocBuilder<DoctorListBloc, DoctorListState>(
                     builder: (context, state) {
                       if (state is DoctorListLoading) {
                         return const SliverToBoxAdapter(
-                          child: Center(heightFactor: 5, child: CircularProgressIndicator()),
+                          child: Center(
+                            heightFactor: 5,
+                            child: CircularProgressIndicator(),
+                          ),
                         );
                       }
                       if (state is DoctorListLoaded) {
-                        
                         // <<< --- THE FIX IS HERE ---
                         // Use the filteredDoctors list to build the UI
                         final doctorsToShow = state.filteredDoctors;
                         // <<< -----------------------
-                        
+
                         if (doctorsToShow.isEmpty) {
                           return const SliverToBoxAdapter(
-                            child: Center(heightFactor: 5, child: Text("No doctors found matching your criteria.")),
+                            child: Center(
+                              heightFactor: 5,
+                              child: Text(
+                                "No doctors found matching your criteria.",
+                              ),
+                            ),
                           );
                         }
-                        
+
                         return SliverPadding(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
-                              (context, index) => DoctorCard(doctor: doctorsToShow[index]),
-                              childCount: doctorsToShow.length,
+                              (context, index) =>
+                                  DoctorCard(doctor: doctorsToShow[index]),
+                              childCount: doctorsToShow.length> 2? 3:doctorsToShow.length,
                             ),
                           ),
                         );
                       }
                       if (state is DoctorListError) {
-                        return SliverToBoxAdapter(child: Center(child: Text(state.message)));
+                        return SliverToBoxAdapter(
+                          child: Center(child: Text(state.message)),
+                        );
                       }
                       // For DoctorListInitial state
                       return const SliverToBoxAdapter(child: SizedBox.shrink());

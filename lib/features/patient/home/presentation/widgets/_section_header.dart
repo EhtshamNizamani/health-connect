@@ -1,11 +1,10 @@
 part of '../screen/home_screen.dart';
 
-
 class _SectionHeader extends StatelessWidget {
   final String title;
-  final VoidCallback? onSeeAll;
+  final Widget? actionWidget;
 
-  const _SectionHeader({required this.title, this.onSeeAll});
+  const _SectionHeader({required this.title, this.actionWidget});
 
   @override
   Widget build(BuildContext context) {
@@ -15,12 +14,8 @@ class _SectionHeader extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            if (onSeeAll != null)
-              TextButton(onPressed: onSeeAll, child: const Text("See All")),
+            Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            if (actionWidget != null) actionWidget!,
           ],
         ),
       ),

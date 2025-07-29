@@ -10,11 +10,11 @@ class CustomTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final void Function(String)? onFieldSubmitted;
   final bool isReadOnly;
-  final int maxLine;
+  final int maxLines;
   final int? maxLength;
   final bool isObscure; // Added for password fields
   final Widget? suffixIcon; // Added for things like password visibility toggle
-
+  final String? labelText;
   const CustomTextField({
     super.key,
     required this.hintText,
@@ -23,10 +23,11 @@ class CustomTextField extends StatelessWidget {
     this.validator,
     this.onFieldSubmitted,
     this.isReadOnly = false,
-    this.maxLine = 1,
+    this.maxLines = 1,
     this.maxLength,
     this.isObscure = false,
     this.suffixIcon,
+    this.labelText,
   });
 
   @override
@@ -53,12 +54,13 @@ class CustomTextField extends StatelessWidget {
       keyboardType: keyboardType,
       onFieldSubmitted: onFieldSubmitted,
       validator: validator,
-      maxLines: maxLine,
+      maxLines: maxLines,
       maxLength: maxLength,
       obscureText: isObscure,
       style: textStyle.copyWith(fontSize: 14.sp),
       cursorColor: colorScheme.primary, // Use theme's primary color
       decoration: InputDecoration(
+        labelText: labelText,
         hintText: hintText,
         hintStyle: hintStyle.copyWith(fontSize: 14.sp),
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),

@@ -8,7 +8,6 @@ class _SpecialtiesSection extends StatelessWidget {
     // Dummy data for now
     final specialties = [
       {'icon': Icons.favorite_border, 'label': 'Cardiology'},
-      {'icon': Icons.visibility_outlined, 'label': 'Ophthalmology'},
       {'icon': Icons.child_friendly, 'label': 'Pediatrics'},
       {'icon': Icons.psychology_outlined, 'label': 'Neurology'},
     ];

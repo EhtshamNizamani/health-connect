@@ -1,70 +1,100 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:health_connect/features/doctor/review/domain/entity/review_entity.dart';
+import 'package:intl/intl.dart';
 
 class ReviewCard extends StatelessWidget {
-  // We'll create a dummy model class later, for now just use strings
-  final String patientName;
-  final String reviewText;
-  final double rating;
-  final String date;
+  final ReviewEntity review;
 
-  const ReviewCard({
-    super.key,
-    required this.patientName,
-    required this.reviewText,
-    required this.rating,
-    required this.date,
-  });
+  const ReviewCard({super.key, required this.review});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+    // Format the date as seen in the UI (e.g., 28/7/2025)
+    final formattedDate = DateFormat('d/M/yyyy').format(review.timestamp.toDate());
+
     return Container(
-      padding: const EdgeInsets.all(16.0),
-      margin: const EdgeInsets.only(bottom: 12.0),
+      padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.3)),
+        // Use a very light background to distinguish it, or keep it transparent
+        color: theme.colorScheme.surface, 
+        borderRadius: BorderRadius.circular(12.r),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Patient Name
-              Text(
-                patientName,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+              // Patient Initial Circle Avatar
+              CircleAvatar(
+                radius: 22.r,
+                // Use the primary color from the theme for the background
+                backgroundColor: theme.colorScheme.primary.withOpacity(0.8),
+                child: Text(
+                  // Get the first letter of the patient's name, or 'A' if empty
+                  review.patientName.isNotEmpty ? review.patientName[0].toUpperCase() : 'A',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    // Use the color meant for text on top of the primary color
+                    color: theme.colorScheme.onPrimary,
+                  ),
                 ),
               ),
-              // Rating Stars
-              Row(
-                children: List.generate(5, (index) {
-                  return Icon(
-                    index < rating ? Icons.star : Icons.star_border,
-                    color: Colors.amber,
-                    size: 16,
-                  );
-                }),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Patient Name
+                    Text(
+                      review.patientName,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    // Star Rating
+                    Row(
+                      children: [
+                        Text(
+                          review.rating.toStringAsFixed(1), // e.g., "4.5"
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            // Use a distinct color for the rating number
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Icon(
+                          Icons.star,
+                          color: Colors.amber.shade600,
+                          size: 16.sp,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Date on the right
+              Text(
+                formattedDate,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.textTheme.bodyMedium?.color,
+                ),
               ),
             ],
           ),
-          // Date of Review
-          Text(
-            date,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Review Text
-          Text(
-            reviewText,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              height: 1.4,
+          // Review Comment
+          Padding(
+            padding: EdgeInsets.only(left: 56.w), // Align with the text above the avatar
+            child: Text(
+              review.comment,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.9),
+                height: 1.4, // Improve line spacing for readability
+              ),
             ),
           ),
         ],

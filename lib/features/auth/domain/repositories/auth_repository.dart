@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dartz/dartz.dart';
 import 'package:health_connect/core/error/failures.dart';
 import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
@@ -19,5 +21,9 @@ abstract class AuthRepository{
 
   Future<UserEntity?> getCurrentUser();
 
-  Future<void> updateUser(UserEntity user);
+    Future<Either<AuthFailure, UserEntity>> updateUserProfile({
+    required String uid,
+    required String name,
+    File? photoFile, // The new photo file, if any
+  });
 }

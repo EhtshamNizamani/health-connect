@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:health_connect/features/doctor/appointment/presantation/screen/doctor_appointments_screen.dart';
 import 'package:health_connect/features/doctor/doctor_dashboard/cubit/doctor_nav_cubit.dart';
 import 'package:health_connect/features/doctor/home/doctor_home_screen.dart';
-import 'package:health_connect/features/doctor/setings/preesntaion/screens/setings_screen.dart';
+import 'package:health_connect/features/doctor/doctor_setings/preesntaion/screens/doctor_setings_screen.dart';
 
 class DoctorMainScreen extends StatelessWidget {
   const DoctorMainScreen({super.key});
@@ -14,7 +14,7 @@ class DoctorMainScreen extends StatelessWidget {
     DoctorHomeScreen(),
     DoctorAppointmentsScreen(),
     Text("DoctorPatientsScreen"),
-    SettingsScreen(),
+    DoctorSettingsScreen(),
   ];
 
   @override

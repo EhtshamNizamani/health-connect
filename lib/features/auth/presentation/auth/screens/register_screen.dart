@@ -104,7 +104,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             controller: passwordController,
                             hintText: 'Password',
                             isObscure: _isPasswordObscured,
-                            maxLine: 1,
+                            maxLines: 1,
                             validator: FormValidator.validatePassword,
                             suffixIcon: IconButton(
                               icon: Icon(

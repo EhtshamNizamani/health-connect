@@ -1,3 +1,5 @@
+import 'dart:io';
+
 abstract class AuthEvent {}
 
 class AuthCheckRequested extends AuthEvent {}
@@ -21,5 +23,18 @@ class RegisterRequested extends AuthEvent {
     required this.selectedRole, // 'doctor' or 'patient'
   });
 }
+class UpdateUserProfile extends AuthEvent {
+  final String uid;
+  final String name;
+  final File? photoFile;
 
+  UpdateUserProfile({
+    required this.uid,
+    required this.name,
+    this.photoFile,
+  });
+
+  @override
+  List<Object?> get props => [uid, name, photoFile];
+}
 class LogoutRequested extends AuthEvent {}

@@ -3,7 +3,6 @@ import 'package:health_connect/core/data/entities/daily_availability_entity.dart
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_profile_entity.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/usecase/get_current_doctor_profile_usecase.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/usecase/save_doctor_usecase.dart';
-import 'package:health_connect/features/doctor/doctor_profile_setup/domain/usecase/update_doctor_profile_usecase.dart';
 import 'doctor_profile_setup_event.dart';
 import 'doctor_profile_setup_state.dart';
 import 'package:dartz/dartz.dart';
@@ -13,7 +12,6 @@ class DoctorProfileSetupBloc
     extends Bloc<DoctorProfileSetupEvent, DoctorProfileSetupState> {
   final SaveDoctorProfileUseCase saveDoctorProfile;
   final GetCurrentDoctorProfileUseCase getCurrentDoctorProfileUsecase;
-  final UpdateDoctorProfileUseCase updateDoctorProfileUseCase;
        final defaultAvailability = {
       'monday': const DailyAvailability(isWorking: false, slots: []),
       'tuesday': const DailyAvailability(isWorking: false, slots: []),
@@ -23,11 +21,10 @@ class DoctorProfileSetupBloc
       'saturday': const DailyAvailability(isWorking: false, slots: []),
       'sunday': const DailyAvailability(isWorking: false, slots: []),
     };
-  DoctorProfileSetupBloc(this.saveDoctorProfile, this.getCurrentDoctorProfileUsecase, this.updateDoctorProfileUseCase)
+  DoctorProfileSetupBloc(this.saveDoctorProfile, this.getCurrentDoctorProfileUsecase,)
     : super(DoctorProfileInitial()) {
     on<SubmitDoctorProfile>(_onSubmitProfile);
     on<GetCurrentDoctorProfile>(_onGetCurrentDoctorProfile);
-    on<UpdateDoctorProfile>(_onUpdateDoctorProfile);
   }
 
   Future<void> _onSubmitProfile(
@@ -64,30 +61,6 @@ class DoctorProfileSetupBloc
       );
     } catch (e) {
       emit(DoctorProfileFailure(e.toString()));
-    }
-  }
-
-  Future<void> _onUpdateDoctorProfile(UpdateDoctorProfile event, Emitter<DoctorProfileSetupState> emit)async{
-    emit(DoctorProfileLoading());
-    try{
-        final doctorToUpdate = DoctorEntity(
-    uid: event.uid, // Update ke waqt UID pata honi chahiye
-    name: event.name,
-    email: event.email, // Ye bhi UI ya auth se aayega
-    specialization: event.specialization,
-    bio: event.bio,
-    experience: event.experience,
-    clinicAddress: event.clinicAddress,
-    consultationFee: event.consultationFee,
-    photoUrl: event.existingPhotoUrl, // Purani photo ka URL pass karein
-    weeklyAvailability: defaultAvailability,
-  );
-
-      final Either<profile.Failure, DoctorEntity> result = await updateDoctorProfileUseCase(doctorToUpdate, event.newPhotoFile);
-    result.fold((l)=> emit(DoctorProfileFailure(l.message)), 
-      (r) => emit(DoctorProfileLoaded(r)));
-    }catch(e){
-      emit(DoctorProfileFailure( e.toString()));
     }
   }
 

@@ -5,6 +5,7 @@ import 'package:health_connect/features/auth/domain/usecases/is_doctor_profile_e
 import 'package:health_connect/features/auth/domain/usecases/login_usecase.dart';
 import 'package:health_connect/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:health_connect/features/auth/domain/usecases/register_usecase.dart';
+import 'package:health_connect/features/auth/domain/usecases/update_user_profile_usecase.dart';
 
 import 'auth_event.dart';
 import 'auth_state.dart';
@@ -17,33 +18,31 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final GetCurrentUserUseCase getCurrentUserUseCase;
   final LogoutUseCase logoutUseCase;
   final IsDoctorProfileExistsUseCase isDoctorProfileExistsUseCase;
-
+  final UpdateUserProfileUseCase _updateUserProfileUseCase;
   AuthBloc(
-     this.loginUseCase,
-     this.registerUseCase,
-     this.getCurrentUserUseCase,
-     this.logoutUseCase,
-     this.isDoctorProfileExistsUseCase, 
+    this.loginUseCase,
+    this.registerUseCase,
+    this.getCurrentUserUseCase,
+    this.logoutUseCase,
+    this.isDoctorProfileExistsUseCase,
+    this._updateUserProfileUseCase,
   ) : super(AuthInitial()) {
-
     Future<void> handleAuthentication(
-        UserEntity user, Emitter<AuthState> emit) async {
-
+      UserEntity user,
+      Emitter<AuthState> emit,
+    ) async {
       if (user.role == 'patient') {
-
         emit(AuthenticatedPatient(user));
       } else if (user.role == 'doctor') {
-
         final profileResult = await isDoctorProfileExistsUseCase(user.id);
 
         profileResult.fold(
           (failure) {
-      print("test ${failure.message}");
+            print("test ${failure.message}");
 
-emit(AuthFailure(message: failure.message));
-          } ,
+            emit(AuthFailure(message: failure.message));
+          },
           (exists) {
-
             if (exists) {
               emit(AuthenticatedDoctorProfileExists(user));
             } else {
@@ -52,53 +51,54 @@ emit(AuthFailure(message: failure.message));
           },
         );
       } else {
-        emit( AuthFailure(message: "Unknown user role."));
+        emit(AuthFailure(message: "Unknown user role."));
       }
     }
-on<LoginRequested>((event, emit) async {
-  emit(AuthLoading());
-  final result = await loginUseCase(
-    email: event.email,
-    password: event.password,
-  );
- await result.fold((l)async => emit(AuthFailure(message: l.message)), (user) async {
-    // Agar login successful hai, to user ko handle karo
-    await handleAuthentication(user, emit);
-  });
 
-});
+    on<LoginRequested>((event, emit) async {
+      emit(AuthLoading());
+      final result = await loginUseCase(
+        email: event.email,
+        password: event.password,
+      );
+      await result.fold((l) async => emit(AuthFailure(message: l.message)), (
+        user,
+      ) async {
+        // Agar login successful hai, to user ko handle karo
+        await handleAuthentication(user, emit);
+      });
+    });
 
     // --- LOGIC #2: Jab naya user register kare ---
     // Ye simple logic hai, ismein profile check nahi hoga.
-   on<RegisterRequested>((event, emit) async {
-  emit(AuthLoading());
-  final result = await registerUseCase(
+    on<RegisterRequested>((event, emit) async {
+      emit(AuthLoading());
+      final result = await registerUseCase(
         name: event.name,
         email: event.email,
         password: event.password,
         selectedRole: event.selectedRole,
-      );  await result.fold(
-    (failure) async => emit(AuthFailure(message: failure.message)),
-    (user) async {
-      if (user.role == 'patient') {
-        emit(AuthenticatedPatient(user));
-      } else if (user.role == 'doctor') {
-        emit(AuthenticatedDoctorProfileNotExists(user));
-      } else {
-        emit(AuthFailure(message: "Unknown role..."));
-      }
-    },
-  );
-});
-   on<AuthCheckRequested>((event, emit) async {
-
+      );
+      await result.fold(
+        (failure) async => emit(AuthFailure(message: failure.message)),
+        (user) async {
+          if (user.role == 'patient') {
+            emit(AuthenticatedPatient(user));
+          } else if (user.role == 'doctor') {
+            emit(AuthenticatedDoctorProfileNotExists(user));
+          } else {
+            emit(AuthFailure(message: "Unknown role..."));
+          }
+        },
+      );
+    });
+    on<AuthCheckRequested>((event, emit) async {
       try {
         // Step 1: Current user ko fetch karne ki koshish karo
         final currentUser = await getCurrentUserUseCase();
 
         // Step 2: Check karo ki user mila ya nahi
         if (currentUser != null) {
-
           // Agar user mila, to a-ch-chhe se profile check karo
           await handleAuthentication(currentUser, emit);
         } else {
@@ -109,7 +109,9 @@ on<LoginRequested>((event, emit) async {
         // Step 3: AGAR KOI BHI ERROR AAYE (jaise aadha-adhura user),
         // to use pakdo aur Unauthenticated state emit kardo.
         // Ye hamara "safety net" hai.
-        print("AuthCheck failed with error: $e. Forcing Unauthenticated state.");
+        print(
+          "AuthCheck failed with error: $e. Forcing Unauthenticated state.",
+        );
         emit(Unauthenticated());
       }
     });
@@ -119,8 +121,33 @@ on<LoginRequested>((event, emit) async {
       await logoutUseCase();
       emit(Unauthenticated());
     });
-  }
+       on<UpdateUserProfile>(
+   (  event,
+   emit,)
+  async {
+    // We don't want the full screen to show a loader,
+    // so we just emit AuthLoading to show it in the button.
+    emit(AuthLoading());
 
+    final result = await _updateUserProfileUseCase(
+      uid: event.uid,
+      name: event.name,
+      photoFile: event.photoFile,
+    );
+
+    result.fold(
+      (failure) {
+        emit(AuthFailure(message: failure.message));
+      },
+      (updatedUser) {
+        // SUCCESS!
+        // We emit the correct AuthenticatedPatient state with the NEW user data.
+        // The UI will catch this new state and update the profile header automatically.
+        emit(AuthenticatedPatient(updatedUser));
+      },
+    );
+  });
+  }
   //   @override
   // void onTransition(Transition<AuthEvent, AuthState> transition) {
   //   super.onTransition(transition);
