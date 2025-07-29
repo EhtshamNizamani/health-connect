@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/di/service_locator.dart'; // get_it ke liye
+import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
+import 'package:health_connect/features/auth/presentation/auth/blocs/auth_state.dart';
 import 'package:health_connect/features/doctor/review/presantation/bloc/review_bloc.dart';
 import 'package:health_connect/features/doctor/review/presantation/bloc/review_event.dart';
 import 'package:health_connect/features/doctor/review/presantation/bloc/review_state.dart';
@@ -21,7 +23,15 @@ class DoctorProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+   final authState = context.read<AuthBloc>().state;
+    String patientId = '';
+    if (authState is AuthenticatedPatient) {
+      patientId = authState.user.id;
+    } else {
+      // Handle the case where the user might not be a patient, although unlikely here.
+      // This could be a guest or another role. You might want to disable chat in that case.
+      print("Warning: User is not in AuthenticatedPatient state.");
+    }
     // Use MultiBlocProvider to provide both BLoCs at the top of the screen's widget tree.
     // Both BLoCs will be created and will start fetching data as soon as this screen is built.
     return MultiBlocProvider(
@@ -61,7 +71,7 @@ class DoctorProfileScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // --- Doctor's Basic Info ---
-                      DoctorProfileHeader(doctor: doctor),
+                      DoctorProfileHeader(doctor: doctor, patientId: patientId),
                       const SizedBox(height: 24),
                       AboutSection(bio: doctor.bio),
                       const SizedBox(height: 24),

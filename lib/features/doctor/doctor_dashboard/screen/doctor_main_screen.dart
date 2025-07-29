@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:health_connect/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:health_connect/features/doctor/appointment/presantation/screen/doctor_appointments_screen.dart';
 import 'package:health_connect/features/doctor/doctor_dashboard/cubit/doctor_nav_cubit.dart';
 import 'package:health_connect/features/doctor/home/doctor_home_screen.dart';
@@ -13,7 +14,7 @@ class DoctorMainScreen extends StatelessWidget {
   final List<Widget> screens = const [
     DoctorHomeScreen(),
     DoctorAppointmentsScreen(),
-    Text("DoctorPatientsScreen"),
+    ChatListScreen(),
     DoctorSettingsScreen(),
   ];
 
@@ -63,9 +64,9 @@ class DoctorMainScreen extends StatelessWidget {
                   label: 'Appointments',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.people_alt_outlined, size: 24.r),
-                  activeIcon: Icon(Icons.people_alt, size: 24.r),
-                  label: 'Patients',
+                  icon: Icon(Icons.chat_bubble_outline_outlined, size: 24.r),
+                  activeIcon: Icon(Icons.chat_bubble_outline, size: 24.r),
+                  label: 'Chat',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.settings_outlined, size: 24.r), // Using settings icon

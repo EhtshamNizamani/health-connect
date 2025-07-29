@@ -16,6 +16,13 @@ import 'package:health_connect/features/auth/domain/usecases/logout_usecase.dart
 import 'package:health_connect/features/auth/domain/usecases/register_usecase.dart';
 import 'package:health_connect/features/auth/domain/usecases/update_user_profile_usecase.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
+import 'package:health_connect/features/chat/data/repositories/firebase_chat_repository_impl.dart';
+import 'package:health_connect/features/chat/domain/repositories/chat_repository.dart';
+import 'package:health_connect/features/chat/domain/usecases/get_chat_rooms_usecase.dart';
+import 'package:health_connect/features/chat/domain/usecases/get_messages_usecase.dart';
+import 'package:health_connect/features/chat/domain/usecases/send_message_usecase.dart';
+import 'package:health_connect/features/chat/presentation/blocs/chat_list/chat_list_bloc.dart';
+import 'package:health_connect/features/chat/presentation/blocs/chat_room/chat_room_bloc.dart';
 import 'package:health_connect/features/doctor/appointment/presantation/bloc/doctor_appointments_bloc.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/data/repositories_impl/doctor_profile_repository_impl.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/repositories/doctor_profile_repository.dart';
@@ -58,51 +65,118 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance);
   sl.registerLazySingleton<FirebaseStorage>(() => FirebaseStorage.instance);
   // Repository
-  sl.registerLazySingleton<AuthRepository>(() => FirebaseAuthRepositoryImpl(sl(),sl(),sl()));
-  sl.registerLazySingleton<DoctorRepository>(()=> FirebaseDoctorRepositoryImpl(sl()));
-  sl.registerLazySingleton<DoctorProfileRepository>(() => FirebaseDoctorProfileRepositoryImpl(sl(), sl(), sl()));
-  sl.registerLazySingleton<DoctorProfileViewRepository>(() => DoctorProfileViewRepositoryImpl( sl()));
-  sl.registerLazySingleton<ManageAvailabilityRepository>(()=>FirebaseManageAvailabilityRepositoryImpl(sl(),sl())); 
-  sl.registerLazySingleton<AppointmentRepository>(() => AppointmentRepositoryImpl(sl()));
+  sl.registerLazySingleton<AuthRepository>(
+    () => FirebaseAuthRepositoryImpl(sl(), sl(), sl()),
+  );
+  sl.registerLazySingleton<DoctorRepository>(
+    () => FirebaseDoctorRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<DoctorProfileRepository>(
+    () => FirebaseDoctorProfileRepositoryImpl(sl(), sl(), sl()),
+  );
+  sl.registerLazySingleton<DoctorProfileViewRepository>(
+    () => DoctorProfileViewRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<ManageAvailabilityRepository>(
+    () => FirebaseManageAvailabilityRepositoryImpl(sl(), sl()),
+  );
+  sl.registerLazySingleton<AppointmentRepository>(
+    () => AppointmentRepositoryImpl(sl()),
+  );
   sl.registerLazySingleton<ReviewRepository>(() => ReviewRepositoryImpl(sl()));
-  sl.registerLazySingleton<DoctorProfileUpdateRepository>(() => DoctorProfileUpdateRepositoryImpl(sl(),sl(),sl()));
-  
+  sl.registerLazySingleton<DoctorProfileUpdateRepository>(
+    () => DoctorProfileUpdateRepositoryImpl(sl(), sl(), sl()),
+  );
+  sl.registerLazySingleton<ChatRepository>(
+    () => FirebaseChatRepositoryImpl(sl(), sl(), sl()),
+  );
+
   // UseCase
   sl.registerLazySingleton<LoginUsecase>(() => LoginUsecase(sl()));
   sl.registerLazySingleton<RegisterUsecase>(() => RegisterUsecase(sl()));
   sl.registerLazySingleton<LogoutUseCase>(() => LogoutUseCase(sl()));
-  sl.registerLazySingleton<GetCurrentUserUseCase>(()=> GetCurrentUserUseCase(sl()));
-  sl.registerLazySingleton<SaveDoctorProfileUseCase>(() => SaveDoctorProfileUseCase(sl()));
-  sl.registerLazySingleton<IsDoctorProfileExistsUseCase>(() => IsDoctorProfileExistsUseCase(sl())); 
-  sl.registerLazySingleton<GetDoctorByIdUseCase>(() => GetDoctorByIdUseCase(sl()));
-  sl.registerLazySingleton<GetDoctorsUseCase>(()=> GetDoctorsUseCase(sl()));
-  sl.registerLazySingleton<GetCurrentDoctorProfileUseCase>(()=>GetCurrentDoctorProfileUseCase(sl()));
-  sl.registerLazySingleton<SaveDoctorAvailabilityUseCase>(()=>SaveDoctorAvailabilityUseCase(sl()));
-  sl.registerLazySingleton<DoctroProfileUpdateUseCase>(() => DoctroProfileUpdateUseCase(sl()));
-  sl.registerLazySingleton<GetAvailableSlotsUseCase>(()=>GetAvailableSlotsUseCase(sl(),sl()));
-  sl.registerLazySingleton<BookAppointmentUseCase>(() => BookAppointmentUseCase(sl()));
-  sl.registerLazySingleton<UpdateAppointmentsStatusUseCase>(() => UpdateAppointmentsStatusUseCase(sl()));
-  sl.registerLazySingleton<GetDoctorAppointmentsUseCase>(() => GetDoctorAppointmentsUseCase(sl()));
-  sl.registerLazySingleton<GetPatientAppointmentsUseCase>(() => GetPatientAppointmentsUseCase(sl()));
-  sl.registerLazySingleton<SubmitReviewUseCase>(() => SubmitReviewUseCase(sl()));
-  sl.registerLazySingleton<GetDoctorReviewUseCase>(() => GetDoctorReviewUseCase(sl()));
-  sl.registerLazySingleton<UpdateUserProfileUseCase>(() => UpdateUserProfileUseCase(sl()));
+  sl.registerLazySingleton<GetCurrentUserUseCase>(
+    () => GetCurrentUserUseCase(sl()),
+  );
+  sl.registerLazySingleton<SaveDoctorProfileUseCase>(
+    () => SaveDoctorProfileUseCase(sl()),
+  );
+  sl.registerLazySingleton<IsDoctorProfileExistsUseCase>(
+    () => IsDoctorProfileExistsUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetDoctorByIdUseCase>(
+    () => GetDoctorByIdUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetDoctorsUseCase>(() => GetDoctorsUseCase(sl()));
+  sl.registerLazySingleton<GetCurrentDoctorProfileUseCase>(
+    () => GetCurrentDoctorProfileUseCase(sl()),
+  );
+  sl.registerLazySingleton<SaveDoctorAvailabilityUseCase>(
+    () => SaveDoctorAvailabilityUseCase(sl()),
+  );
+  sl.registerLazySingleton<DoctroProfileUpdateUseCase>(
+    () => DoctroProfileUpdateUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetAvailableSlotsUseCase>(
+    () => GetAvailableSlotsUseCase(sl(), sl()),
+  );
+  sl.registerLazySingleton<BookAppointmentUseCase>(
+    () => BookAppointmentUseCase(sl()),
+  );
+  sl.registerLazySingleton<UpdateAppointmentsStatusUseCase>(
+    () => UpdateAppointmentsStatusUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetDoctorAppointmentsUseCase>(
+    () => GetDoctorAppointmentsUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetPatientAppointmentsUseCase>(
+    () => GetPatientAppointmentsUseCase(sl()),
+  );
+  sl.registerLazySingleton<SubmitReviewUseCase>(
+    () => SubmitReviewUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetDoctorReviewUseCase>(
+    () => GetDoctorReviewUseCase(sl()),
+  );
+  sl.registerLazySingleton<UpdateUserProfileUseCase>(
+    () => UpdateUserProfileUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetChatRoomsUseCase>(
+    () => GetChatRoomsUseCase(sl()),
+  );
+  sl.registerLazySingleton<GetMessagesUseCase>(() => GetMessagesUseCase(sl()));
+  sl.registerLazySingleton<SendMessageUseCase>(() => SendMessageUseCase(sl()));
 
-  
-  
   // Bloc
-  sl.registerFactory(() => AuthBloc(sl<LoginUsecase>(), sl<RegisterUsecase>(), sl<GetCurrentUserUseCase>(), sl<LogoutUseCase>(), sl<IsDoctorProfileExistsUseCase>(),sl()));
-  sl.registerFactory(() => DoctorProfileSetupBloc(sl(),sl()));
+  sl.registerFactory(
+    () => AuthBloc(
+      sl<LoginUsecase>(),
+      sl<RegisterUsecase>(),
+      sl<GetCurrentUserUseCase>(),
+      sl<LogoutUseCase>(),
+      sl<IsDoctorProfileExistsUseCase>(),
+      sl(),
+    ),
+  );
+  sl.registerFactory(() => DoctorProfileSetupBloc(sl(), sl()));
   sl.registerFactory(() => DoctorListBloc(sl<GetDoctorsUseCase>()));
-  sl.registerFactory(() => DoctorProfileViewBloc(sl<GetDoctorByIdUseCase>(),sl()));
-  sl.registerFactory(() => ManageAvailabilityBloc(sl<GetCurrentDoctorProfileUseCase>(), sl<SaveDoctorAvailabilityUseCase>()));
+  sl.registerFactory(
+    () => DoctorProfileViewBloc(sl<GetDoctorByIdUseCase>(), sl()),
+  );
+  sl.registerFactory(
+    () => ManageAvailabilityBloc(
+      sl<GetCurrentDoctorProfileUseCase>(),
+      sl<SaveDoctorAvailabilityUseCase>(),
+    ),
+  );
   sl.registerFactory(() => BookingBloc(sl())); // Add this line
-  sl.registerFactory(()=> DoctorAppointmentsBloc(sl(), sl(), sl()));
-  sl.registerFactory(()=> PatientAppointmentsBloc(sl(), sl(), sl()));
-  sl.registerFactory(() => ReviewBloc(sl(), sl())); 
-  sl.registerFactory(() => DoctorProfileUpdateBloc(sl(), sl())); 
+  sl.registerFactory(() => DoctorAppointmentsBloc(sl(), sl(), sl()));
+  sl.registerFactory(() => PatientAppointmentsBloc(sl(), sl(), sl()));
+  sl.registerFactory(() => ReviewBloc(sl(), sl()));
+  sl.registerFactory(() => DoctorProfileUpdateBloc(sl(), sl()));
+  sl.registerFactory(() => ChatListBloc(sl()));
+  sl.registerFactory(() => ChatRoomBloc(sl(), sl()));
 
   // Theme Cubit
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit());
-
 }
