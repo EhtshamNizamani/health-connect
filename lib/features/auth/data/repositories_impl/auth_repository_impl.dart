@@ -3,18 +3,24 @@ import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:health_connect/core/di/service_locator.dart';
 import 'package:health_connect/core/error/failures.dart';
+import 'package:health_connect/core/service/notification_service.dart';
 import 'package:health_connect/features/auth/data/models/json_user.dart';
 import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 import 'package:health_connect/features/auth/domain/repositories/auth_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image/image.dart' as img;
+
 class FirebaseAuthRepositoryImpl extends AuthRepository {
   final FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firebaseFirestore;
   final FirebaseStorage _firebaseStorage;
-  FirebaseAuthRepositoryImpl(this._firebaseAuth, this._firebaseFirestore,this._firebaseStorage);
-
+  FirebaseAuthRepositoryImpl(
+    this._firebaseAuth,
+    this._firebaseFirestore,
+    this._firebaseStorage,
+  );
   @override
   Future<Either<AuthFailure, UserEntity>> login({
     required String email,
@@ -36,16 +42,28 @@ class FirebaseAuthRepositoryImpl extends AuthRepository {
         }
 
         final data = userDoc.data()!;
-        final role = data['role'] ?? 'patient';
-        final name = data['name'] ?? user.displayName ?? '';
+
+        // <<<--- IMPROVEMENT STARTS HERE ---
+        // 1. Get the new token from the device
+        final notificationService = sl<NotificationService>();
+        final newFcmToken = await notificationService.getFcmToken();
+
+        // 2. Get the old token from the document
+        final oldFcmToken = data['fcmToken'] as String?;
+
+        // 3. Only update Firestore if the token is new or different
+        if (newFcmToken != null && newFcmToken != oldFcmToken) {
+          print("FCM Token has changed. Updating in Firestore...");
+          await _firebaseFirestore.collection('users').doc(user.uid).update({
+            'fcmToken': newFcmToken,
+          });
+        }
+        // <<<--- IMPROVEMENT ENDS HERE ---
 
         return Right(
-          UserModel(
-            id: user.uid,
-            name: name,
-            email: user.email ?? '',
-            role: role,
-          ).toDomain(),
+          UserModel.fromSnapshot(
+            userDoc,
+          ).toDomain(), // More efficient to use fromSnapshot
         );
       } else {
         return Left(AuthFailure('User not found'));
@@ -70,11 +88,14 @@ class FirebaseAuthRepositoryImpl extends AuthRepository {
       User? user = userCredential.user;
       if (user != null) {
         await user.updateProfile(displayName: name);
+        final notificationService = sl<NotificationService>();
+        final fcmToken = await notificationService.getFcmToken();
 
         await _firebaseFirestore.collection('users').doc(user.uid).set({
           'name': name,
           'email': email,
           'role': selectedRole,
+          'fcmToken': fcmToken,
         });
 
         return Right(
@@ -89,8 +110,11 @@ class FirebaseAuthRepositoryImpl extends AuthRepository {
         return Left(AuthFailure('User not found'));
       }
     } on FirebaseAuthException catch (e) {
+      print("FirebaseAuthException e $e");
       return Left(AuthFailure(e.message ?? 'Firebase Authentication failed.'));
     } catch (e) {
+      print("catch e $e");
+
       return Left(AuthFailure('Registration failed: $e'));
     }
   }
@@ -124,8 +148,6 @@ class FirebaseAuthRepositoryImpl extends AuthRepository {
     ).toDomain();
   }
 
-
-
   @override
   Future<Either<AuthFailure, bool>> isDoctorProfileExists(String uid) async {
     try {
@@ -139,7 +161,8 @@ class FirebaseAuthRepositoryImpl extends AuthRepository {
       return Left(AuthFailure('Failed to check doctor profile existence: $e'));
     }
   }
-   @override
+
+  @override
   Future<Either<AuthFailure, UserEntity>> updateUserProfile({
     required String uid,
     required String name,
@@ -151,29 +174,26 @@ class FirebaseAuthRepositoryImpl extends AuthRepository {
 
       // 1. UPLOAD NEW PHOTO (if one was provided)
       if (photoFile != null) {
-        
         final compressedPhotoFile = await _compressImage(photoFile);
 
         // Create a reference to the file in Firebase Storage
         final storageRef = _firebaseStorage.ref().child('user_photos/$uid.jpg');
-        
+
         // Upload the file
         await storageRef.putFile(compressedPhotoFile);
-        
+
         // Get the download URL to save in Firestore and Auth
         photoUrl = await storageRef.getDownloadURL();
       }
 
       // 2. PREPARE DATA FOR FIRESTORE
       // Create a map of the data that needs to be updated.
-      final Map<String, dynamic> dataToUpdate = {
-        'name': name,
-      };
+      final Map<String, dynamic> dataToUpdate = {'name': name};
       // Only add the photoUrl to the map if a new one was uploaded.
       if (photoUrl != null) {
         dataToUpdate['photoUrl'] = photoUrl;
       }
-      
+
       // 3. UPDATE THE FIRESTORE DOCUMENT
       await userRef.update(dataToUpdate);
 
@@ -186,14 +206,14 @@ class FirebaseAuthRepositoryImpl extends AuthRepository {
           await currentUser.updatePhotoURL(photoUrl);
         }
       }
-      
+
       // 5. FETCH THE UPDATED USER DATA AND RETURN IT (Read-after-write)
       // This ensures the data returned to the BLoC is 100% fresh from the server.
       final updatedDoc = await userRef.get();
       if (!updatedDoc.exists) {
         return Left(AuthFailure('Failed to retrieve updated user profile.'));
       }
-      
+
       // We need a way to create a UserEntity from the map.
       // Assuming your UserEntity has a fromMap factory or similar.
       final updatedUserEntity = UserEntity(
@@ -203,17 +223,18 @@ class FirebaseAuthRepositoryImpl extends AuthRepository {
         role: updatedDoc.data()?['role'] ?? '',
         photoUrl: updatedDoc.data()?['photoUrl'],
       );
-      
-      return Right(updatedUserEntity);
 
+      return Right(updatedUserEntity);
     } on FirebaseException catch (e) {
-      return Left(AuthFailure(e.message ?? 'An error occurred during profile update.'));
+      return Left(
+        AuthFailure(e.message ?? 'An error occurred during profile update.'),
+      );
     } catch (e) {
       return Left(AuthFailure('An unexpected error occurred: $e'));
     }
   }
 
-   // --- Helper method for image compression ---
+  // --- Helper method for image compression ---
   Future<File> _compressImage(File file) async {
     // 1. Decode the image file into an Image object from the package
     final image = img.decodeImage(await file.readAsBytes());
@@ -231,7 +252,7 @@ class FirebaseAuthRepositoryImpl extends AuthRepository {
 
     // 4. Write the compressed bytes back to the original file path
     await file.writeAsBytes(compressedBytes);
-    
+
     // Return the (now compressed) file
     return file;
   }

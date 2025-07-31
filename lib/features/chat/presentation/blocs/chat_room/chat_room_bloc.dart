@@ -93,6 +93,20 @@ Future<void> _onSendMessage(
   SendMessage event,
   Emitter<ChatRoomState> emit,
 ) async {
+    // 1. Get the current state
+  final currentState = state;
+  if (currentState is! ChatRoomLoaded) return; // Sirf loaded state mein kaam karega
+
+  // 2. Ek "temporary" message banayein
+  final optimisticMessage = event.message.copyWith(
+    id: 'temp_${DateTime.now().millisecondsSinceEpoch}', // Ek unique temp ID
+    status: MessageStatus.sending,
+  );
+
+  // 3. Turant ek nayi state emit karein jismein naya message shamil ho
+  final optimisticMessages = [optimisticMessage, ...currentState.messages];
+  emit(ChatRoomLoaded(optimisticMessages));
+
   final result = await _sendMessageUseCase(
      event.chatRoomId,
      event.message,

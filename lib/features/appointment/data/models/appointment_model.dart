@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:health_connect/features/appointment/domain/entities/appointment_entity.dart';
 // lib/features/appointment/data/models/appointment_model.dart
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:health_connect/features/appointment/domain/entities/appointment_entity.dart';
 
 class AppointmentModel {
   final String id;

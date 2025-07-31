@@ -9,6 +9,8 @@ class MessageModel {
   final String type;
   final Timestamp timestamp;
   final String? fileUrl;
+  // Note: The 'status' field does not exist in the model because
+  // it is a UI-only state and is not stored in Firestore.
 
   const MessageModel({
     required this.id,
@@ -35,6 +37,7 @@ class MessageModel {
   }
 
   /// Converts the Model to a Map for writing to Firestore.
+  /// 'status' is not included in the map.
   Map<String, dynamic> toMap() {
     return {
       'senderId': senderId,
@@ -47,6 +50,7 @@ class MessageModel {
   }
   
   /// Converts this Data Model to a Domain Entity.
+  /// All messages coming from Firestore are considered 'sent'.
   MessageEntity toDomain() {
     return MessageEntity(
       id: id,
@@ -56,10 +60,12 @@ class MessageModel {
       type: type,
       timestamp: timestamp,
       fileUrl: fileUrl,
+      status: MessageStatus.sent, // Messages from DB are always 'sent'
     );
   }
 
   /// Creates a Model from a Domain Entity.
+  /// It ignores the entity's 'status' field.
   factory MessageModel.fromEntity(MessageEntity entity) {
     return MessageModel(
       id: entity.id,
