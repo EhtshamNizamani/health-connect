@@ -6,11 +6,13 @@ import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/call_screen_bloc/call_screen_bloc.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/call_screen_bloc/call_screen_event.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/call_screen_bloc/call_screen_state.dart';
-import 'package:health_connect/features/video_call/presantation/widgets/cal_content_widget.dart';
+import 'package:health_connect/features/video_call/presantation/widgets/call_content_widget.dart';
 import 'package:health_connect/features/video_call/presantation/widgets/call_error_widget.dart';
 import 'package:health_connect/features/video_call/presantation/widgets/call_loading_widget.dart';
 
-class CallScreen extends StatefulWidget {
+// --- WIDGET #1: THE ENTRY POINT (Stateless) ---
+// This widget's only job is to provide the BLoC.
+class CallScreen extends StatelessWidget {
   final String callID;
   final UserEntity currentUser;
   final UserEntity otherUser;
@@ -23,16 +25,46 @@ class CallScreen extends StatefulWidget {
   });
 
   @override
-  State<CallScreen> createState() => _CallScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => sl<CallScreenBloc>(),
+      child: CallScreenView(
+        // Pass the parameters to the child
+        callID: callID,
+        currentUser: currentUser,
+        otherUser: otherUser,
+      ),
+    );
+  }
 }
 
-class _CallScreenState extends State<CallScreen> {
+// --- WIDGET #2: THE UI (Stateful) ---
+// This widget is now a CHILD of the BlocProvider.
+class CallScreenView extends StatefulWidget {
+  final String callID;
+  final UserEntity currentUser;
+  final UserEntity otherUser;
+
+  const CallScreenView({
+    super.key,
+    required this.callID,
+    required this.currentUser,
+    required this.otherUser,
+  });
+
+  @override
+  State<CallScreenView> createState() => _CallScreenViewState();
+}
+
+class _CallScreenViewState extends State<CallScreenView> {
   @override
   void initState() {
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    
-    // Initialize call
+
+    // --- THIS NOW WORKS! ---
+    // Because the parent widget (CallScreen) has already provided the BLoC,
+    // context.read() can now find it.
     context.read<CallScreenBloc>().add(
       InitializeCall(
         widget.callID,
@@ -45,72 +77,65 @@ class _CallScreenState extends State<CallScreen> {
   @override
   void dispose() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    // The BLoC's own close() method will be called automatically by BlocProvider.
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => sl<CallScreenBloc>(),
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: BlocConsumer<CallScreenBloc, CallScreenState>(
-          listener: (context, state) {
-            if (state is CallScreenEnded) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: BlocConsumer<CallScreenBloc, CallScreenState>(
+        listener: (context, state) {
+          if (state is CallScreenEnded) {
+            if (Navigator.canPop(context)) {
               Navigator.of(context).pop();
             }
-            if (state is CallScreenError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          },
-          builder: (context, state) {
-            if (state is CallScreenLoading || state is CallScreenInitial) {
-              return CallLoadingWidget(
-                otherUser: widget.otherUser,
-                status: "Initializing call...",
-              );
-            }
-            
-            if (state is CallScreenConnecting) {
-              return CallLoadingWidget(
-                otherUser: widget.otherUser,
-                status: "Connecting...",
-              );
-            }
-            
-            if (state is CallScreenConnected) {
-              return CallContentWidget(
-                state: state,
-                currentUser: widget.currentUser,
-                otherUser: widget.otherUser,
-                callId: widget.callID,
-              );
-            }
-            
-            if (state is CallScreenError) {
-              return CallErrorWidget(
-                message: state.message,
-                onRetry: () {
-                  context.read<CallScreenBloc>().add(
-                    InitializeCall(
-                      widget.callID,
-                      widget.currentUser.id,
-                      widget.currentUser.name,
-                    ),
-                  );
-                },
-                onExit: () => Navigator.of(context).pop(),
-              );
-            }
-            
-            return const SizedBox.shrink();
-          },
-        ),
+          }
+          // No need for error snackbar here if the CallErrorWidget handles it
+        },
+        builder: (context, state) {
+          if (state is CallScreenLoading || state is CallScreenInitial) {
+            return CallLoadingWidget(
+              otherUser: widget.otherUser,
+              status: "Initializing call...",
+            );
+          }
+          if (state is CallScreenConnecting) {
+            return CallLoadingWidget(
+              otherUser: widget.otherUser,
+              status: "Connecting...",
+            );
+          }
+          if (state is CallScreenConnected) {
+            return CallContentWidget(
+              state: state,
+              currentUser: widget.currentUser,
+              otherUser: widget.otherUser,
+              callId: widget.callID,
+            );
+          }
+          if (state is CallScreenError) {
+            return CallErrorWidget(
+              message: state.message,
+              onRetry: () {
+                context.read<CallScreenBloc>().add(
+                  InitializeCall(
+                    widget.callID,
+                    widget.currentUser.id,
+                    widget.currentUser.name,
+                  ),
+                );
+              },
+              onExit: () {
+                if (Navigator.canPop(context)) {
+                  Navigator.of(context).pop();
+                }
+              },
+            );
+          }
+          return const SizedBox.shrink();
+        },
       ),
     );
   }

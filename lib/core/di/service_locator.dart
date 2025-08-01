@@ -61,16 +61,20 @@ import 'package:health_connect/features/patient/doctor_profile_view/domain/repos
 import 'package:health_connect/features/patient/doctor_profile_view/domain/usecase/get_available_slots_usecase.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/domain/usecase/get_doctor_by_id_usecase.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_bloc.dart';
-import 'package:health_connect/features/video_call/data/repository/call_engine_repository.dart.dart';
+import 'package:health_connect/features/video_call/data/repository/call_engine_repository_impl.dart.dart';
+import 'package:health_connect/features/video_call/data/repository/calling_repository_impl.dart';
 import 'package:health_connect/features/video_call/data/repository/video_call_repository_impl.dart';
 import 'package:health_connect/features/video_call/domain/repository/call_engine_repository.dart';
+import 'package:health_connect/features/video_call/domain/repository/calling_repository.dart';
 import 'package:health_connect/features/video_call/domain/repository/video_call_repository.dart';
 import 'package:health_connect/features/video_call/domain/usecase/accept_call_usecase.dart';
 import 'package:health_connect/features/video_call/domain/usecase/cancel_call_usecase.dart';
 import 'package:health_connect/features/video_call/domain/usecase/decline_call_usecase.dart';
 import 'package:health_connect/features/video_call/domain/usecase/initiate_call_usecase.dart';
 import 'package:health_connect/features/video_call/domain/usecase/manage_call_usecase.dart';
+import 'package:health_connect/features/video_call/domain/usecase/manage_calling_usecase.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/call_screen_bloc/call_screen_bloc.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/calling/calling_screen_bloc.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_bloc.dart';
 
 final sl = GetIt.instance;
@@ -126,6 +130,10 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<VideoCallRepository>(
     () => VideoCallRepositoryImpl(sl(), sl()),
   );
+  sl.registerLazySingleton<CallingRepository>(
+    () => CallingRepositoryImpl(sl<FirebaseFunctions>(), sl<FirebaseAuth>()),
+  );
+
   // UseCase
   sl.registerLazySingleton<LoginUsecase>(() => LoginUsecase(sl()));
   sl.registerLazySingleton<RegisterUsecase>(() => RegisterUsecase(sl()));
@@ -186,6 +194,7 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<SendMessageUseCase>(() => SendMessageUseCase(sl()));
   sl.registerLazySingleton(() => UploadFileUseCase(sl()));
   sl.registerLazySingleton(() => InitiateCallUseCase(sl()));
+  sl.registerLazySingleton(() => ManageCallingUseCase(sl()));
 
   // Bloc
   sl.registerFactory(
@@ -218,6 +227,8 @@ Future<void> setupLocator() async {
   sl.registerFactory(() => ChatRoomBloc(sl(), sl(), sl()));
   sl.registerFactory(() => CallScreenBloc(sl(), sl()));
   sl.registerFactory(() => VideoCallBloc(sl(), sl(), sl(), sl()));
+    sl.registerFactory(() => CallingScreenBloc(sl()));
+
   // Theme Cubit
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit());
 }

@@ -1,5 +1,6 @@
 
 import 'package:equatable/equatable.dart';
+import 'package:health_connect/features/video_call/domain/entity/call_engine_event.dart';
 
 abstract class CallScreenEvent extends Equatable {
   const CallScreenEvent();
@@ -47,3 +48,13 @@ class EndCall extends CallScreenEvent {
 }
 
 class ToggleControlsVisibility extends CallScreenEvent {}
+
+class EngineEventOccurred extends CallScreenEvent {
+  final CallEngineEvent engineEvent;
+
+  const EngineEventOccurred(this.engineEvent);
+
+  @override
+  List<Object> get props => [engineEvent];
+}
+class CallTimerTicked extends CallScreenEvent {}

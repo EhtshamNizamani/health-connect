@@ -1,5 +1,4 @@
 import 'package:bloc/bloc.dart';
-import 'package:equatable/equatable.dart';
 import 'package:health_connect/features/video_call/domain/usecase/accept_call_usecase.dart';
 import 'package:health_connect/features/video_call/domain/usecase/cancel_call_usecase.dart';
 import 'package:health_connect/features/video_call/domain/usecase/decline_call_usecase.dart';
