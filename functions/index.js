@@ -4,8 +4,6 @@ const admin = require("firebase-admin");
 
 // Initialize the Firebase Admin SDK
 admin.initializeApp();
-
-// Create a reference to the Firestore database
 const db = admin.firestore();
 
 // Define the region once to reuse it
@@ -13,158 +11,108 @@ const europeFunctions = functions.region("europe-west1");
 
 /**
  * ==================================================================
- * 1. FUNCTION TO SEND THE INITIAL CALL INVITATION
+ * 1. SEND INITIAL CALL INVITATION
  * Triggered by the caller. Sends a notification to the receiver.
  * ==================================================================
  */
 exports.sendCallNotification = europeFunctions.https.onCall(
     async (data, context) => {
-      // --- Authenticate the request ---
       if (!context.auth) {
         throw new functions.https.HttpsError(
-            "unauthenticated",
-            "The function must be called while authenticated.",
+            "unauthenticated", "User must be authenticated.",
         );
       }
-
-      // --- Get and validate data ---
       const {receiverId, callerName, callId} = data;
       if (!receiverId || !callerName || !callId) {
         throw new functions.https.HttpsError(
-            "invalid-argument",
-            "Requires 'receiverId', 'callerName', and 'callId'.",
+            "invalid-argument", "Missing required data.",
         );
       }
-
       try {
-        // --- Get receiver's & caller's info from Firestore ---
-        const receiverDoc = await db
-            .collection("users")
-            .doc(receiverId).get();
-        const callerDoc = await db
-            .collection("users")
-            .doc(context.auth.uid).get();
-
-        if (!receiverDoc.exists) {
-          throw new functions.https.HttpsError(
-              "not-found", "Receiver's user document not found.",
-          );
+        const callerId = context.auth.uid;
+        const callerDoc = await db.collection("users").doc(callerId).get();
+        const receiverDoc = await db.collection("users").doc(receiverId).get();
+        if (!callerDoc.exists || !receiverDoc.exists) {
+          throw new functions.https.HttpsError("not-found", "User not found.");
         }
-        if (!callerDoc.exists) {
-          throw new functions.https.HttpsError(
-              "not-found", "Caller's user document not found.",
-          );
-        }
-
         const {fcmToken} = receiverDoc.data();
-        const callerData = callerDoc.data();
         if (!fcmToken) {
-          throw new functions.https.HttpsError(
-              "unavailable",
-              "The receiver does not have a notification token.",
-          );
+          return {success: false, error: "Receiver has no FCM token."};
         }
-
-        // --- Construct the ZegoCloud-compliant notification payload ---
-        const payload = {
+        const callerData = callerDoc.data();
+        const message = {
+          token: fcmToken,
           data: {
-            "payload": JSON.stringify({
-              "aps": {
-                "alert": {
-                  "title": `Incoming Call from ${callerName}`,
-                  "body": "Tap to answer the video call.",
-                },
-                "sound": "default",
-              },
-              "call_id": callId,
-              "caller_id": context.auth.uid,
-              "caller_name": callerName,
-              "caller_photo_url": callerData.photoUrl || "",
-              "caller_role": callerData.role || "",
-              "type": "video_call_invitation",
-              "call_type": "video_call",
-              "zego_call_id": callId,
-              "zego_uikit_call_version": "2.0.0",
+            payload: JSON.stringify({
+              type: "video_call_invitation",
+              call_id: callId,
+              caller_id: callerId,
+              caller_name: callerName,
+              caller_photo_url: callerData.photoUrl || "",
+              caller_role: callerData.role || "",
             }),
           },
-          token: fcmToken,
-          apns: {headers: {"apns-priority": "10"}},
+          notification: {
+            title: `Incoming Call from ${callerName}`,
+            body: "Tap to answer the video call.",
+          },
           android: {priority: "high"},
+          apns: {payload: {aps: {"sound": "default", "content-available": 1}}},
         };
-
-        // --- Send the notification ---
-        await admin.messaging().send(payload);
-
-        console.log(`Call invitation sent successfully to ${receiverId}`);
+        await admin.messaging().send(message);
+        await db.collection("calls").doc(callId).set({
+          callId,
+          callerId,
+          callerName,
+          receiverId,
+          status: "calling",
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
         return {success: true};
       } catch (error) {
-        console.error("Error sending call invitation:", error);
-        throw new functions.https.HttpsError("internal", error.message, error);
+        console.error("sendCallNotification Error:", error);
+        throw new functions.https.HttpsError("internal", error.message);
       }
     },
 );
 
 /**
  * ==================================================================
- * 2. FUNCTION TO NOTIFY CALLER THAT THE CALL WAS ACCEPTED
- * Triggered by the receiver. Sends a notification back to the caller.
+ * 2. SEND "CALL ACCEPTED" SIGNAL
  * ==================================================================
  */
 exports.acceptCall = europeFunctions.https.onCall(async (data, context) => {
-  // --- Authenticate the request ---
   if (!context.auth) {
-    throw new functions.https.HttpsError(
-        "unauthenticated", "Must be authenticated.",
-    );
+    throw new functions.https.HttpsError("unauthenticated", "Auth required.");
   }
-
-  // --- Get and validate data ---
   const {callerId, callId} = data;
-  if (!callerId || !callId) {
-    throw new functions.https.HttpsError(
-        "invalid-argument", "Requires 'callerId' and 'callId'.",
-    );
-  }
-
   const accepterId = context.auth.uid;
-
+  if (!callerId || !callId) {
+    throw new functions.https
+        .HttpsError("invalid-argument", "Required data missing.");
+  }
   try {
-    // --- Get accepter's (current user's) details ---
     const accepterDoc = await db.collection("users").doc(accepterId).get();
-    if (!accepterDoc.exists) {
-      throw new functions.https.HttpsError(
-          "not-found", "Accepter's user document not found.",
-      );
-    }
-    const accepterData = accepterDoc.data();
-
-    // --- Get original caller's FCM token ---
     const callerDoc = await db.collection("users").doc(callerId).get();
-    if (!callerDoc.exists) {
-      throw new functions.https.HttpsError(
-          "not-found", "Original caller not found.",
-      );
+    if (!accepterDoc.exists || !callerDoc.exists) {
+      throw new functions.https.HttpsError("not-found", "User not found.");
     }
     const {fcmToken} = callerDoc.data();
     if (!fcmToken) {
-      console.log("Caller has no FCM token. Cannot send 'accept' signal.");
-      return {success: false, message: "Caller has no token."};
+      return {success: false, error: "Caller has no FCM token."};
     }
-
-    // --- Construct the 'call_accepted' payload with rich data ---
+    const accepterData = accepterDoc.data();
     const message = {
       token: fcmToken,
       data: {
         payload: JSON.stringify({
-          "type": "call_accepted",
-          "call_id": callId,
-          "accepter_id": accepterId,
-          "accepter_name": accepterData.name || "User",
-          "accepter_role": accepterData.role || "",
-          "accepter_photo_url": accepterData.photoUrl || "",
+          type: "call_accepted",
+          call_id: callId,
+          accepter_id: accepterId,
+          accepter_name: accepterData.name || "User",
+          accepter_photo_url: accepterData.photoUrl || "",
         }),
       },
-      // Also send a visual notification
       notification: {
         title: "Call Accepted",
         body: `${accepterData.name || "User"} has joined the call.`,
@@ -172,14 +120,152 @@ exports.acceptCall = europeFunctions.https.onCall(async (data, context) => {
       android: {priority: "high"},
       apns: {payload: {aps: {"content-available": 1}}},
     };
-
-    // --- Send the 'accept' signal ---
     await admin.messaging().send(message);
-
-    console.log(`'call_accepted' signal sent successfully to ${callerId}`);
+    await db.collection("calls").doc(callId).update({
+      status: "accepted",
+      acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
     return {success: true};
   } catch (error) {
-    console.error("Error sending 'accept' signal:", error);
-    throw new functions.https.HttpsError("internal", error.message, error);
+    console.error("acceptCall Error:", error);
+    throw new functions.https.HttpsError("internal", error.message);
+  }
+});
+
+/**
+ * ==================================================================
+ * 3. SEND "CALL DECLINED" SIGNAL
+ * ==================================================================
+ */
+exports.declineCall = europeFunctions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "Auth required.");
+  }
+  const {callerId, callId} = data;
+  if (!callerId || !callId) {
+    throw new functions.https
+        .HttpsError("invalid-argument", "Required data missing.");
+  }
+  try {
+    const callerDoc = await db.collection("users").doc(callerId).get();
+    if (!callerDoc.exists) {
+      throw new functions.https.HttpsError("not-found", "User not found.");
+    }
+    const {fcmToken} = callerDoc.data();
+    if (!fcmToken) {
+      return {success: false, error: "Caller has no FCM token."};
+    }
+    const message = {
+      token: fcmToken,
+      data: {
+        payload: JSON.stringify({type: "call_declined", call_id: callId}),
+      },
+    };
+    await admin.messaging().send(message);
+    await db.collection("calls").doc(callId).update({
+      status: "declined",
+      declinedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return {success: true};
+  } catch (error) {
+    console.error("declineCall Error:", error);
+    throw new functions.https.HttpsError("internal", error.message);
+  }
+});
+
+/**
+ * ==================================================================
+ * 4. SEND "CALL ENDED" SIGNAL
+ * ==================================================================
+ */
+exports.endCall = europeFunctions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "Auth required.");
+  }
+  const {otherUserId, callId, chatRoomId, duration} = data;
+  if (!otherUserId || !callId || !chatRoomId) {
+    throw new functions.https
+        .HttpsError("invalid-argument", "Required data missing.");
+  }
+  try {
+    const otherUserDoc = await db.collection("users").doc(otherUserId).get();
+    if (otherUserDoc.exists) {
+      const {fcmToken} = otherUserDoc.data();
+      if (fcmToken) {
+        const message = {
+          token: fcmToken,
+          data: {
+            payload: JSON.stringify({type: "call_ended", call_id: callId}),
+          },
+        };
+        await admin.messaging().send(message);
+      }
+    }
+    await db.collection("calls").doc(callId).update({
+      status: "ended",
+      endedAt: admin.firestore.FieldValue.serverTimestamp(),
+      endedBy: context.auth.uid,
+      duration: duration || 0,
+    });
+    const systemMessage = {
+      senderId: "system",
+      receiverId: "system",
+      content: `Video call ended. Duration: ${duration || "N/A"}`,
+      type: "system_call_ended",
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    await db.collection("chats").doc(chatRoomId)
+        .collection("messages").add(systemMessage);
+    await db.collection("chats").doc(chatRoomId).update({
+      lastMessage: "Video call ended",
+      lastMessageTimestamp: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return {success: true};
+  } catch (error) {
+    console.error("endCall Error:", error);
+    throw new functions.https.HttpsError("internal", error.message);
+  }
+});
+
+/**
+ * ==================================================================
+ * 5. SEND "CALL CANCELLED" SIGNAL (from caller)
+ * ==================================================================
+ */
+exports.cancelCall = europeFunctions.https.onCall(async (data, context) => {
+  // This function can be simplified as it's very similar to declineCall
+  if (!context.auth) {
+    throw new functions.https
+        .HttpsError("unauthenticated", "Auth required.");
+  }
+  const {receiverId, callId} = data;
+  if (!receiverId || !callId) {
+    throw new functions
+        .https.HttpsError("invalid-argument", "Required data missing.");
+  }
+  try {
+    const receiverDoc = await db.collection("users").doc(receiverId).get();
+    if (!receiverDoc.exists) {
+      throw new functions.https.HttpsError("not-found", "User not found.");
+    }
+    const {fcmToken} = receiverDoc.data();
+    if (!fcmToken) {
+      return {success: false, error: "Receiver has no FCM token."};
+    }
+    const message = {
+      token: fcmToken,
+      data: {
+        payload: JSON.stringify({type: "call_cancelled", call_id: callId}),
+      },
+    };
+    await admin.messaging().send(message);
+    await db.collection("calls").doc(callId).update({
+      status: "cancelled",
+      cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return {success: true};
+  } catch (error) {
+    console.error("cancelCall Error:", error);
+    throw new functions.https.HttpsError("internal", error.message);
   }
 });

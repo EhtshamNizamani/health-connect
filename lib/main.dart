@@ -14,7 +14,8 @@ import 'package:health_connect/features/doctor/doctor_profile_setup/presentation
 import 'package:health_connect/features/appointment/presentation/blocs/booking_bloc.dart';
 import 'package:health_connect/features/doctor/review/presantation/bloc/review_bloc.dart';
 import 'package:health_connect/features/patient/dashboard/screens/dashboard_screen.dart';
-import 'package:health_connect/features/video_call/presantation/bloc/video_call_bloc.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/call_screen_bloc/call_screen_bloc.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_bloc.dart';
 
 import 'core/di/service_locator.dart';
 import 'features/auth/presentation/auth/blocs/auth_bloc.dart';
@@ -43,6 +44,7 @@ void main() async {
         ),
         BlocProvider<BookingBloc>(create: (_) => sl<BookingBloc>()),
         BlocProvider<ReviewBloc>(create: (_) => sl<ReviewBloc>()),
+        BlocProvider<CallScreenBloc>(create: (_) => sl<CallScreenBloc>()),
         BlocProvider<VideoCallBloc>(create: (_) => sl<VideoCallBloc>()),
 
       ],
