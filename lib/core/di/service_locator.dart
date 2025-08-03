@@ -74,7 +74,6 @@ import 'package:health_connect/features/video_call/domain/usecase/initiate_call_
 import 'package:health_connect/features/video_call/domain/usecase/manage_call_usecase.dart';
 import 'package:health_connect/features/video_call/domain/usecase/manage_calling_usecase.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/call_screen_bloc/call_screen_bloc.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/calling/calling_screen_bloc.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_bloc.dart';
 
 final sl = GetIt.instance;
@@ -226,8 +225,7 @@ Future<void> setupLocator() async {
   sl.registerFactory(() => ChatListBloc(sl()));
   sl.registerFactory(() => ChatRoomBloc(sl(), sl(), sl()));
   sl.registerFactory(() => CallScreenBloc(sl(), sl()));
-  sl.registerFactory(() => VideoCallBloc(sl(), sl(), sl(), sl()));
-    sl.registerFactory(() => CallingScreenBloc(sl()));
+  sl.registerFactory(() => VideoCallBloc(sl(), sl(), sl(), sl(), sl()));
 
   // Theme Cubit
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit());

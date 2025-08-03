@@ -1,12 +1,15 @@
-import 'package:equatable/equatable.dart';
 
+import 'package:equatable/equatable.dart';
+import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
+import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_profile_entity.dart';
+import 'package:health_connect/features/video_call/domain/entity/video_call_enitity.dart';
 abstract class VideoCallEvent extends Equatable {
   const VideoCallEvent();
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
-/// Dispatched when the user taps the call icon to start a call.
+// Original VideoCall Events
 class StartCall extends VideoCallEvent {
   final String receiverId;
   final String callerName;
@@ -22,7 +25,6 @@ class StartCall extends VideoCallEvent {
   List<Object> get props => [receiverId, callerName, callId];
 }
 
-/// Dispatched when the receiver taps "Accept".
 class AcceptCall extends VideoCallEvent {
   final String callerId;
   final String callId;
@@ -36,7 +38,6 @@ class AcceptCall extends VideoCallEvent {
   List<Object> get props => [callerId, callId];
 }
 
-/// Dispatched when the receiver taps "Decline".
 class DeclineCall extends VideoCallEvent {
   final String callerId;
   final String callId;
@@ -45,11 +46,11 @@ class DeclineCall extends VideoCallEvent {
     required this.callerId,
     required this.callId,
   });
-    @override
+  
+  @override
   List<Object> get props => [callerId, callId];
 }
 
-/// Dispatched when the caller cancels the call from the CallingScreen.
 class CancelCall extends VideoCallEvent {
   final String receiverId;
   final String callId;
@@ -58,6 +59,38 @@ class CancelCall extends VideoCallEvent {
     required this.receiverId,
     required this.callId,
   });
-    @override
+  
+  @override
   List<Object> get props => [receiverId, callId];
+}
+
+// Original CallingScreen Events (merged)
+class InitializeCalling extends VideoCallEvent {
+  final String callId;
+  final UserEntity currentUser;
+  final DoctorEntity doctor;
+  final UserEntity patient;
+
+  const InitializeCalling({
+    required this.callId,
+    required this.currentUser,
+    required this.doctor,
+    required this.patient,
+  });
+
+  @override
+  List<Object> get props => [callId, currentUser, doctor, patient];
+}
+
+class StartCallingSequence extends VideoCallEvent {}
+
+class JoinCall extends VideoCallEvent {}
+
+class UpdateCallStatus extends VideoCallEvent {
+  final VideoCallStatus status;
+  
+  const UpdateCallStatus(this.status);
+  
+  @override
+  List<Object> get props => [status];
 }

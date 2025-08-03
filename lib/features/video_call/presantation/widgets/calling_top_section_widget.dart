@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:health_connect/features/video_call/domain/entity/calling_entity.dart';
+import 'package:health_connect/features/video_call/domain/entity/video_call_enitity.dart';
 
 class CallingTopSectionWidget extends StatelessWidget {
-  final CallState callState;
+  final VideoCallStatus callState;
 
   const CallingTopSectionWidget({
     Key? key,
@@ -58,41 +58,49 @@ class CallingTopSectionWidget extends StatelessWidget {
 
   Color _getStatusColor() {
     switch (callState) {
-      case CallState.connecting:
+      case VideoCallStatus.connecting:
         return Colors.orange;
-      case CallState.ringing:
+      case VideoCallStatus.ringing:
         return Colors.blue;
-      case CallState.connectingToCall:
+      case VideoCallStatus.connectingToCall:
         return Colors.green;
-      case CallState.connected:
+      case VideoCallStatus.connected:
         return Colors.green;
-      case CallState.ended:
-      case CallState.cancelled:
+      case VideoCallStatus.ended:
+      case VideoCallStatus.cancelled:
         return Colors.red;
-      case CallState.busy:
-      case CallState.noAnswer:
+      case VideoCallStatus.busy:
+      case VideoCallStatus.noAnswer:
+        return Colors.red;
+      case VideoCallStatus.initiating:
+        return Colors.blue;
+      case VideoCallStatus.failed:
         return Colors.red;
     }
   }
 
   String _getCallStateText() {
     switch (callState) {
-      case CallState.connecting:
+      case VideoCallStatus.connecting:
         return "Connecting";
-      case CallState.ringing:
+      case VideoCallStatus.ringing:
         return "Ringing";
-      case CallState.connectingToCall:
+      case VideoCallStatus.connectingToCall:
         return "Joining";
-      case CallState.connected:
+      case VideoCallStatus.connected:
         return "Connected";
-      case CallState.ended:
+      case VideoCallStatus.ended:
         return "Call Ended";
-      case CallState.cancelled:
+      case VideoCallStatus.cancelled:
         return "Cancelled";
-      case CallState.busy:
+      case VideoCallStatus.busy:
         return "Busy";
-      case CallState.noAnswer:
+      case VideoCallStatus.noAnswer:
         return "No Answer";
+      case VideoCallStatus.initiating:
+        return "Initiating";
+      case VideoCallStatus.failed:
+        return "Failed Dalled";
     }
   }
 }

@@ -1,42 +1,55 @@
-import 'package:health_connect/features/video_call/domain/entity/call_entity.dart';
-
-class CallModel extends CallEntity {
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:health_connect/features/video_call/domain/entity/video_call_enitity.dart';
+class CallModel extends VideoCallEntity {
   const CallModel({
     required super.callId,
     required super.callerId,
     required super.receiverId,
     required super.callerName,
     required super.receiverName,
+    super.receiverPhotoUrl,
     required super.status,
     required super.createdAt,
-    super.durationSeconds,
   });
 
-  factory CallModel.fromJson(Map<String, dynamic> json) {
+  /// Creates a Model from a Firestore DocumentSnapshot.
+  factory CallModel.fromSnapshot(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+
     return CallModel(
-      callId: json['callId'],
-      callerId: json['callerId'],
-      receiverId: json['receiverId'],
-      callerName: json['callerName'],
-      receiverName: json['receiverName'],
-      status: CallStatus.values.firstWhere(
-        (e) => e.toString().split('.').last == json['status'],
+      callId: doc.id,
+      // Ab hum nested user data se seedhe fields extract kar rahe hain.
+      callerId: data['caller']?['id'] ?? '',
+      callerName: data['caller']?['name'] ?? '',
+      receiverId: data['receiver']?['id'] ?? '',
+      receiverName: data['receiver']?['name'] ?? '',
+      receiverPhotoUrl: data['receiver']?['photoUrl'],
+      // Convert the status string from Firestore back to our enum
+      status: VideoCallStatus.values.firstWhere(
+        (e) => e.name == data['status'],
+        orElse: () => VideoCallStatus.failed, // Fallback
       ),
-      createdAt: DateTime.parse(json['createdAt']),
-      durationSeconds: json['durationSeconds'] ?? 0,
+      // Convert the Firestore Timestamp to DateTime
+      createdAt: (data['createdAt'] as Timestamp? ?? Timestamp.now()).toDate(),
     );
   }
 
-  Map<String, dynamic> toJson() {
+  /// Converts the Model to a Map for writing to Firestore.
+  Map<String, dynamic> toMap() {
+    // toMap mein bhi hum data ko nested objects mein rakhenge,
+    // kyunki Firestore is tarah ke structure ko asani se handle karta hai.
     return {
-      'callId': callId,
-      'callerId': callerId,
-      'receiverId': receiverId,
-      'callerName': callerName,
-      'receiverName': receiverName,
-      'status': status.toString().split('.').last,
-      'createdAt': createdAt.toIso8601String(),
-      'durationSeconds': durationSeconds,
+      'caller': {
+        'id': callerId,
+        'name': callerName,
+      },
+      'receiver': {
+        'id': receiverId,
+        'name': receiverName,
+        'photoUrl': receiverPhotoUrl,
+      },
+      'status': status.name,
+      'createdAt': FieldValue.serverTimestamp(),
     };
   }
 }

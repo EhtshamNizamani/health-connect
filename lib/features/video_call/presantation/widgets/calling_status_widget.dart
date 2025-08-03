@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:health_connect/features/video_call/domain/entity/calling_entity.dart';
+import 'package:health_connect/features/video_call/domain/entity/video_call_enitity.dart';
 
 class CallingStatusWidget extends StatelessWidget {
-  final CallState callState;
+  final VideoCallStatus callState;
 
   const CallingStatusWidget({
     Key? key,
@@ -28,22 +29,26 @@ class CallingStatusWidget extends StatelessWidget {
 
   String _getCallStatusMessage() {
     switch (callState) {
-      case CallState.connecting:
+      case VideoCallStatus.connecting:
         return "Connecting...";
-      case CallState.ringing:
+      case VideoCallStatus.ringing:
         return "Ringing...";
-      case CallState.connectingToCall:
+      case VideoCallStatus.connectingToCall:
         return "Joining call...";
-      case CallState.connected:
+      case VideoCallStatus.connected:
         return "Connected";
-      case CallState.ended:
+      case VideoCallStatus.ended:
         return "Call ended";
-      case CallState.cancelled:
+      case VideoCallStatus.cancelled:
         return "Call cancelled";
-      case CallState.busy:
+      case VideoCallStatus.busy:
         return "User is busy";
-      case CallState.noAnswer:
+      case VideoCallStatus.noAnswer:
         return "No answer";
+      case VideoCallStatus.initiating:
+        return "Initiating";
+      case VideoCallStatus.failed:
+        return "Fialed";
     }
   }
 }

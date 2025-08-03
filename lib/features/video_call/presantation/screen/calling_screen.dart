@@ -5,9 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/di/service_locator.dart';
 import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_profile_entity.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/calling/calling_screen_bloc.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/calling/calling_screen_event.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/calling/calling_screen_state.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_bloc.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_event.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_state.dart';
 import 'package:health_connect/features/video_call/presantation/screen/call_screen.dart';
 import 'package:health_connect/features/video_call/presantation/widgets/calling_content_widget.dart';
 import 'package:health_connect/features/video_call/presantation/widgets/calling_error_widget.dart';
@@ -41,7 +41,7 @@ class _CallingScreenState extends State<CallingScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => sl<CallingScreenBloc>()..add(
+      create: (context) => sl<VideoCallBloc>()..add(
         InitializeCalling(
           callId: widget.callID,
           currentUser: widget.currentUser,
@@ -51,13 +51,13 @@ class _CallingScreenState extends State<CallingScreen> {
       ),
       child: Scaffold(
         backgroundColor: const Color(0xFF1a1a1a),
-        body: BlocConsumer<CallingScreenBloc, CallingScreenState>(
+        body: BlocConsumer<VideoCallBloc, VideoCallState>(
           listener: (context, state) {
-            if (state is CallingScreenCancelled) {
+            if (state is VideoCallCancelled) {
               Navigator.pop(context);
             }
             
-            if (state is CallingScreenNavigateToCall) {
+            if (state is VideoCallNavigateToCall) {
               final otherUser = UserEntity(
                 id: state.otherUserId,
                 name: state.otherUserName,
@@ -78,7 +78,7 @@ class _CallingScreenState extends State<CallingScreen> {
               );
             }
             
-            if (state is CallingScreenError) {
+            if (state is VideoCallFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
@@ -88,22 +88,22 @@ class _CallingScreenState extends State<CallingScreen> {
             }
           },
           builder: (context, state) {
-            if (state is CallingScreenInitial || state is CallingScreenLoading) {
+            if (state is VideoCallInitial || state is VideoCallLoading) {
               return const CallingLoadingWidget();
             }
             
-            if (state is CallingScreenActive) {
+            if (state is VideoCallActive) {
               return CallingContentWidget(
-                callingEntity: state.callingEntity,
+                callingEntity: state.callEntity,
                 shouldStartAnimations: state.shouldStartAnimations,
               );
             }
             
-            if (state is CallingScreenError) {
+            if (state is VideoCallFailure) {
               return CallingErrorWidget(
                 message: state.message,
                 onRetry: () {
-                  context.read<CallingScreenBloc>().add(
+                  context.read<VideoCallBloc>().add(
                     InitializeCalling(
                       callId: widget.callID,
                       currentUser: widget.currentUser,

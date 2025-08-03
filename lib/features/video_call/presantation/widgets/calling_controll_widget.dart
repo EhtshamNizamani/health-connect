@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:health_connect/features/video_call/domain/entity/calling_entity.dart';
+import 'package:health_connect/features/video_call/domain/entity/video_call_enitity.dart';
 
 class CallingControlsWidget extends StatelessWidget {
-  final CallState callState;
+  final VideoCallStatus callState;
   final VoidCallback onCancel;
 
   const CallingControlsWidget({
@@ -57,7 +57,7 @@ class CallingControlsWidget extends StatelessWidget {
   }
 
   bool _shouldCenterControls() {
-    return callState == CallState.connecting || 
-           callState == CallState.connectingToCall;
+    return callState == VideoCallStatus.connecting || 
+           callState == VideoCallStatus.connectingToCall;
   }
 }

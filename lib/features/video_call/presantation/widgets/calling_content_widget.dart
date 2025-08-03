@@ -2,8 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/features/video_call/domain/entity/calling_entity.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/calling/calling_screen_bloc.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/calling/calling_screen_event.dart';
+import 'package:health_connect/features/video_call/domain/entity/video_call_enitity.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_bloc.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_event.dart';
 import 'package:health_connect/features/video_call/presantation/widgets/calling_avtar_widget.dart';
 import 'package:health_connect/features/video_call/presantation/widgets/calling_controll_widget.dart';
 import 'package:health_connect/features/video_call/presantation/widgets/calling_ring_animation.dart';
@@ -11,7 +12,7 @@ import 'package:health_connect/features/video_call/presantation/widgets/calling_
 import 'package:health_connect/features/video_call/presantation/widgets/calling_top_section_widget.dart';
 
 class CallingContentWidget extends StatefulWidget {
-  final CallingEntity callingEntity;
+  final VideoCallEntity callingEntity;
   final bool shouldStartAnimations;
 
   const CallingContentWidget({
@@ -43,7 +44,7 @@ class _CallingContentWidgetState extends State<CallingContentWidget>
   @override
   void didUpdateWidget(CallingContentWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _handleStateChanges(oldWidget.callingEntity.callState);
+    _handleStateChanges(oldWidget.callingEntity.status);
   }
 
   @override
@@ -83,25 +84,25 @@ class _CallingContentWidgetState extends State<CallingContentWidget>
     _pulseController.repeat(reverse: true);
   }
 
-  void _handleStateChanges(CallState previousState) {
-    final currentState = widget.callingEntity.callState;
+  void _handleStateChanges(VideoCallStatus previousState) {
+    final currentState = widget.callingEntity.status;
     
     if (currentState != previousState) {
       switch (currentState) {
-        case CallState.connecting:
+        case VideoCallStatus.connecting:
           _pulseController.repeat(reverse: true);
           _ringController.stop();
           break;
-        case CallState.ringing:
+        case VideoCallStatus.ringing:
           _pulseController.repeat(reverse: true);
           _ringController.repeat();
           break;
-        case CallState.connectingToCall:
+        case VideoCallStatus.connectingToCall:
           _pulseController.stop();
           _ringController.stop();
           break;
-        case CallState.cancelled:
-        case CallState.ended:
+        case VideoCallStatus.cancelled:
+        case VideoCallStatus.ended:
           _pulseController.stop();
           _ringController.stop();
           break;
@@ -118,7 +119,7 @@ class _CallingContentWidgetState extends State<CallingContentWidget>
         children: [
           // Top section with status
           CallingTopSectionWidget(
-            callState: widget.callingEntity.callState,
+            callState: widget.callingEntity.status,
           ),
 
           // Main content area
@@ -130,7 +131,7 @@ class _CallingContentWidgetState extends State<CallingContentWidget>
                 CallingAvatarWidget(
                   photoUrl: widget.callingEntity.receiverPhotoUrl,
                   pulseAnimation: _pulseAnimation,
-                  callState: widget.callingEntity.callState,
+                  callState: widget.callingEntity.status,
                 ),
 
                 const SizedBox(height: 40),
@@ -150,13 +151,13 @@ class _CallingContentWidgetState extends State<CallingContentWidget>
 
                 // Call status
                 CallingStatusWidget(
-                  callState: widget.callingEntity.callState,
+                  callState: widget.callingEntity.status,
                 ),
 
                 const SizedBox(height: 60),
 
                 // Ring animation (only during ringing)
-                if (widget.callingEntity.callState == CallState.ringing)
+                if (widget.callingEntity.status == VideoCallStatus.ringing)
                   CallingRingAnimationWidget(
                     ringAnimation: _ringAnimation,
                   ),
@@ -166,9 +167,9 @@ class _CallingContentWidgetState extends State<CallingContentWidget>
 
           // Bottom controls
           CallingControlsWidget(
-            callState: widget.callingEntity.callState,
+            callState: widget.callingEntity.status,
             onCancel: () {
-              context.read<CallingScreenBloc>().add(CancelCalling());
+              context.read<VideoCallBloc>().add(DeclineCall(callerId: '', callId: ''));
             },
           ),
         ],

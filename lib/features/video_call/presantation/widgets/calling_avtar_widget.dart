@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:health_connect/features/video_call/domain/entity/calling_entity.dart';
+import 'package:health_connect/features/video_call/domain/entity/video_call_enitity.dart';
 
 class CallingAvatarWidget extends StatelessWidget {
   final String? photoUrl;
   final Animation<double> pulseAnimation;
-  final CallState callState;
+  final VideoCallStatus callState;
 
   const CallingAvatarWidget({
     Key? key,
@@ -19,7 +20,7 @@ class CallingAvatarWidget extends StatelessWidget {
       animation: pulseAnimation,
       builder: (context, child) {
         return Transform.scale(
-          scale: callState == CallState.ringing ? pulseAnimation.value : 1.0,
+          scale: callState == VideoCallStatus.ringing ? pulseAnimation.value : 1.0,
           child: Container(
             width: 160,
             height: 160,
