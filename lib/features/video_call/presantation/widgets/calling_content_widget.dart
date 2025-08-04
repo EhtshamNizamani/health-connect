@@ -1,7 +1,7 @@
 // features/video_call/presentation/widgets/calling_content_widget.dart (NEW FILE)
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:health_connect/features/video_call/domain/entity/calling_entity.dart';
+import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 import 'package:health_connect/features/video_call/domain/entity/video_call_enitity.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_bloc.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_event.dart';
@@ -14,11 +14,13 @@ import 'package:health_connect/features/video_call/presantation/widgets/calling_
 class CallingContentWidget extends StatefulWidget {
   final VideoCallEntity callingEntity;
   final bool shouldStartAnimations;
+  final UserEntity currentUser;
 
   const CallingContentWidget({
     Key? key,
     required this.callingEntity,
     required this.shouldStartAnimations,
+    required this.currentUser,
   }) : super(key: key);
 
   @override
@@ -169,7 +171,8 @@ class _CallingContentWidgetState extends State<CallingContentWidget>
           CallingControlsWidget(
             callState: widget.callingEntity.status,
             onCancel: () {
-              context.read<VideoCallBloc>().add(DeclineCall(callerId: '', callId: ''));
+             
+              context.read<VideoCallBloc>().add(DeclineCall(callerId: widget.callingEntity.callerId, callId: widget.callingEntity.callId));
             },
           ),
         ],

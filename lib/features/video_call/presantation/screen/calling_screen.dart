@@ -94,6 +94,7 @@ class _CallingScreenState extends State<CallingScreen> {
             
             if (state is VideoCallActive) {
               return CallingContentWidget(
+                currentUser: widget.currentUser,
                 callingEntity: state.callEntity,
                 shouldStartAnimations: state.shouldStartAnimations,
               );

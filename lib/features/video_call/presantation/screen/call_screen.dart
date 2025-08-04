@@ -10,8 +10,6 @@ import 'package:health_connect/features/video_call/presantation/widgets/call_con
 import 'package:health_connect/features/video_call/presantation/widgets/call_error_widget.dart';
 import 'package:health_connect/features/video_call/presantation/widgets/call_loading_widget.dart';
 
-// --- WIDGET #1: THE ENTRY POINT (Stateless) ---
-// This widget's only job is to provide the BLoC.
 class CallScreen extends StatelessWidget {
   final String callID;
   final UserEntity currentUser;
@@ -38,8 +36,6 @@ class CallScreen extends StatelessWidget {
   }
 }
 
-// --- WIDGET #2: THE UI (Stateful) ---
-// This widget is now a CHILD of the BlocProvider.
 class CallScreenView extends StatefulWidget {
   final String callID;
   final UserEntity currentUser;
@@ -62,9 +58,6 @@ class _CallScreenViewState extends State<CallScreenView> {
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-    // --- THIS NOW WORKS! ---
-    // Because the parent widget (CallScreen) has already provided the BLoC,
-    // context.read() can now find it.
     context.read<CallScreenBloc>().add(
       InitializeCall(
         widget.callID,
@@ -77,7 +70,6 @@ class _CallScreenViewState extends State<CallScreenView> {
   @override
   void dispose() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    // The BLoC's own close() method will be called automatically by BlocProvider.
     super.dispose();
   }
 
