@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_bloc.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_state.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_bloc.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_state.dart';
 import 'package:health_connect/features/video_call/presantation/widgets/incoming_call_buttons.dart';
 
 class IncomingCallControls extends StatelessWidget {
   final VoidCallback onAccept;
   final VoidCallback onDecline;
-  final VoidCallback onMessage;
+  // final VoidCallback onMessage;
 
   const IncomingCallControls({
     super.key,
     required this.onAccept,
     required this.onDecline,
-    required this.onMessage,
+    // required this.onMessage,
   });
 
   @override
@@ -36,11 +36,11 @@ class IncomingCallControls extends StatelessWidget {
                 isLoading: isLoading,
               ),
               
-              // Message button (optional)
-              IncomingCallSecondaryButton(
-                icon: Icons.message,
-                onTap: onMessage,
-              ),
+              // // Message button (optional)
+              // IncomingCallSecondaryButton(
+              //   icon: Icons.message,
+              //   onTap: onMessage,
+              // ),
               
               // Accept button
               IncomingCallActionButton(

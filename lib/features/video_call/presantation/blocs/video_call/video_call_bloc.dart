@@ -5,16 +5,14 @@ import 'package:health_connect/features/video_call/domain/usecase/accept_call_us
 import 'package:health_connect/features/video_call/domain/usecase/cancel_call_usecase.dart';
 import 'package:health_connect/features/video_call/domain/usecase/decline_call_usecase.dart';
 import 'package:health_connect/features/video_call/domain/usecase/initiate_call_usecase.dart';
-import 'package:health_connect/features/video_call/domain/usecase/manage_calling_usecase.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_event.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_state.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_event.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_state.dart';
 
 class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
   final InitiateCallUseCase _initiateCallUseCase;
   final AcceptCallUseCase _acceptCallUseCase;
   final DeclineCallUseCase _declineCallUseCase;
   final CancelCallUseCase _cancelCallUseCase;
-  final ManageCallingUseCase _manageCallingUseCase;
 
   Timer? _callingSequenceTimer;
   bool _hasNavigatedToCall = false;
@@ -25,7 +23,6 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
     this._acceptCallUseCase,
     this._declineCallUseCase,
     this._cancelCallUseCase,
-    this._manageCallingUseCase,
   ) : super(VideoCallInitial()) {
     // Original VideoCall events
     on<StartCall>(_onStartCall);

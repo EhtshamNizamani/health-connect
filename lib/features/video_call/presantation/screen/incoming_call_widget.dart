@@ -4,9 +4,9 @@ import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_bloc.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_event.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_state.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_bloc.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_event.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_state.dart';
 import 'package:health_connect/features/video_call/presantation/screen/call_screen.dart';
 import 'package:health_connect/features/video_call/presantation/widgets/incoming_call_controls.dart';
 import 'package:health_connect/features/video_call/presantation/widgets/incoming_call_loading.dart';
@@ -256,9 +256,9 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                     child: IncomingCallControls(
                       onAccept: () => _onAcceptCall(context),
                       onDecline: _onDeclineCall,
-                      onMessage: () {
-                        // TODO: Send quick message
-                      },
+                      // onMessage: () {
+                      //   // TODO: Send quick message
+                      // },
                     ),
                   ),
                 ],

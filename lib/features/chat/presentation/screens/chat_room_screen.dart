@@ -6,9 +6,9 @@ import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.d
 import 'package:health_connect/features/chat/presentation/blocs/chat_room/chat_room_bloc.dart';
 import 'package:health_connect/features/chat/presentation/blocs/chat_room/chat_room_event.dart';
 import 'package:health_connect/features/chat/presentation/blocs/chat_room/chat_room_state.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_bloc.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_event.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_state.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_bloc.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_event.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_state.dart';
 import 'package:health_connect/features/video_call/presantation/screen/calling_screen.dart';
 import 'package:health_connect/features/chat/presentation/widgets/chat_input_field.dart';
 import 'package:health_connect/features/chat/presentation/widgets/message_bubble.dart';

@@ -40,7 +40,7 @@ class VideoCallRepositoryImpl implements VideoCallRepository {
       );
       print("Calling cloud function...");
       await callable.call<void>({
-        'receiverId': receiverId,
+        'receiverId': receiverId, 
         'callerName': callerName,
         'callId': callId,
       });

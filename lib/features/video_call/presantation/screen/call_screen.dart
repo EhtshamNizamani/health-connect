@@ -84,7 +84,6 @@ class _CallScreenViewState extends State<CallScreenView> {
               Navigator.of(context).pop();
             }
           }
-          // No need for error snackbar here if the CallErrorWidget handles it
         },
         builder: (context, state) {
           if (state is CallScreenLoading || state is CallScreenInitial) {

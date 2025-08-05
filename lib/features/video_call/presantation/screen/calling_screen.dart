@@ -5,9 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/di/service_locator.dart';
 import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_profile_entity.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_bloc.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_event.dart';
-import 'package:health_connect/features/video_call/presantation/blocs/video_call/vide_call_state.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_bloc.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_event.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_state.dart';
 import 'package:health_connect/features/video_call/presantation/screen/call_screen.dart';
 import 'package:health_connect/features/video_call/presantation/widgets/calling_content_widget.dart';
 import 'package:health_connect/features/video_call/presantation/widgets/calling_error_widget.dart';
@@ -56,7 +56,6 @@ class _CallingScreenState extends State<CallingScreen> {
             if (state is VideoCallCancelled) {
               Navigator.pop(context);
             }
-            print(" this is your state $state");
             if (state is VideoCallNavigateToCall) {
               final otherUser = UserEntity(
                 id: state.otherUserId,
