@@ -56,7 +56,7 @@ class _CallingScreenState extends State<CallingScreen> {
             if (state is VideoCallCancelled) {
               Navigator.pop(context);
             }
-            
+            print(" this is your state $state");
             if (state is VideoCallNavigateToCall) {
               final otherUser = UserEntity(
                 id: state.otherUserId,

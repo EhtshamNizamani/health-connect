@@ -4,10 +4,8 @@ import 'package:health_connect/features/video_call/domain/entity/video_call_enit
 class CallingTopSectionWidget extends StatelessWidget {
   final VideoCallStatus callState;
 
-  const CallingTopSectionWidget({
-    Key? key,
-    required this.callState,
-  }) : super(key: key);
+  const CallingTopSectionWidget({Key? key, required this.callState})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -46,11 +44,7 @@ class CallingTopSectionWidget extends StatelessWidget {
           ),
           const Spacer(),
           // Video call icon
-          const Icon(
-            Icons.videocam,
-            color: Colors.white70,
-            size: 24,
-          ),
+          const Icon(Icons.videocam, color: Colors.white70, size: 24),
         ],
       ),
     );
@@ -68,6 +62,7 @@ class CallingTopSectionWidget extends StatelessWidget {
         return Colors.green;
       case VideoCallStatus.ended:
       case VideoCallStatus.cancelled:
+      case VideoCallStatus.declined:
         return Colors.red;
       case VideoCallStatus.busy:
       case VideoCallStatus.noAnswer:
@@ -101,6 +96,8 @@ class CallingTopSectionWidget extends StatelessWidget {
         return "Initiating";
       case VideoCallStatus.failed:
         return "Failed Dalled";
+      case VideoCallStatus.declined:
+        return "Call Declined";
     }
   }
 }

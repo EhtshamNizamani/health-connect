@@ -72,4 +72,5 @@ enum VideoCallStatus {
   busy,
   noAnswer,
   cancelled,
+  declined,
 }

@@ -74,8 +74,32 @@ class VideoCallNavigateToCall extends VideoCallState {
       ];
 }
 
-// End states
-class VideoCallCancelled extends VideoCallState {}
+// End states - Updated with proper data
+class VideoCallCancelled extends VideoCallState {
+  final String callId;
+  final String message;
+  
+  const VideoCallCancelled({
+    required this.callId,
+    required this.message,
+  });
+  
+  @override
+  List<Object> get props => [callId, message];
+}
+
+class VideoCallDeclined extends VideoCallState {
+  final String callId;
+  final String message;
+  
+  const VideoCallDeclined({
+    required this.callId,
+    required this.message,
+  });
+  
+  @override
+  List<Object> get props => [callId, message];
+}
 
 class VideoCallFailure extends VideoCallState {
   final String message;
@@ -85,4 +109,3 @@ class VideoCallFailure extends VideoCallState {
   @override
   List<Object> get props => [message];
 }
-

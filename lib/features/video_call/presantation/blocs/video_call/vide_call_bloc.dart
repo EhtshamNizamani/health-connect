@@ -15,14 +15,15 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
   final DeclineCallUseCase _declineCallUseCase;
   final CancelCallUseCase _cancelCallUseCase;
   final ManageCallingUseCase _manageCallingUseCase;
-  
+
   Timer? _callingSequenceTimer;
   bool _hasNavigatedToCall = false;
+  VideoCallEntity? _activeCall;
 
   VideoCallBloc(
-    this._initiateCallUseCase, 
-    this._acceptCallUseCase, 
-    this._declineCallUseCase, 
+    this._initiateCallUseCase,
+    this._acceptCallUseCase,
+    this._declineCallUseCase,
     this._cancelCallUseCase,
     this._manageCallingUseCase,
   ) : super(VideoCallInitial()) {
@@ -31,13 +32,16 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
     on<AcceptCall>(_onAcceptCall);
     on<DeclineCall>(_onDeclineCall);
     on<CancelCall>(_onCancelCall);
-    
+
     // Original CallingScreen events (merged)
     on<InitializeCalling>(_onInitializeCalling);
     on<StartCallingSequence>(_onStartCallingSequence);
     on<JoinCall>(_onJoinCall);
     on<UpdateCallStatus>(_onUpdateCallStatus);
   }
+
+  // Getter to access active call
+  VideoCallEntity? get activeCall => _activeCall;
 
   @override
   Future<void> close() {
@@ -46,7 +50,10 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
   }
 
   // Original VideoCall methods
-  Future<void> _onStartCall(StartCall event, Emitter<VideoCallState> emit) async {
+  Future<void> _onStartCall(
+    StartCall event,
+    Emitter<VideoCallState> emit,
+  ) async {
     emit(VideoCallInitiating());
     final result = await _initiateCallUseCase(
       receiverId: event.receiverId,
@@ -59,7 +66,10 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
     );
   }
 
-  Future<void> _onAcceptCall(AcceptCall event, Emitter<VideoCallState> emit) async {
+  Future<void> _onAcceptCall(
+    AcceptCall event,
+    Emitter<VideoCallState> emit,
+  ) async {
     final result = await _acceptCallUseCase(
       callerId: event.callerId,
       callId: event.callId,
@@ -70,14 +80,71 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
     );
   }
 
-  Future<void> _onDeclineCall(DeclineCall event, Emitter<VideoCallState> emit) async {
-    await _declineCallUseCase(callerId: event.callerId, callId: event.callId);
-    // No specific state needed, UI just pops
+  Future<void> _onDeclineCall(
+    DeclineCall event,
+    Emitter<VideoCallState> emit,
+  ) async {
+
+    try {
+      // 1. Stop any ongoing sequences
+      _callingSequenceTimer?.cancel();
+      _hasNavigatedToCall = true;
+
+      // 2. Tell the Cloud Function to notify the caller
+      await _declineCallUseCase(
+        callerId: event.callerId,
+        callId: event.callId,
+      );
+
+
+      emit(
+        VideoCallDeclined(
+          callId: event.callId,
+          message: "Call declined",
+        ),
+      );
+
+      // 4. Clear the call after a brief delay
+      await Future.delayed(const Duration(milliseconds: 500));
+      _activeCall = null;
+      emit(VideoCallInitial());
+    } catch (e) {
+      emit(VideoCallFailure("Failed to decline call: $e"));
+    }
   }
 
-  Future<void> _onCancelCall(CancelCall event, Emitter<VideoCallState> emit) async {
-    await _cancelCallUseCase(receiverId: event.receiverId, callId: event.callId);
-    // No specific state needed, UI just pops
+  // Fixed Cancel Call Method
+  Future<void> _onCancelCall(
+    CancelCall event,
+    Emitter<VideoCallState> emit,
+  ) async {
+
+    try {
+      // 1. Stop any ongoing sequences immediately
+      _callingSequenceTimer?.cancel();
+      _hasNavigatedToCall = false;
+
+      // 2. Tell the Cloud Function to notify the receiver
+      await _cancelCallUseCase(
+        receiverId: event.receiverId,
+        callId: event.callId,
+      );
+
+
+      emit(
+        VideoCallCancelled(
+          callId: event.callId,
+          message: "Call cancelled",
+        ),
+      );
+
+      // 4. Clear the call after a brief delay
+      await Future.delayed(const Duration(milliseconds: 500));
+      _activeCall = null;
+      emit(VideoCallInitial());
+    } catch (e) {
+      emit(VideoCallFailure("Failed to cancel call: $e"));
+    }
   }
 
   // Original CallingScreen methods (merged and adapted)
@@ -95,11 +162,11 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
         ? event.doctor.photoUrl
         : event.patient.photoUrl;
 
-    final callEntity = VideoCallEntity(
+    _activeCall = VideoCallEntity(
       callId: event.callId,
       callerId: event.currentUser.id,
-      receiverId: event.currentUser.role == 'patient' 
-          ? event.doctor.uid 
+      receiverId: event.currentUser.role == 'patient'
+          ? event.doctor.uid
           : event.patient.id,
       callerName: event.currentUser.name,
       receiverName: receiverName,
@@ -108,10 +175,9 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
       createdAt: DateTime.now(),
     );
 
-    emit(VideoCallActive(
-      callEntity: callEntity,
-      shouldStartAnimations: true,
-    ));
+    emit(
+      VideoCallActive(callEntity: _activeCall!, shouldStartAnimations: true),
+    );
 
     // Auto-start calling sequence
     add(StartCallingSequence());
@@ -121,81 +187,124 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
     StartCallingSequence event,
     Emitter<VideoCallState> emit,
   ) async {
-    if (state is! VideoCallActive) return;
-    final currentState = state as VideoCallActive;
+    if (state is! VideoCallActive || _activeCall == null) return;
 
-    // Step 1: Connecting
-    emit(currentState.copyWith(
-      callEntity: currentState.callEntity.copyWith(
-        status: VideoCallStatus.connecting,
-      ),
-    ));
+    try {
+      // Step 1: Connecting
+      if (_activeCall?.status != VideoCallStatus.cancelled &&
+          _activeCall?.status != VideoCallStatus.declined) {
+        _activeCall = _activeCall!.copyWith(status: VideoCallStatus.connecting);
+        emit(
+          VideoCallActive(
+            callEntity: _activeCall!,
+            shouldStartAnimations: true,
+          ),
+        );
 
-    await Future.delayed(const Duration(seconds: 1));
+        await Future.delayed(const Duration(seconds: 1));
+      }
 
-    // Step 2: Ringing
-    if (state is VideoCallActive) {
-      final updatedState = state as VideoCallActive;
-      emit(updatedState.copyWith(
-        callEntity: updatedState.callEntity.copyWith(
-          status: VideoCallStatus.ringing,
-        ),
-      ));
+      // Step 2: Ringing
+      if (_activeCall?.status != VideoCallStatus.cancelled &&
+          _activeCall?.status != VideoCallStatus.declined &&
+          state is VideoCallActive) {
+        _activeCall = _activeCall!.copyWith(status: VideoCallStatus.ringing);
+        emit(
+          VideoCallActive(
+            callEntity: _activeCall!,
+            shouldStartAnimations: true,
+          ),
+        );
 
-      await Future.delayed(const Duration(seconds: 3));
+        await Future.delayed(const Duration(seconds: 3));
+      }
 
       // Step 3: Connecting to call
-      if (state is VideoCallActive && !_hasNavigatedToCall) {
-        final finalState = state as VideoCallActive;
-        emit(finalState.copyWith(
-          callEntity: finalState.callEntity.copyWith(
-            status: VideoCallStatus.connectingToCall,
+      if (_activeCall?.status != VideoCallStatus.cancelled &&
+          _activeCall?.status != VideoCallStatus.declined &&
+          state is VideoCallActive &&
+          !_hasNavigatedToCall) {
+        _activeCall = _activeCall!.copyWith(
+          status: VideoCallStatus.connectingToCall,
+        );
+        emit(
+          VideoCallActive(
+            callEntity: _activeCall!,
+            shouldStartAnimations: true,
           ),
-        ));
+        );
 
         await Future.delayed(const Duration(seconds: 1));
 
         // Step 4: Join call
-        if (!_hasNavigatedToCall) {
+        if (!_hasNavigatedToCall &&
+            _activeCall?.status != VideoCallStatus.cancelled &&
+            _activeCall?.status != VideoCallStatus.declined) {
           add(JoinCall());
         }
       }
+    } catch (e) {
+      emit(VideoCallFailure("Call sequence failed: $e"));
     }
   }
 
-  Future<void> _onJoinCall(
-    JoinCall event,
-    Emitter<VideoCallState> emit,
-  ) async {
-    if (_hasNavigatedToCall) return;
-    if (state is! VideoCallActive) return;
+  Future<void> _onJoinCall(JoinCall event, Emitter<VideoCallState> emit) async {
+    if (_hasNavigatedToCall ||
+        state is! VideoCallActive ||
+        _activeCall == null ||
+        _activeCall!.status == VideoCallStatus.cancelled ||
+        _activeCall!.status == VideoCallStatus.declined)
+      return;
 
     _hasNavigatedToCall = true;
-    final currentState = state as VideoCallActive;
-    final entity = currentState.callEntity;
 
-    emit(VideoCallNavigateToCall(
-      callId: entity.callId,
-      currentUserId: entity.callerId,
-      currentUserName: entity.callerName,
-      otherUserId: entity.receiverId,
-      otherUserName: entity.receiverName,
-      otherUserPhotoUrl: entity.receiverPhotoUrl,
-    ));
+    emit(
+      VideoCallNavigateToCall(
+        callId: _activeCall!.callId,
+        currentUserId: _activeCall!.callerId,
+        currentUserName: _activeCall!.callerName,
+        otherUserId: _activeCall!.receiverId,
+        otherUserName: _activeCall!.receiverName,
+        otherUserPhotoUrl: _activeCall!.receiverPhotoUrl,
+      ),
+    );
   }
 
   Future<void> _onUpdateCallStatus(
     UpdateCallStatus event,
     Emitter<VideoCallState> emit,
   ) async {
-    if (state is VideoCallActive) {
-      print("What status is this ${event.status}");
-      final currentState = state as VideoCallActive;
-      emit(currentState.copyWith(
-        callEntity: currentState.callEntity.copyWith(
-          status: event.status,
-        ),
-      ));
+    if (state is VideoCallActive && _activeCall != null) {
+      print("Updating call status to: ${event.status}");
+
+      _activeCall = _activeCall!.copyWith(status: event.status);
+
+      // Handle specific status updates
+      switch (event.status) {
+        case VideoCallStatus.cancelled:
+          emit(
+            VideoCallCancelled(
+              callId: _activeCall!.callId,
+              message: "Call was cancelled",
+            ),
+          );
+          break;
+        case VideoCallStatus.declined:
+          emit(
+            VideoCallDeclined(
+              callId: _activeCall!.callId,
+              message: "Call was declined",
+            ),
+          );
+          break;
+        default:
+          emit(
+            VideoCallActive(
+              callEntity: _activeCall!,
+              shouldStartAnimations: true,
+            ),
+          );
+      }
     }
   }
 }

@@ -147,6 +147,14 @@ exports.declineCall = europeFunctions.https.onCall(async (data, context) => {
         .HttpsError("invalid-argument", "Required data missing.");
   }
   try {
+    const declinerId = context.auth.uid;
+    const declinerDoc = await db.collection("users").doc(declinerId).get();
+    if (!declinerDoc.exists) {
+      throw new functions.https.HttpsError(
+          "not-found", "Decliner's user document not found.",
+      );
+    }
+    const declinerData = declinerDoc.data();
     const callerDoc = await db.collection("users").doc(callerId).get();
     if (!callerDoc.exists) {
       throw new functions.https.HttpsError("not-found", "User not found.");
@@ -155,10 +163,20 @@ exports.declineCall = europeFunctions.https.onCall(async (data, context) => {
     if (!fcmToken) {
       return {success: false, error: "Caller has no FCM token."};
     }
+    // --- THE FIX: Add the decliner's name to the payload ---
     const message = {
       token: fcmToken,
       data: {
-        payload: JSON.stringify({type: "call_declined", call_id: callId}),
+        payload: JSON.stringify({
+          type: "call_declined",
+          call_id: callId,
+          decliner_id: declinerId,
+          decliner_name: declinerData.name || "User",
+        }),
+      },
+      notification: {
+        title: "Call Declined",
+        body: `${declinerData.name || "Someone"} declined your call.`,
       },
     };
     await admin.messaging().send(message);
@@ -226,27 +244,33 @@ exports.endCall = europeFunctions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("internal", error.message);
   }
 });
-
-/**
- * ==================================================================
- * 5. SEND "CALL CANCELLED" SIGNAL (from caller)
- * ==================================================================
- */
+// ==================================================================
+// 5. SEND "CALL CANCELLED" SIGNAL (from caller)
+// ==================================================================
 exports.cancelCall = europeFunctions.https.onCall(async (data, context) => {
-  // This function can be simplified as it's very similar to declineCall
   if (!context.auth) {
     throw new functions.https
         .HttpsError("unauthenticated", "Auth required.");
   }
   const {receiverId, callId} = data;
   if (!receiverId || !callId) {
-    throw new functions
-        .https.HttpsError("invalid-argument", "Required data missing.");
+    throw new functions.https
+        .HttpsError("invalid-argument", "Required data missing.");
   }
+
   try {
+    // <<<--- THE FIX: Get the caller's data ---
+    const callerId = context.auth.uid;
+    const callerDoc = await db.collection("users").doc(callerId).get();
+    if (!callerDoc.exists) {
+      throw new functions.https.HttpsError("not-found", "Caller not found.");
+    }
+    const callerData = callerDoc.data();
+    // <<<------------------------------------->>>
+
     const receiverDoc = await db.collection("users").doc(receiverId).get();
     if (!receiverDoc.exists) {
-      throw new functions.https.HttpsError("not-found", "User not found.");
+      throw new functions.https.HttpsError("not-found", "Receiver not found.");
     }
     const {fcmToken} = receiverDoc.data();
     if (!fcmToken) {
@@ -255,14 +279,24 @@ exports.cancelCall = europeFunctions.https.onCall(async (data, context) => {
     const message = {
       token: fcmToken,
       data: {
-        payload: JSON.stringify({type: "call_cancelled", call_id: callId}),
+        payload: JSON.stringify({
+          type: "call_cancelled",
+          call_id: callId,
+          caller_id: callerId, // Good to send this too
+          caller_name: callerData.name || "Caller", // Now we can send the name
+        }),
       },
-    };
+      // Optional: Add a visual notification as well
+      notification: {
+        title: "Call Cancelled",
+        body: `${callerData.name || "Someone"} cancelled the call.`,
+      }};
     await admin.messaging().send(message);
     await db.collection("calls").doc(callId).update({
       status: "cancelled",
       cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+
     return {success: true};
   } catch (error) {
     console.error("cancelCall Error:", error);

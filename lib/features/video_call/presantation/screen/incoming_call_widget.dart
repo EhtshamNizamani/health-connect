@@ -42,6 +42,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
   late AnimationController _slideController;
   late Animation<double> _pulseAnimation;
   late Animation<Offset> _slideAnimation;
+  bool _isProcessingAction = false;
 
   @override
   void initState() {
@@ -98,6 +99,9 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
   }
 
   void _onAcceptCall(BuildContext context) async {
+    if (_isProcessingAction) return;
+    _isProcessingAction = true;
+
     // Stop ringtone and add haptic feedback
     FlutterRingtonePlayer().stop();
     HapticFeedback.mediumImpact();
@@ -140,9 +144,14 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
   }
 
   void _onDeclineCall() async {
+    print(" why tapping ??");
+    if (_isProcessingAction) return;
+    _isProcessingAction = true;
+
     // Stop ringtone and add haptic feedback
     FlutterRingtonePlayer().stop();
     HapticFeedback.mediumImpact();
+    
     // Use VideoCallBloc to handle decline call
     context.read<VideoCallBloc>().add(
       DeclineCall(callerId: widget.callerId, callId: widget.callId),
@@ -161,6 +170,8 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
 
     return BlocListener<VideoCallBloc, VideoCallState>(
       listener: (context, state) {
+        print("IncomingCallScreen - State changed: $state");
+        
         if (state is VideoCallFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -168,6 +179,37 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
               backgroundColor: Colors.red,
             ),
           );
+        }
+        
+        // Handle when call is cancelled by the caller
+        if (state is VideoCallCancelled) {
+          FlutterRingtonePlayer().stop();
+          HapticFeedback.mediumImpact();
+          
+          // Show brief message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Call was cancelled'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          
+          // Close the screen
+          if (mounted && !_isProcessingAction) {
+            _slideController.reverse().then((_) {
+              if (mounted) {
+                Navigator.of(context).pop();
+              }
+            });
+          }
+        }
+        
+        // Handle when call is declined
+        if (state is VideoCallDeclined) {
+          // This screen initiated the decline, so just close
+          if (mounted && !_isProcessingAction) {
+            Navigator.of(context).pop();
+          }
         }
       },
       child: Scaffold(
@@ -226,17 +268,6 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
             // Loading overlay when processing
             BlocBuilder<VideoCallBloc, VideoCallState>(
               builder: (context, state) {
-                print("Thi si my state $state");
-
-                if (state is VideoCallCancelled) {
-                  FlutterRingtonePlayer().stop();
-                  HapticFeedback.mediumImpact();
-                  // Animate out and close
-                  _slideController.reverse();
-                  if (mounted) {
-                    Navigator.of(context).pop();
-                  }
-                }
                 if (state is VideoCallInitiating) {
                   return const IncomingCallLoadingOverlay(
                     message: "Connecting...",

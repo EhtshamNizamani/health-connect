@@ -48,6 +48,8 @@ class CallingStatusWidget extends StatelessWidget {
         return "Initiating";
       case VideoCallStatus.failed:
         return "Fialed";
+          case VideoCallStatus.declined:
+        return "Call Declined";
     }
   }
 }

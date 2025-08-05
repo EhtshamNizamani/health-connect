@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:health_connect/core/constants/app_color.dart';
 import 'package:health_connect/core/di/service_locator.dart';
 import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
@@ -189,7 +190,7 @@ class NotificationService {
       ScaffoldMessenger.of(currentState.context).showSnackBar(
         SnackBar(
           content: Text('${payload['caller_name'] ?? 'Caller'} cancelled the call'),
-          backgroundColor: Colors.grey,
+          backgroundColor: AppColors.error,
           duration: const Duration(seconds: 3),
         ),
       );

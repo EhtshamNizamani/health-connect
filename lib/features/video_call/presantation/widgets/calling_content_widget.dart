@@ -1,4 +1,3 @@
-// features/video_call/presentation/widgets/calling_content_widget.dart (NEW FILE)
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
@@ -114,6 +113,17 @@ class _CallingContentWidgetState extends State<CallingContentWidget>
     }
   }
 
+  void _handleCancelCall() {
+    // Use the correct event based on the call state
+    // For calling screen (caller side), use CancelCall
+    context.read<VideoCallBloc>().add(
+      CancelCall(
+        receiverId: widget.callingEntity.receiverId, 
+        callId: widget.callingEntity.callId,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -170,10 +180,7 @@ class _CallingContentWidgetState extends State<CallingContentWidget>
           // Bottom controls
           CallingControlsWidget(
             callState: widget.callingEntity.status,
-            onCancel: () {
-             
-              context.read<VideoCallBloc>().add(DeclineCall(callerId: widget.callingEntity.callerId, callId: widget.callingEntity.callId));
-            },
+            onCancel: _handleCancelCall,
           ),
         ],
       ),
