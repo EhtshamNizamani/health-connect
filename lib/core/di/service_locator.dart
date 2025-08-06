@@ -6,9 +6,11 @@ import 'package:get_it/get_it.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:health_connect/core/config/zego_cloud_config.dart';
 import 'package:health_connect/core/service/notification_service.dart';
+import 'package:health_connect/core/service/stripe_payment_service.dart';
 import 'package:health_connect/core/themes/theme_manager.dart';
 import 'package:health_connect/features/appointment/domain/usecases/get_doctor_appointments_usecase.dart';
 import 'package:health_connect/features/appointment/domain/usecases/get_patient_appointments_usecase.dart';
+import 'package:health_connect/features/appointment/domain/usecases/initiate_payment.dart';
 import 'package:health_connect/features/appointment/domain/usecases/update_appointment_status_usecase.dart';
 
 import 'package:health_connect/features/auth/data/repositories_impl/auth_repository_impl.dart';
@@ -93,8 +95,9 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<FirebaseFunctions>(
     () => FirebaseFunctions.instanceFor(region: "europe-west1"),
   );
+  //service
   sl.registerLazySingleton(() => NotificationService());
-  sl.registerLazySingleton(() => ManageCallUseCase(sl(), sl()));
+  sl.registerLazySingleton(() => StripePaymentService());
 
   // Repository
   sl.registerLazySingleton<AuthRepository>(
@@ -113,7 +116,7 @@ Future<void> setupLocator() async {
     () => FirebaseManageAvailabilityRepositoryImpl(sl(), sl()),
   );
   sl.registerLazySingleton<AppointmentRepository>(
-    () => AppointmentRepositoryImpl(sl()),
+    () => AppointmentRepositoryImpl(sl(), sl()),
   );
   sl.registerLazySingleton<ReviewRepository>(() => ReviewRepositoryImpl(sl()));
   sl.registerLazySingleton<DoctorProfileUpdateRepository>(
@@ -192,6 +195,8 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<SendMessageUseCase>(() => SendMessageUseCase(sl()));
   sl.registerLazySingleton(() => UploadFileUseCase(sl()));
   sl.registerLazySingleton(() => InitiateCallUseCase(sl()));
+  sl.registerLazySingleton(() => InitiatePaymentUseCase(sl())); 
+  sl.registerLazySingleton(() => ManageCallUseCase(sl(), sl()));
 
   // Bloc
   sl.registerFactory(
@@ -215,7 +220,7 @@ Future<void> setupLocator() async {
       sl<SaveDoctorAvailabilityUseCase>(),
     ),
   );
-  sl.registerFactory(() => BookingBloc(sl())); // Add this line
+  sl.registerFactory(() => BookingBloc(sl(),sl(),sl())); // Add this line
   sl.registerFactory(() => DoctorAppointmentsBloc(sl(), sl(), sl()));
   sl.registerFactory(() => PatientAppointmentsBloc(sl(), sl(), sl()));
   sl.registerFactory(() => ReviewBloc(sl(), sl()));

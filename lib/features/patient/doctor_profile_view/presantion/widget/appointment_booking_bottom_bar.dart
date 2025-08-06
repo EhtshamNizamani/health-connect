@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/constants/app_color.dart';
 import 'package:health_connect/core/shared/widgets/custom_button.dart';
+import 'package:health_connect/features/appointment/presentation/blocs/booking_event.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_state.dart';
 import 'package:health_connect/features/appointment/domain/entities/appointment_entity.dart';
 import 'package:health_connect/features/appointment/presentation/blocs/booking_bloc.dart';
-import 'package:health_connect/features/appointment/presentation/blocs/booking_event.dart';
 import 'package:health_connect/features/appointment/presentation/blocs/booking_state.dart';
+import 'package:health_connect/features/patient/appointment/presentation/screen/payment_summary_screen.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_bloc.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_state.dart';
 
@@ -70,9 +71,13 @@ class AppointmentBookingBottomBar extends StatelessWidget {
                             consultationFee: doctor.consultationFee,
                             createdAt: DateTime.now(),
                           );
-                          context.read<BookingBloc>().add(
-                            AppointmentBookingRequested(newAppointment),
-                          );
+                          Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => PaymentSummaryScreen(
+                            appointmentDetails: newAppointment,
+                          ),
+                        ),
+                      );
                         },
                   text: "Book Appointment",
                 ),

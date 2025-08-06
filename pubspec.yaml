@@ -62,8 +62,8 @@ dependencies:
   cloud_functions: ^5.6.2
   firebase_app_check: ^0.3.2+10
   flutter_ringtone_player: ^4.0.0+4
-  zego_zimkit: ^1.19.2
   permission_handler: ^11.3.1
+  flutter_stripe: ^11.5.0
 
 dev_dependencies:
   flutter_test:

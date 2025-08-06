@@ -15,4 +15,9 @@ abstract class AppointmentRepository {
   Stream<Either<Failure, List<AppointmentEntity>>> getPatientAppointments(String patientId);
   
   Future<Either<Failure, void>> updateAppointmentStatus(String appointmentId, String newStatus);
+  
+  Future<Either<Failure, String>> initiatePayment({
+    required String doctorId,
+    required int amount,
+  });
 }

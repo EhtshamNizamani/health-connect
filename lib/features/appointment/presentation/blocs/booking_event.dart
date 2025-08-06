@@ -7,11 +7,12 @@ abstract class BookingEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class AppointmentBookingRequested extends BookingEvent {
-  final AppointmentEntity appointment;
+// Event to start the whole process: payment followed by booking
+class PaymentAndBookingStarted extends BookingEvent {
+  final AppointmentEntity appointmentDetails;
 
-  const AppointmentBookingRequested(this.appointment);
-  
+  const PaymentAndBookingStarted(this.appointmentDetails);
+
   @override
-  List<Object> get props => [appointment];
+  List<Object> get props => [appointmentDetails];
 }

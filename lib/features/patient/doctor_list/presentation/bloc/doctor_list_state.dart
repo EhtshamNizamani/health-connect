@@ -1,45 +1,49 @@
-import 'package:equatable/equatable.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_profile_entity.dart';
+import 'package:equatable/equatable.dart';
 
+// Using a single state class is a modern and clean BLoC pattern
+class DoctorListState extends Equatable {
+  final List<DoctorEntity> doctors;
+  final bool isLoadingFirstPage;
+  final bool isLoadingMore;
+  final bool hasReachedMax;
+  final DocumentSnapshot? lastDocument;
+  final String? errorMessage;
 
-abstract class DoctorListState extends Equatable {
-  const DoctorListState();
-  @override
-  List<Object?> get props => [];
-}
-
-class DoctorListInitial extends DoctorListState {}
-class DoctorListLoading extends DoctorListState {}
-class DoctorListError extends DoctorListState {
-  final String message;
-  const DoctorListError(this.message);
-  @override
-  List<Object?> get props => [message];
-}
-
-// <<< --- UPDATE THIS STATE ---
-class DoctorListLoaded extends DoctorListState {
-  // This will hold the complete list of doctors fetched from Firestore
-  final List<DoctorEntity> allDoctors;
-  // This will hold the list of doctors to be displayed (after filtering)
-  final List<DoctorEntity> filteredDoctors;
-
-  const DoctorListLoaded({
-    required this.allDoctors,
-    required this.filteredDoctors,
+  const DoctorListState({
+    this.doctors = const [],
+    this.isLoadingFirstPage = false,
+    this.isLoadingMore = false,
+    this.hasReachedMax = false,
+    this.lastDocument,
+    this.errorMessage,
   });
 
-  @override
-  List<Object?> get props => [allDoctors, filteredDoctors];
+  // Initial state factory
+  factory DoctorListState.initial() => const DoctorListState();
 
-  // Helper method to create a new state with updated filters
-  DoctorListLoaded copyWith({
-    List<DoctorEntity>? allDoctors,
-    List<DoctorEntity>? filteredDoctors,
+  // copyWith method to easily create new states
+  DoctorListState copyWith({
+    List<DoctorEntity>? doctors,
+    bool? isLoadingFirstPage,
+    bool? isLoadingMore,
+    bool? hasReachedMax,
+    DocumentSnapshot? lastDocument,
+    String? errorMessage,
   }) {
-    return DoctorListLoaded(
-      allDoctors: allDoctors ?? this.allDoctors,
-      filteredDoctors: filteredDoctors ?? this.filteredDoctors,
+    return DoctorListState(
+      doctors: doctors ?? this.doctors,
+      isLoadingFirstPage: isLoadingFirstPage ?? this.isLoadingFirstPage,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasReachedMax: hasReachedMax ?? this.hasReachedMax,
+      lastDocument: lastDocument ?? this.lastDocument,
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
+
+  @override
+  List<Object?> get props => [
+    doctors, isLoadingFirstPage, isLoadingMore, hasReachedMax, lastDocument, errorMessage
+  ];
 }

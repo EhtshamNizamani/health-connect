@@ -6,6 +6,9 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 const db = admin.firestore();
 
+// YEH LINE YAHAN HONI CHAHIYE
+const stripe = require("stripe")(functions.config().stripe.secret_key);
+
 // Define the region once to reuse it
 const europeFunctions = functions.region("europe-west1");
 
@@ -301,5 +304,83 @@ exports.cancelCall = europeFunctions.https.onCall(async (data, context) => {
   } catch (error) {
     console.error("cancelCall Error:", error);
     throw new functions.https.HttpsError("internal", error.message);
+  }
+});
+/**
+ * ==================================================================
+ * ** NAYA STRIPE PAYMENT FUNCTION (FINAL LINTING FIXES) **
+ * ==================================================================
+ */
+exports.createPayment = europeFunctions.https.onCall(async (data, context) => {
+  // 1. Check karein ki user authenticated hai ya nahi
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+        "unauthenticated",
+        "This function must be called while authenticated.", // Line todi gayi
+    );
+  }
+
+  // 2. App se aane wala data (sirf doctor ID)
+  const {doctorId} = data;
+
+  if (!doctorId) {
+    throw new functions.https.HttpsError(
+        "invalid-argument",
+        "The function requires a 'doctorId' argument.", // Line todi gayi
+    );
+  }
+
+  // Production-Ready Approach (Recommended)
+  // Hum client se amount trust nahi karenge.
+  //  Server par doctor ki fee fetch karenge.
+  let amountToChargeInPaisa;
+  try {
+    const doctorDoc = await db.collection("doctors").doc(doctorId).get();
+    if (!doctorDoc.exists) {
+      throw new functions.https.HttpsError("not-found", "Doctor not found.");
+    }
+    // Firestore se fee lein (e.g., 500)
+    const fee = doctorDoc.data().consultationFee;
+    if (!fee) {
+      throw new functions.https.HttpsError(
+          "not-found",
+          "Consultation fee for this doctor is not set.", // Line todi gayi
+      );
+    }
+    // Stripe ko paise mein convert karein
+    amountToChargeInPaisa = fee * 100;
+  } catch (error) {
+    console.error("Error fetching doctor fee:", error);
+    throw new functions.https.HttpsError(
+        "internal",
+        "Could not verify the doctor's fee.",
+    );
+  }
+
+  try {
+    // 3. Stripe Payment Intent banayein
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountToChargeInPaisa, // Securely fetched amount
+      currency: "inr", // Aapki currency (e.g., inr, usd)
+      automatic_payment_methods: {
+        enabled: true,
+      },
+      // Metadata mein extra info save kar sakte hain
+      metadata: {
+        userId: context.auth.uid,
+        doctorId: doctorId,
+      },
+    });
+
+    // 4. Client-side ko 'client_secret' return karein
+    return {
+      clientSecret: paymentIntent.client_secret,
+    };
+  } catch (error) {
+    console.error("Stripe Error:", error);
+    throw new functions.https.HttpsError(
+        "internal",
+        "An error occurred while creating the payment intent.",
+    );
   }
 });

@@ -2,7 +2,9 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:health_connect/core/service/notification_service.dart';
 import 'package:health_connect/core/themes/theme_manager.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_event.dart';
@@ -31,6 +33,10 @@ void main() async {
   );
   await setupLocator();
   // await sl<NotificationService>().initialize(); 
+  Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
+
+  // Yeh line optional hai, lekin good practice hai
+  await Stripe.instance.applySettings();
 
   runApp(
     MultiBlocProvider(
