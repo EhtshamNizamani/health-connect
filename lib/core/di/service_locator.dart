@@ -1,7 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:health_connect/core/config/zego_cloud_config.dart';
+import 'package:health_connect/core/service/notification_service.dart';
 import 'package:health_connect/core/themes/theme_manager.dart';
 import 'package:health_connect/features/appointment/domain/usecases/get_doctor_appointments_usecase.dart';
 import 'package:health_connect/features/appointment/domain/usecases/get_patient_appointments_usecase.dart';
@@ -57,14 +61,41 @@ import 'package:health_connect/features/patient/doctor_profile_view/domain/repos
 import 'package:health_connect/features/patient/doctor_profile_view/domain/usecase/get_available_slots_usecase.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/domain/usecase/get_doctor_by_id_usecase.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_bloc.dart';
+import 'package:health_connect/features/video_call/data/repository/call_engine_repository_impl.dart.dart';
+import 'package:health_connect/features/video_call/data/repository/calling_repository_impl.dart';
+import 'package:health_connect/features/video_call/data/repository/video_call_repository_impl.dart';
+import 'package:health_connect/features/video_call/domain/repository/call_engine_repository.dart';
+import 'package:health_connect/features/video_call/domain/repository/calling_repository.dart';
+import 'package:health_connect/features/video_call/domain/repository/video_call_repository.dart';
+import 'package:health_connect/features/video_call/domain/usecase/accept_call_usecase.dart';
+import 'package:health_connect/features/video_call/domain/usecase/cancel_call_usecase.dart';
+import 'package:health_connect/features/video_call/domain/usecase/decline_call_usecase.dart';
+import 'package:health_connect/features/video_call/domain/usecase/initiate_call_usecase.dart';
+import 'package:health_connect/features/video_call/domain/usecase/manage_call_usecase.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/call_screen_bloc/call_screen_bloc.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_bloc.dart';
 
 final sl = GetIt.instance;
 
 Future<void> setupLocator() async {
+  // <<<--- ADD THIS LINE AT THE TOP ---
+  // Load environment variables first to ensure they are available for all dependencies.
+  await dotenv.load(fileName: ".env");
+
+  //configuration
+  sl.registerLazySingleton(() => ZegoConfig());
+
   // Firebase
   sl.registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance);
   sl.registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance);
   sl.registerLazySingleton<FirebaseStorage>(() => FirebaseStorage.instance);
+
+  sl.registerLazySingleton<FirebaseFunctions>(
+    () => FirebaseFunctions.instanceFor(region: "europe-west1"),
+  );
+  sl.registerLazySingleton(() => NotificationService());
+  sl.registerLazySingleton(() => ManageCallUseCase(sl(), sl()));
+
   // Repository
   sl.registerLazySingleton<AuthRepository>(
     () => FirebaseAuthRepositoryImpl(sl(), sl(), sl()),
@@ -90,6 +121,15 @@ Future<void> setupLocator() async {
   );
   sl.registerLazySingleton<ChatRepository>(
     () => FirebaseChatRepositoryImpl(sl(), sl(), sl()),
+  );
+  sl.registerLazySingleton<CallEngineRepository>(
+    () => CallEngineRepositoryImpl(sl<ZegoConfig>()),
+  );
+  sl.registerLazySingleton<VideoCallRepository>(
+    () => VideoCallRepositoryImpl(sl(), sl()),
+  );
+  sl.registerLazySingleton<CallingRepository>(
+    () => CallingRepositoryImpl(sl<FirebaseFunctions>(), sl<FirebaseAuth>()),
   );
 
   // UseCase
@@ -145,9 +185,13 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<GetChatRoomsUseCase>(
     () => GetChatRoomsUseCase(sl()),
   );
+  sl.registerLazySingleton(() => AcceptCallUseCase(sl()));
+  sl.registerLazySingleton(() => DeclineCallUseCase(sl()));
+  sl.registerLazySingleton(() => CancelCallUseCase(sl()));
   sl.registerLazySingleton<GetMessagesUseCase>(() => GetMessagesUseCase(sl()));
   sl.registerLazySingleton<SendMessageUseCase>(() => SendMessageUseCase(sl()));
   sl.registerLazySingleton(() => UploadFileUseCase(sl()));
+  sl.registerLazySingleton(() => InitiateCallUseCase(sl()));
 
   // Bloc
   sl.registerFactory(
@@ -177,7 +221,9 @@ Future<void> setupLocator() async {
   sl.registerFactory(() => ReviewBloc(sl(), sl()));
   sl.registerFactory(() => DoctorProfileUpdateBloc(sl(), sl()));
   sl.registerFactory(() => ChatListBloc(sl()));
-  sl.registerFactory(() => ChatRoomBloc(sl(), sl(),sl()));
+  sl.registerFactory(() => ChatRoomBloc(sl(), sl(), sl()));
+  sl.registerFactory(() => CallScreenBloc(sl(), sl()));
+  sl.registerFactory(() => VideoCallBloc(sl(), sl(), sl(), sl()));
 
   // Theme Cubit
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit());

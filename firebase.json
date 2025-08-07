@@ -1,1 +1,46 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"health-connect-6b5fc","appId":"1:893010256648:android:0bda72b61b4bc93cf642bd","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"health-connect-6b5fc","appId":"1:893010256648:ios:3141f8e1a3b4d5ecf642bd","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"health-connect-6b5fc","configurations":{"android":"1:893010256648:android:0bda72b61b4bc93cf642bd","ios":"1:893010256648:ios:3141f8e1a3b4d5ecf642bd"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "health-connect-6b5fc",
+          "appId": "1:893010256648:android:0bda72b61b4bc93cf642bd",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "health-connect-6b5fc",
+          "appId": "1:893010256648:ios:3141f8e1a3b4d5ecf642bd",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "health-connect-6b5fc",
+          "configurations": {
+            "android": "1:893010256648:android:0bda72b61b4bc93cf642bd",
+            "ios": "1:893010256648:ios:3141f8e1a3b4d5ecf642bd"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ]
+    }
+  ]
+}

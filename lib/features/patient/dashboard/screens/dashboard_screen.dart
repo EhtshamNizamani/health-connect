@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:health_connect/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:health_connect/features/patient/home/presentation/screen/home_screen.dart';
 import 'package:health_connect/features/patient/patient_setings/screen/patient_setings_screen.dart';
 import '../cubit/bottom_nav_cubit.dart';
@@ -11,7 +12,7 @@ class DashboardScreen extends StatelessWidget {
   final List<Widget> screens = const [
     PatientHomeScreen(),
     Text("Survey Screen"),
-    Text("Chat Screen"),
+    ChatListScreen(),
     PatientSettingsScreen(),
   ];
 
@@ -61,8 +62,8 @@ class DashboardScreen extends StatelessWidget {
                   label: 'Survey',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.chat_bubble_outline, size: 24.r),
-                  activeIcon: Icon(Icons.chat_bubble, size: 24.r),
+                    icon: Icon(Icons.chat_bubble_outline_outlined, size: 24.r),
+                  activeIcon: Icon(Icons.chat_bubble_outline, size: 24.r),
                   label: 'Chat',
                 ),
                 BottomNavigationBarItem(

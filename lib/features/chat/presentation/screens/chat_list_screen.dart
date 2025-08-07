@@ -13,7 +13,6 @@ import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entit
 import 'package:intl/intl.dart';
 import 'chat_room_screen.dart';
 
-
 class ChatListScreen extends StatelessWidget {
   const ChatListScreen({super.key});
 
@@ -24,7 +23,8 @@ class ChatListScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Messages'),
-          automaticallyImplyLeading: false, // Assuming this is a tab in main navigation
+          automaticallyImplyLeading:
+              false, // Assuming this is a tab in main navigation
         ),
         body: BlocBuilder<ChatListBloc, ChatListState>(
           builder: (context, state) {
@@ -37,43 +37,109 @@ class ChatListScreen extends StatelessWidget {
             if (state is ChatListLoaded) {
               if (state.chatRooms.isEmpty) {
                 return const Center(
-                  child: Text("Your conversations with doctors will appear here."),
+                  child: Text(
+                    "Your conversations with doctors will appear here.",
+                  ),
                 );
               }
-              
+
               // We need the current user to figure out the other participant's ID
               final authState = context.read<AuthBloc>().state;
-              if (authState is! AuthenticatedPatient && authState is! AuthenticatedDoctorProfileExists && authState is! AuthenticatedDoctorProfileNotExists) {
-                  return const Center(child: Text("Cannot load chats. User not authenticated."));
+              if (authState is! AuthenticatedPatient &&
+                  authState is! AuthenticatedDoctorProfileExists &&
+                  authState is! AuthenticatedDoctorProfileNotExists) {
+                return const Center(
+                  child: Text("Cannot load chats. User not authenticated."),
+                );
               }
               final currentUser = (authState as dynamic).user;
-
 
               return ListView.separated(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 itemCount: state.chatRooms.length,
-                separatorBuilder: (context, index) => const Divider(indent: 80, endIndent: 16),
+                separatorBuilder: (context, index) =>
+                    const Divider(indent: 80, endIndent: 16),
                 itemBuilder: (context, index) {
                   final chatRoom = state.chatRooms[index];
-                  
-                  String receiverId = chatRoom.participants.firstWhere((id) => id != currentUser.id, orElse: () => '');
-                  
+
+                  String receiverId = chatRoom.participants.firstWhere(
+                    (id) => id != currentUser.id,
+                    orElse: () => '',
+                  );
+
                   return ChatListItem(
                     chatRoom: chatRoom,
                     onTap: () {
+                      // <<<--- NEW LOGIC: Determine who is doctor and who is patient ---
+                      UserEntity patient;
+                      DoctorEntity doctor;
 
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ChatRoomScreen(
-                              chatRoomId: chatRoom.id,
-                              chatPartnerName: chatRoom.otherUserName,
-                              receiverId: receiverId,
-                              patient: currentUser as UserEntity,
-                              doctor: DoctorEntity(uid: receiverId, name: chatRoom.otherUserName, photoUrl: chatRoom.otherUserPhotoUrl, email: '', specialization: '', bio: '', experience: 0, clinicAddress: '', consultationFee: 0, weeklyAvailability: {}),
-                            ),
-                          ),
+                      if (currentUser.role == 'patient') {
+                        // Current user is patient, other user is doctor
+                        patient = currentUser;
+                        doctor = DoctorEntity(
+                          uid: receiverId,
+                          name: chatRoom.otherUserName,
+                          photoUrl: chatRoom.otherUserPhotoUrl,
+                          email: '',
+                          specialization: '',
+                          bio: '',
+                          experience: 0,
+                          clinicAddress: '',
+                          consultationFee: 0,
+                          weeklyAvailability: {},
                         );
+                      } else if (currentUser.role == 'doctor') {
+                        // Current user is doctor, other user is patient
+                        doctor = DoctorEntity(
+                          uid: currentUser.id,
+                          name: currentUser.name,
+                          photoUrl: currentUser.photoUrl ?? '',
+                          email: currentUser.email,
+                          specialization:
+                              '', // You might want to get this from DoctorProfileEntity
+                          bio: '',
+                          experience: 0,
+                          clinicAddress: '',
+                          consultationFee: 0,
+                          weeklyAvailability: {},
+                        );
+                        patient = UserEntity(
+                          id: receiverId,
+                          name: chatRoom.otherUserName,
+                          email: '', // We don't have this info from chatRoom
+                          role: 'patient',
+                          photoUrl: chatRoom.otherUserPhotoUrl,
+                        );
+                      } else {
+                        // Fallback - shouldn't happen in normal flow
+                        patient = currentUser;
+                        doctor = DoctorEntity(
+                          uid: receiverId,
+                          name: chatRoom.otherUserName,
+                          photoUrl: chatRoom.otherUserPhotoUrl,
+                          email: '',
+                          specialization: '',
+                          bio: '',
+                          experience: 0,
+                          clinicAddress: '',
+                          consultationFee: 0,
+                          weeklyAvailability: {},
+                        );
+                      }
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatRoomScreen(
+                            chatRoomId: chatRoom.id,
+                            chatPartnerName: chatRoom.otherUserName,
+                            receiverId: receiverId,
+                            patient: patient, // <<<--- Now properly assigned
+                            doctor: doctor, // <<<--- Now properly assigned
+                          ),
+                        ),
+                      );
                     },
                   );
                 },
@@ -92,42 +158,44 @@ class ChatListItem extends StatelessWidget {
   final ChatRoomEntity chatRoom;
   final VoidCallback onTap;
 
-  const ChatListItem({
-    super.key,
-    required this.chatRoom,
-    required this.onTap,
-  });
+  const ChatListItem({super.key, required this.chatRoom, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     // Format the timestamp nicely
-    final String timestampText = _formatTimestamp(chatRoom.lastMessageTimestamp);
-    
+    final String timestampText = _formatTimestamp(
+      chatRoom.lastMessageTimestamp,
+    );
+
     return ListTile(
       onTap: onTap,
       leading: CircleAvatar(
         radius: 28,
         backgroundColor: theme.colorScheme.primaryContainer,
-        backgroundImage: chatRoom.otherUserPhotoUrl.isNotEmpty 
-          ? NetworkImage(chatRoom.otherUserPhotoUrl) 
-          : null,
-        child: chatRoom.otherUserPhotoUrl.isEmpty 
-          ? Text(chatRoom.otherUserName.isNotEmpty ? chatRoom.otherUserName[0].toUpperCase() : '?', 
-            style: const TextStyle(fontWeight: FontWeight.bold)) 
-          : null,
+        backgroundImage: chatRoom.otherUserPhotoUrl.isNotEmpty
+            ? NetworkImage(chatRoom.otherUserPhotoUrl)
+            : null,
+        child: chatRoom.otherUserPhotoUrl.isEmpty
+            ? Text(
+                chatRoom.otherUserName.isNotEmpty
+                    ? chatRoom.otherUserName[0].toUpperCase()
+                    : '?',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              )
+            : null,
       ),
-      title: Text(chatRoom.otherUserName, style: const TextStyle(fontWeight: FontWeight.bold)),
+      title: Text(
+        chatRoom.otherUserName,
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
       subtitle: Text(
         chatRoom.lastMessage,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: Text(
-        timestampText,
-        style: theme.textTheme.bodySmall,
-      ),
+      trailing: Text(timestampText, style: theme.textTheme.bodySmall),
     );
   }
 

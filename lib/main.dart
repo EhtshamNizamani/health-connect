@@ -1,8 +1,9 @@
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:health_connect/core/service/notification_service.dart';
 import 'package:health_connect/core/themes/theme_manager.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_event.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_state.dart';
@@ -13,16 +14,23 @@ import 'package:health_connect/features/doctor/doctor_profile_setup/presentation
 import 'package:health_connect/features/appointment/presentation/blocs/booking_bloc.dart';
 import 'package:health_connect/features/doctor/review/presantation/bloc/review_bloc.dart';
 import 'package:health_connect/features/patient/dashboard/screens/dashboard_screen.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/call_screen_bloc/call_screen_bloc.dart';
+import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_bloc.dart';
 
 import 'core/di/service_locator.dart';
 import 'features/auth/presentation/auth/blocs/auth_bloc.dart';
 
-final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+   await FirebaseAppCheck.instance.activate(
+    androidProvider: AndroidProvider.debug,
+    appleProvider: AppleProvider.debug,
+  );
   await setupLocator();
+  // await sl<NotificationService>().initialize(); 
 
   runApp(
     MultiBlocProvider(
@@ -36,6 +44,8 @@ void main() async {
         ),
         BlocProvider<BookingBloc>(create: (_) => sl<BookingBloc>()),
         BlocProvider<ReviewBloc>(create: (_) => sl<ReviewBloc>()),
+        BlocProvider<CallScreenBloc>(create: (_) => sl<CallScreenBloc>()),
+        BlocProvider<VideoCallBloc>(create: (_) => sl<VideoCallBloc>()),
 
       ],
       child: const MyApp(),
@@ -43,8 +53,26 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+   @override
+  void initState() {
+    super.initState();
+    // 4. Initialize your notification listeners after the app has started
+    // and the widget tree is being built. This is the safest time.
+    _initializeNotifications();
+  }
+
+  Future<void> _initializeNotifications() async {
+    final notificationService = sl<NotificationService>();
+    await notificationService.initializeListeners();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +87,7 @@ class MyApp extends StatelessWidget {
             return BlocListener<AuthBloc, AuthState>(
               listener: (context, state) {
                 print("Global Auth Listener received state: $state");
-                final navigator = _navigatorKey.currentState;
+                final navigator = navigatorKey.currentState;
                 if (navigator == null) return;
 
                 if (state is Unauthenticated) {
@@ -87,7 +115,7 @@ class MyApp extends StatelessWidget {
                 }
               },
               child: MaterialApp(
-                navigatorKey: _navigatorKey, // Use the global key
+                navigatorKey: navigatorKey, // Use the global key
                 debugShowCheckedModeBanner: false,
                 theme: themeState.themeData,
                 // The home is now a simple, static splash screen.

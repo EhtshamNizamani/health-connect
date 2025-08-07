@@ -15,6 +15,14 @@ class UserEntity extends Equatable {
     this.photoUrl, // <<<--- ADDED TO CONSTRUCTOR
   });
 
+  // Empty constructor
+  const UserEntity.empty()
+      : id = '',
+        name = '',
+        email = '',
+        role = '',
+        photoUrl = null;
+
   @override
   List<Object?> get props => [id, name, email, role, photoUrl]; // <<<--- ADDED TO PROPS
   
