@@ -45,6 +45,7 @@ class DoctorProfileViewBloc extends Bloc<DoctorProfileViewEvent, DoctorProfileVi
           emit(currentState.copyWith(areSlotsLoading: false, slotsError: failure.message));
         },
         (slots) {
+          print("test slots ${slots}");
           emit(currentState.copyWith(areSlotsLoading: false, availableSlots: slots));
         },
       );

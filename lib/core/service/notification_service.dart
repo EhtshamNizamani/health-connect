@@ -6,6 +6,8 @@ import 'package:health_connect/core/constants/app_color.dart';
 import 'package:health_connect/core/di/service_locator.dart';
 import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
+import 'package:health_connect/features/doctor/appointment/presantation/screen/doctor_appointments_screen.dart';
+import 'package:health_connect/features/patient/appointment/presentation/screen/patient_appointment_screen.dart';
 import 'package:health_connect/features/video_call/presantation/screen/call_screen.dart';
 import 'package:health_connect/features/video_call/presantation/screen/incoming_call_widget.dart';
 import 'package:health_connect/main.dart';
@@ -42,14 +44,16 @@ class NotificationService {
     // Check for initial message
     final initialMessage = await _firebaseMessaging.getInitialMessage();
     if (initialMessage != null) {
-      print("[NotificationService] App opened from terminated state by notification.");
-      _handleMessage(initialMessage);
+      print(
+        "[NotificationService] App opened from terminated state by notification.",
+      );
+      (initialMessage);
     }
   }
 
   void _handleMessage(RemoteMessage message) {
     print('[NotificationService] Handling message with data: ${message.data}');
-    
+
     if (message.data.containsKey('payload')) {
       try {
         final payload = jsonDecode(message.data['payload']);
@@ -70,6 +74,30 @@ class NotificationService {
             break;
           case 'call_cancelled':
             _handleCallCancelled(payload);
+            break;
+          // --- NAYE APPOINTMENT NOTIFICATIONS ---
+          case 'new_appointment':
+            print(
+              "[NotificationService] Tapped 'new_appointment' notification.",
+            );
+            // Navigate the doctor to their appointments screen
+            // navigatorKey.currentState?.push(
+            //   MaterialPageRoute(
+            //     builder: (_) => const DoctorAppointmentsScreen(),
+            //   ),
+            // );
+            break;
+
+          case 'appointment_status_update':
+            print(
+              "[NotificationService] Tapped 'appointment_status_update' notification.",
+            );
+            // Navigate the patient to their appointments screen
+            // navigatorKey.currentState?.push(
+            //   MaterialPageRoute(
+            //     builder: (_) => const PatientAppointmentsScreen(),
+            //   ),
+            // );
             break;
           default:
             print('[NotificationService] Unknown message type: $messageType');
@@ -103,11 +131,11 @@ class NotificationService {
 
   void _handleCallAccepted(Map<String, dynamic> payload) {
     print('[NotificationService] Call accepted - navigating to CallScreen');
-    
+
     final authState = sl<AuthBloc>().state;
     final currentUser = authState.user;
     final callId = payload['call_id'];
-    
+
     if (currentUser != null && callId != null) {
       final otherUser = UserEntity(
         id: payload['accepter_id'] ?? '',
@@ -123,7 +151,7 @@ class NotificationService {
         if (currentState.canPop()) {
           currentState.pop();
         }
-        
+
         // Navigate to CallScreen
         currentState.push(
           MaterialPageRoute(
@@ -140,16 +168,18 @@ class NotificationService {
 
   void _handleCallDeclined(Map<String, dynamic> payload) {
     print('[NotificationService] Call declined');
-    
+
     final currentState = navigatorKey.currentState;
     if (currentState != null && currentState.canPop()) {
       // Close any calling screen
       currentState.pop();
-      
+
       // Show snackbar
       ScaffoldMessenger.of(currentState.context).showSnackBar(
         SnackBar(
-          content: Text('${payload['decliner_name'] ?? 'User'} declined the call'),
+          content: Text(
+            '${payload['decliner_name'] ?? 'User'} declined the call',
+          ),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 3),
         ),
@@ -159,18 +189,20 @@ class NotificationService {
 
   void _handleCallEnded(Map<String, dynamic> payload) {
     print('[NotificationService] Call ended by other user');
-    
+
     final currentState = navigatorKey.currentState;
     if (currentState != null) {
       // Close any call-related screens
       if (currentState.canPop()) {
         currentState.pop();
       }
-      
+
       // Show snackbar
       ScaffoldMessenger.of(currentState.context).showSnackBar(
         SnackBar(
-          content: Text('Call ended by ${payload['ender_name'] ?? 'other user'}'),
+          content: Text(
+            'Call ended by ${payload['ender_name'] ?? 'other user'}',
+          ),
           backgroundColor: Colors.orange,
           duration: const Duration(seconds: 3),
         ),
@@ -180,16 +212,18 @@ class NotificationService {
 
   void _handleCallCancelled(Map<String, dynamic> payload) {
     print('[NotificationService] Call cancelled by caller');
-    
+
     final currentState = navigatorKey.currentState;
     if (currentState != null && currentState.canPop()) {
       // Close incoming call screen
       currentState.pop();
-      
+
       // Show snackbar
       ScaffoldMessenger.of(currentState.context).showSnackBar(
         SnackBar(
-          content: Text('${payload['caller_name'] ?? 'Caller'} cancelled the call'),
+          content: Text(
+            '${payload['caller_name'] ?? 'Caller'} cancelled the call',
+          ),
           backgroundColor: AppColors.error,
           duration: const Duration(seconds: 3),
         ),

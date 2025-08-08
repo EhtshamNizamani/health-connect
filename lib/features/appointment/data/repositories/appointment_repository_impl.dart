@@ -185,6 +185,7 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
 
       final clientSecret = response.data['clientSecret'] as String?;
       if (clientSecret != null) {
+        
         return Right(clientSecret);
       } else {
         return Left(ServerFailure("Failed to get payment secret from server."));
