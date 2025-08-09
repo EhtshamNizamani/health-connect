@@ -4,7 +4,7 @@ import 'package:health_connect/features/appointment/domain/entities/appointment_
 abstract class DoctorAppointmentsState extends Equatable {
   const DoctorAppointmentsState();
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class DoctorAppointmentsInitial extends DoctorAppointmentsState {}
@@ -21,13 +21,38 @@ class DoctorAppointmentsLoaded extends DoctorAppointmentsState {
   final List<AppointmentEntity> pending;
   final List<AppointmentEntity> upcoming;
   final List<AppointmentEntity> past;
+  final String? updatingAppointmentId; // ID of the appointment being updated
 
   const DoctorAppointmentsLoaded({
     required this.pending,
     required this.upcoming,
     required this.past,
+    this.updatingAppointmentId, // Can be null
   });
-  
+
   @override
-  List<Object> get props => [pending, upcoming, past];
+  List<Object?> get props => [
+        pending,
+        upcoming,
+        past,
+        updatingAppointmentId,
+      ];
+
+  // <<< --- THIS IS THE FINAL, CORRECTED copyWith METHOD ---
+  DoctorAppointmentsLoaded copyWith({
+    List<AppointmentEntity>? pending,
+    List<AppointmentEntity>? upcoming,
+    List<AppointmentEntity>? past,
+    String? updatingAppointmentId,
+    bool clearUpdatingId = false,
+  }) {
+    return DoctorAppointmentsLoaded(
+      pending: pending ?? this.pending,
+      upcoming: upcoming ?? this.upcoming,
+      past: past ?? this.past,
+      updatingAppointmentId: clearUpdatingId
+          ? null
+          : updatingAppointmentId ?? this.updatingAppointmentId,
+    );
+  }
 }

@@ -15,6 +15,7 @@ import 'package:health_connect/features/doctor/doctor_profile_setup/presentation
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/screens/doctor_profile_setup_screen.dart';
 import 'package:health_connect/features/appointment/presentation/blocs/booking_bloc.dart';
 import 'package:health_connect/features/doctor/review/presantation/bloc/review_bloc.dart';
+import 'package:health_connect/features/notification/presantaion/bloc/notification_bloc.dart';
 import 'package:health_connect/features/patient/dashboard/screens/dashboard_screen.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/call_screen_bloc/call_screen_bloc.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_bloc.dart';
@@ -27,23 +28,25 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-   await FirebaseAppCheck.instance.activate(
+  await FirebaseAppCheck.instance.activate(
     androidProvider: AndroidProvider.debug,
     appleProvider: AppleProvider.debug,
   );
   await setupLocator();
-  // await sl<NotificationService>().initialize(); 
   Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
-
-  // Yeh line optional hai, lekin good practice hai
   await Stripe.instance.applySettings();
 
   runApp(
     MultiBlocProvider(
       providers: [
         BlocProvider<ThemeCubit>(create: (_) => sl<ThemeCubit>()),
+        // Use singleton AuthBloc
         BlocProvider<AuthBloc>(
           create: (_) => sl<AuthBloc>()..add(AuthCheckRequested()),
+        ),
+        // Use singleton NotificationBloc (it already has the same AuthBloc instance)
+        BlocProvider<NotificationBloc>(
+          create: (_) => sl<NotificationBloc>()..add(StartListeningToNotifications()),
         ),
         BlocProvider<DoctorProfileSetupBloc>(
           create: (_) => sl<DoctorProfileSetupBloc>(),
@@ -52,7 +55,6 @@ void main() async {
         BlocProvider<ReviewBloc>(create: (_) => sl<ReviewBloc>()),
         BlocProvider<CallScreenBloc>(create: (_) => sl<CallScreenBloc>()),
         BlocProvider<VideoCallBloc>(create: (_) => sl<VideoCallBloc>()),
-
       ],
       child: const MyApp(),
     ),
@@ -67,11 +69,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-   @override
+  @override
   void initState() {
     super.initState();
-    // 4. Initialize your notification listeners after the app has started
-    // and the widget tree is being built. This is the safest time.
     _initializeNotifications();
   }
 
@@ -89,7 +89,6 @@ class _MyAppState extends State<MyApp> {
           minTextAdapt: true,
           splitScreenMode: true,
           builder: (_, __) {
-            // The listener is now a parent of MaterialApp
             return BlocListener<AuthBloc, AuthState>(
               listener: (context, state) {
                 print("Global Auth Listener received state: $state");
@@ -121,11 +120,9 @@ class _MyAppState extends State<MyApp> {
                 }
               },
               child: MaterialApp(
-                navigatorKey: navigatorKey, // Use the global key
+                navigatorKey: navigatorKey,
                 debugShowCheckedModeBanner: false,
                 theme: themeState.themeData,
-                // The home is now a simple, static splash screen.
-                // The listener will navigate away from it.
                 home: const SplashScreen(),
               ),
             );
@@ -136,7 +133,6 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-// Ek simple Splash Screen Widget
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 

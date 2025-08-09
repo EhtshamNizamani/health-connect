@@ -53,6 +53,11 @@ import 'package:health_connect/features/doctor/review/domain/repository/review_r
 import 'package:health_connect/features/doctor/review/domain/usecase/get_doctor_review_usecase.dart';
 import 'package:health_connect/features/doctor/review/domain/usecase/submit_review_usecase.dart';
 import 'package:health_connect/features/doctor/review/presantation/bloc/review_bloc.dart';
+import 'package:health_connect/features/notification/data/repository_impl/notificaiton_impl.dart';
+import 'package:health_connect/features/notification/domain/repository/notification_repository.dart';
+import 'package:health_connect/features/notification/domain/usecase/get_unread_count_usecase.dart';
+import 'package:health_connect/features/notification/domain/usecase/mark_notification_as_read_usecase.dart';
+import 'package:health_connect/features/notification/presantaion/bloc/notification_bloc.dart';
 import 'package:health_connect/features/patient/appointment/presentation/bloc/patient_appointments_bloc.dart';
 import 'package:health_connect/features/patient/doctor_list/data/repository_impl/doctor_repository_impl.dart';
 import 'package:health_connect/features/patient/doctor_list/domain/repositories/doctor_repository.dart';
@@ -76,12 +81,10 @@ import 'package:health_connect/features/video_call/domain/usecase/initiate_call_
 import 'package:health_connect/features/video_call/domain/usecase/manage_call_usecase.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/call_screen_bloc/call_screen_bloc.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_bloc.dart';
-
 final sl = GetIt.instance;
 
 Future<void> setupLocator() async {
-  // <<<--- ADD THIS LINE AT THE TOP ---
-  // Load environment variables first to ensure they are available for all dependencies.
+  // Load environment variables first
   await dotenv.load(fileName: ".env");
 
   //configuration
@@ -95,6 +98,7 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<FirebaseFunctions>(
     () => FirebaseFunctions.instanceFor(region: "europe-west1"),
   );
+  
   //service
   sl.registerLazySingleton(() => NotificationService());
   sl.registerLazySingleton(() => StripePaymentService());
@@ -133,6 +137,9 @@ Future<void> setupLocator() async {
   );
   sl.registerLazySingleton<CallingRepository>(
     () => CallingRepositoryImpl(sl<FirebaseFunctions>(), sl<FirebaseAuth>()),
+  );
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(sl()),
   );
 
   // UseCase
@@ -197,9 +204,11 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton(() => InitiateCallUseCase(sl()));
   sl.registerLazySingleton(() => InitiatePaymentUseCase(sl())); 
   sl.registerLazySingleton(() => ManageCallUseCase(sl(), sl()));
+  sl.registerLazySingleton(() => GetUnreadCountUseCase(sl()));
+  sl.registerLazySingleton(() => MarkNotificationsAsReadUseCase(sl()));
 
-  // Bloc
-  sl.registerFactory(
+  // Bloc - CHANGED: AuthBloc as LazySingleton instead of Factory
+  sl.registerLazySingleton<AuthBloc>(
     () => AuthBloc(
       sl<LoginUsecase>(),
       sl<RegisterUsecase>(),
@@ -209,6 +218,12 @@ Future<void> setupLocator() async {
       sl(),
     ),
   );
+  
+  // NotificationBloc also as LazySingleton to ensure same AuthBloc instance
+  sl.registerLazySingleton<NotificationBloc>(
+    () => NotificationBloc(sl(), sl(), sl<AuthBloc>()),
+  );
+  
   sl.registerFactory(() => DoctorProfileSetupBloc(sl(), sl()));
   sl.registerFactory(() => DoctorListBloc(sl<GetDoctorsUseCase>()));
   sl.registerFactory(
@@ -220,7 +235,7 @@ Future<void> setupLocator() async {
       sl<SaveDoctorAvailabilityUseCase>(),
     ),
   );
-  sl.registerFactory(() => BookingBloc(sl(),sl(),sl())); // Add this line
+  sl.registerFactory(() => BookingBloc(sl(),sl(),sl()));
   sl.registerFactory(() => DoctorAppointmentsBloc(sl(), sl(), sl()));
   sl.registerFactory(() => PatientAppointmentsBloc(sl(), sl(), sl()));
   sl.registerFactory(() => ReviewBloc(sl(), sl()));

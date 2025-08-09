@@ -35,6 +35,7 @@ class __DateAndTimeSelectorBodyState extends State<_DateAndTimeSelectorBody> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+final isDark = theme.brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,32 +48,40 @@ class __DateAndTimeSelectorBodyState extends State<_DateAndTimeSelectorBody> {
           ),
         ),
         const SizedBox(height: 16),
-        DatePicker(
-          height: 80.h,
-          DateTime.now(),
-          initialSelectedDate: _selectedDate,
-          selectionColor: theme.colorScheme.primary,
-          selectedTextColor: Colors.white,
-          daysCount: 7,
-          onDateChange: (date) {
-            // When the user picks a new date:
-            // 1. Update the local state to show the new date selection.
-            setState(() {
-              _selectedDate = date;
-            });
-            // 2. Tell the BLoC to clear the old time slot selection.
-            context.read<DoctorProfileViewBloc>().add(
-              const TimeSlotSelected(null),
-            );
-            // 3. Tell the BLoC to fetch available slots for this new date.
-            context.read<DoctorProfileViewBloc>().add(
-              FetchAvailableSlotsViewEvent(
-                doctorId: widget.doctorId,
-                date: date,
-              ),
-            );
-          },
-        ),
+      
+DatePicker(
+  height: 95.h,
+  DateTime.now(),
+  initialSelectedDate: _selectedDate,
+  selectionColor: theme.colorScheme.primary,
+  daysCount: 7,
+  monthTextStyle: TextStyle(
+    color: isDark ? Colors.white : Colors.black87,
+  ),
+  dateTextStyle: TextStyle(
+    color: isDark ? Colors.white : Colors.black87,
+    fontWeight: FontWeight.bold,
+  ),
+  dayTextStyle: TextStyle(
+    color: isDark ? Colors.white70 : Colors.grey[700],
+  ),
+  onDateChange: (date) {
+    setState(() {
+      _selectedDate = date;
+    });
+
+    context.read<DoctorProfileViewBloc>().add(
+      const TimeSlotSelected(null),
+    );
+
+    context.read<DoctorProfileViewBloc>().add(
+      FetchAvailableSlotsViewEvent(
+        doctorId: widget.doctorId,
+        date: date,
+      ),
+    );
+  },
+),
 
         const Divider(height: 48),
 
