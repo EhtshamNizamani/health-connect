@@ -10,7 +10,7 @@ import 'package:health_connect/core/themes/theme_manager.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_event.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_state.dart';
 import 'package:health_connect/features/auth/presentation/auth/screens/login_screen..dart';
-import 'package:health_connect/features/doctor/doctor_dashboard/screen/doctor_main_screen.dart';
+import 'package:health_connect/features/doctor/doctor_bottom_navigation/screen/doctor_main_screen.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/bloc/doctor_profile_setup_bloc.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/screens/doctor_profile_setup_screen.dart';
 import 'package:health_connect/features/appointment/presentation/blocs/booking_bloc.dart';
