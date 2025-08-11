@@ -8,19 +8,27 @@ import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entit
 
 abstract class ChatRepository {
   /// Fetches a real-time stream of chat rooms for the current user.
-  Stream<Either<Failure, List<ChatRoomEntity>>> getChatRooms();
+  Stream<Either<Failure, List<ChatRoomEntity>>> getChatRooms(String userId);
 
   /// Fetches a real-time stream of messages for a specific chat room.
   Stream<Either<Failure, List<MessageEntity>>> getMessages(String chatRoomId);
 
   /// Sends a new message (text or file) to a chat room.
-// Update the abstract method
-Future<Either<Failure, void>> sendMessage({
-  required String chatRoomId,
-  required MessageEntity message,
-  required UserEntity patient,
-  required DoctorEntity doctor,
-});
+  // Update the abstract method
+  Future<Either<Failure, void>> sendMessage({
+    required String chatRoomId,
+    required MessageEntity message,
+    required UserEntity patient,
+    required DoctorEntity doctor,
+  });
+
   /// Uploads a file to Firebase Storage and returns the download URL.
   Future<Either<Failure, String>> uploadFile(File file, String chatRoomId);
+
+  Stream<Either<Failure, int>> getTotalUnreadCountStream(String userId);
+
+  Future<Either<Failure, void>> markChatRoomAsRead(
+    String chatRoomId,
+    String userId,
+  );
 }

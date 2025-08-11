@@ -7,3 +7,11 @@ abstract class ChatListEvent extends Equatable {
 }
 
 class SubscribeToChatRooms extends ChatListEvent {}
+class MarkChatAsRead extends ChatListEvent {
+  final String chatRoomId;
+  const MarkChatAsRead(this.chatRoomId)
+  ;
+    @override
+  List<Object> get props => [chatRoomId];
+
+}

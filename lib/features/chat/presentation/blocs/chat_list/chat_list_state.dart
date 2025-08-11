@@ -9,11 +9,18 @@ abstract class ChatListState extends Equatable {
 
 class ChatListInitial extends ChatListState {}
 class ChatListLoading extends ChatListState {}
+// ...
 class ChatListLoaded extends ChatListState {
   final List<ChatRoomEntity> chatRooms;
-  const ChatListLoaded(this.chatRooms);
+  final int totalUnreadCount; // <<< --- NAYI PROPERTY ---
+
+  const ChatListLoaded({
+    required this.chatRooms,
+    required this.totalUnreadCount,
+  });
+
   @override
-  List<Object> get props => [chatRooms];
+  List<Object> get props => [chatRooms, totalUnreadCount];
 }
 class ChatListError extends ChatListState {
   final String message;
