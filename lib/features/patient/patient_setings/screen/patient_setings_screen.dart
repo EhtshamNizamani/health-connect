@@ -122,7 +122,6 @@ class PatientSettingsScreen extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Profile updated successfully!")),
                   );
-                  Navigator.pop(context); // Close the bottom sheet
                 } else if (state is AuthFailure) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(state.message)),

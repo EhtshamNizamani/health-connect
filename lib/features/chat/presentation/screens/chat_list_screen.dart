@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,7 +32,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       body: SafeArea(
         child: BlocConsumer<ChatListBloc, ChatListState>(
           listener: (context, state) {
@@ -47,11 +47,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
           },
           builder: (context, state) {
             print("🖥️ [ChatListScreen] Current state: ${state.runtimeType}");
-        
+
             if (state is ChatListLoading || state is ChatListInitial) {
               return const Center(child: CircularProgressIndicator());
             }
-        
+
             if (state is ChatListError) {
               return Center(
                 child: Column(
@@ -71,14 +71,16 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     Text(
                       state.message,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton(
                       onPressed: () {
-                        context.read<ChatListBloc>().add(SubscribeToChatRooms());
+                        context.read<ChatListBloc>().add(
+                          SubscribeToChatRooms(),
+                        );
                       },
                       child: const Text('Retry'),
                     ),
@@ -86,10 +88,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 ),
               );
             }
-        
+
             if (state is ChatListLoaded) {
-              print("🖥️ [ChatListScreen] Loaded ${state.chatRooms.length} chat rooms, unread: ${state.totalUnreadCount}");
-        
+              print(
+                "🖥️ [ChatListScreen] Loaded ${state.chatRooms.length} chat rooms, unread: ${state.totalUnreadCount}",
+              );
+
               if (state.chatRooms.isEmpty) {
                 return const Center(
                   child: Column(
@@ -112,15 +116,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
                       Text(
                         'Your conversations with doctors will appear here.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.grey,
-                        ),
+                        style: TextStyle(color: Colors.grey),
                       ),
                     ],
                   ),
                 );
               }
-        
+
               // Get current user for navigation
               final authState = context.read<AuthBloc>().state;
               if (authState.user == null) {
@@ -129,7 +131,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 );
               }
               final currentUser = authState.user!;
-        
+
               return RefreshIndicator(
                 onRefresh: () async {
                   context.read<ChatListBloc>().add(SubscribeToChatRooms());
@@ -141,12 +143,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
                       const Divider(indent: 80, endIndent: 16),
                   itemBuilder: (context, index) {
                     final chatRoom = state.chatRooms[index];
-                    
+
                     String receiverId = chatRoom.participants.firstWhere(
                       (id) => id != currentUser.id,
                       orElse: () => '',
                     );
-        
+
                     return ChatListItem(
                       chatRoom: chatRoom,
                       onTap: () => _navigateToChatRoom(
@@ -160,7 +162,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 ),
               );
             }
-        
+
             return const SizedBox.shrink();
           },
         ),
@@ -176,9 +178,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   ) {
     // Mark chat as read when opening
     if (chatRoom.unreadCount > 0) {
-      context.read<ChatListBloc>().add(
-        MarkChatAsRead(chatRoom.id),
-      );
+      context.read<ChatListBloc>().add(MarkChatAsRead(chatRoom.id));
     }
 
     // Determine patient and doctor entities
@@ -256,31 +256,32 @@ class ChatListItem extends StatelessWidget {
   final ChatRoomEntity chatRoom;
   final VoidCallback onTap;
 
-  const ChatListItem({
-    super.key,
-    required this.chatRoom,
-    required this.onTap,
-  });
+  const ChatListItem({super.key, required this.chatRoom, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final String timestampText = _formatTimestamp(chatRoom.lastMessageTimestamp);
+    final String timestampText = _formatTimestamp(
+      chatRoom.lastMessageTimestamp,
+    );
 
     return ListTile(
       onTap: onTap,
-      leading: CircleAvatar(
+      leading:CircleAvatar(
         radius: 28,
         backgroundColor: theme.colorScheme.primaryContainer,
         backgroundImage: chatRoom.otherUserPhotoUrl.isNotEmpty
-            ? NetworkImage(chatRoom.otherUserPhotoUrl)
+            ? CachedNetworkImageProvider(chatRoom.otherUserPhotoUrl)
             : null,
         child: chatRoom.otherUserPhotoUrl.isEmpty
             ? Text(
                 chatRoom.otherUserName.isNotEmpty
                     ? chatRoom.otherUserName[0].toUpperCase()
                     : '?',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onPrimaryContainer,
+                ),
               )
             : null,
       ),

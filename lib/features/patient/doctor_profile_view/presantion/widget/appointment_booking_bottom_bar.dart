@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/constants/app_color.dart';
 import 'package:health_connect/core/shared/widgets/custom_button.dart';
-import 'package:health_connect/features/appointment/presentation/blocs/booking_event.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_state.dart';
 import 'package:health_connect/features/appointment/domain/entities/appointment_entity.dart';
@@ -70,6 +69,8 @@ class AppointmentBookingBottomBar extends StatelessWidget {
                             status: 'pending',
                             consultationFee: doctor.consultationFee,
                             createdAt: DateTime.now(),
+                            isReadByDoctor: false,
+                            isReadByPatient: false
                           );
                           Navigator.of(context).push(
                         MaterialPageRoute(

@@ -12,6 +12,9 @@ class AppointmentEntity extends Equatable {
   final int consultationFee;
   final DateTime createdAt;
   final bool isReviewed;
+  final bool isReadByDoctor;
+  final bool isReadByPatient;
+  
   const AppointmentEntity({
     required this.id,
     required this.doctorId,
@@ -22,7 +25,9 @@ class AppointmentEntity extends Equatable {
     required this.appointmentDateTime,
     required this.status,
     required this.consultationFee,
+    required this.isReadByDoctor,
     required this.createdAt,
+    required this.isReadByPatient,
     this.isReviewed = false,
   });
 

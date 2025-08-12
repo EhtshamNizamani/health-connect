@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:health_connect/core/error/failures.dart';
+import 'package:health_connect/core/services/sound_service.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
 import 'package:health_connect/features/chat/domain/entities/chat_room_entity.dart';
 import 'package:health_connect/features/chat/domain/usecases/get_chat_rooms_usecase.dart';
@@ -14,6 +15,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   final GetChatRoomsUseCase _getChatRoomsUseCase;
   final GetTotalUnreadCountUseCase _getTotalUnreadCountUseCase;
   final MarkChatRoomAsReadOptimisticUseCase _markChatRoomAsReadOptimisticUseCase;
+  final SoundService _soundService;
   final AuthBloc _authBloc;
   final ChatRoomOptimisticUpdater _optimisticUpdater;
 
@@ -29,6 +31,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     this._getTotalUnreadCountUseCase,
     this._markChatRoomAsReadOptimisticUseCase,
     this._optimisticUpdater,
+    this._soundService,
     this._authBloc,
   ) : super(ChatListInitial()) {
     on<SubscribeToChatRooms>(_onSubscribeToChatRooms);
@@ -146,7 +149,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     Emitter<ChatListState> emit,
   ) async {
     print("🔄 [ChatListBloc] _onUpdateUnreadCount called");
-    
+    final _prevCount = _currentUnreadCount;
     _currentUnreadCount = event.unreadCount;
     print("🔄 [ChatListBloc] Updated unread count: $_currentUnreadCount");
     
@@ -155,6 +158,11 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       print("✅ [ChatListBloc] About to emit ChatListLoaded with ${_currentChatRooms.length} rooms and $_currentUnreadCount unread");
       
       try {
+        if(event.unreadCount > _prevCount){
+        print("this iss unread count ${event.unreadCount } adn this is prevcount $_prevCount ${event.unreadCount > _prevCount}");
+
+         await _soundService.playMessageSound();
+        }
         emit(ChatListLoaded(
           chatRooms: _currentChatRooms,
           totalUnreadCount: _currentUnreadCount,

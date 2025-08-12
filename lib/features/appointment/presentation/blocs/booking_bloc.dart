@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:health_connect/core/service/stripe_payment_service.dart';
+import 'package:health_connect/core/services/stripe_payment_service.dart';
 import 'package:health_connect/features/appointment/domain/usecases/book_appointment_usecase.dart';
 import 'package:health_connect/features/appointment/domain/usecases/initiate_payment.dart';
 import 'package:health_connect/features/appointment/presentation/blocs/booking_event.dart';

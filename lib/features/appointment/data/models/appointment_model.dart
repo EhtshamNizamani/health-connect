@@ -14,6 +14,8 @@ class AppointmentModel {
   final int consultationFee;
   final Timestamp createdAt;
   final bool isReviewed; // <<<--- NEW FIELD ADDED
+  final bool isReadByDoctor;
+  final bool isReadByPatient;
 
   const AppointmentModel({
     required this.id,
@@ -26,7 +28,10 @@ class AppointmentModel {
     required this.status,
     required this.consultationFee,
     required this.createdAt,
-    required this.isReviewed, // <<<--- ADDED TO CONSTRUCTOR
+    required this.isReviewed,
+    required this.isReadByPatient,
+    required this.isReadByDoctor,
+
   });
 
   // --- METHODS TO INTERACT WITH DATA SOURCE (FIRESTORE) ---
@@ -45,7 +50,10 @@ class AppointmentModel {
       consultationFee: data['consultationFee'] as int? ?? 0,
       createdAt: data['createdAt'] as Timestamp? ?? Timestamp.now(),
       // Read the 'isReviewed' field. Default to 'false' if it doesn't exist.
-      isReviewed: data['isReviewed'] as bool? ?? false, // <<<--- LOGIC ADDED
+      isReviewed: data['isReviewed'] as bool? ?? false, 
+      isReadByDoctor: data['isReadByDoctor'] as bool? ?? false,
+      isReadByPatient: data['isReadByPatient'] as bool? ?? false,
+
     );
   }
 
@@ -60,7 +68,11 @@ class AppointmentModel {
       'status': status,
       'consultationFee': consultationFee,
       'createdAt': createdAt,
-      'isReviewed': isReviewed, // <<<--- FIELD ADDED TO MAP
+      'isReviewed': isReviewed, 
+      'isReadByDoctor': isReadByDoctor, 
+      'isReadByPatient': isReadByPatient, 
+
+
     };
   }
 
@@ -78,7 +90,10 @@ class AppointmentModel {
       status: status,
       consultationFee: consultationFee,
       createdAt: createdAt.toDate(),
-      isReviewed: isReviewed, // <<<--- FIELD ADDED
+      isReviewed: isReviewed, 
+      isReadByDoctor: isReadByDoctor, 
+      isReadByPatient: isReadByPatient, 
+
     );
   }
 
@@ -94,7 +109,10 @@ class AppointmentModel {
       status: entity.status,
       consultationFee: entity.consultationFee,
       createdAt: Timestamp.fromDate(entity.createdAt),
-      isReviewed: entity.isReviewed, // <<<--- FIELD ADDED
+      isReviewed: entity.isReviewed,
+      isReadByDoctor: entity.isReadByDoctor, 
+      isReadByPatient: entity.isReadByPatient,
+
     );
   }
 }

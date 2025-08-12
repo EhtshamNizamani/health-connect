@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/di/service_locator.dart';
-import 'package:health_connect/features/appointment/domain/entities/appointment_entity.dart';
 import 'package:health_connect/features/doctor/appointment/presantation/widgets/appointment_list_view.dart';
 import '../bloc/doctor_appointments_bloc.dart';
 import '../bloc/doctor_appointments_event.dart';
 import '../bloc/doctor_appointments_state.dart';
-import '../widgets/appointment_card.dart';
 
 class DoctorAppointmentsScreen extends StatelessWidget {
   const DoctorAppointmentsScreen({super.key});

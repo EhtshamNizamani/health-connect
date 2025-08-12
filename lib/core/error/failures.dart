@@ -30,3 +30,6 @@ class StorageFailure extends Failure {
 class ValidationError extends Failure {
   ValidationError(super.message);
 }
+class UnexpectedFailure extends Failure {
+  UnexpectedFailure(super.message);
+}

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:health_connect/core/shared/widgets/notification_badge_icon.dart';
 import 'package:health_connect/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:health_connect/features/patient/home/presentation/screen/home_screen.dart';
 import 'package:health_connect/features/patient/patient_setings/screen/patient_setings_screen.dart';
@@ -62,8 +63,11 @@ class DashboardScreen extends StatelessWidget {
                   label: 'Survey',
                 ),
                 BottomNavigationBarItem(
-                    icon: Icon(Icons.chat_bubble_outline_outlined, size: 24.r),
-                  activeIcon: Icon(Icons.chat_bubble_outline, size: 24.r),
+                  icon: NotificationBadgeIcon(
+                    iconData: Icons.chat_bubble_outline,
+                    size: 24.r,
+                    type: NotificationBadgeType.messages,
+                  ),
                   label: 'Chat',
                 ),
                 BottomNavigationBarItem(

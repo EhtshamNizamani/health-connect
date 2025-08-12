@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:health_connect/core/constants/app_color.dart';
 import 'package:health_connect/core/shared/widgets/custom_button.dart';
 import 'package:health_connect/core/shared/widgets/custom_text_widget.dart';
 import 'package:health_connect/core/shared/widgets/custom_textbutton.dart';
 import 'package:health_connect/core/shared/widgets/custom_textfield.dart';
 import 'package:health_connect/core/utils/form_validator.dart';
-import 'package:health_connect/features/doctor/doctor_dashboard/screen/doctor_main_screen.dart';
-import 'package:health_connect/features/doctor/home/doctor_home_screen.dart';
-import 'package:health_connect/features/patient/dashboard/screens/dashboard_screen.dart';
 
 import '../blocs/auth_bloc.dart';
 import '../blocs/auth_event.dart';

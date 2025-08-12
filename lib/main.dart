@@ -5,11 +5,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:health_connect/core/service/notification_service.dart';
+import 'package:health_connect/core/services/notification_service.dart';
 import 'package:health_connect/core/themes/theme_manager.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_event.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_state.dart';
 import 'package:health_connect/features/auth/presentation/auth/screens/login_screen..dart';
+import 'package:health_connect/features/chat/presentation/blocs/chat_list/chat_list_bloc.dart';
+import 'package:health_connect/features/chat/presentation/blocs/chat_list/chat_list_event.dart';
 import 'package:health_connect/features/doctor/doctor_bottom_navigation/screen/doctor_main_screen.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/bloc/doctor_profile_setup_bloc.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/screens/doctor_profile_setup_screen.dart';
@@ -55,6 +57,7 @@ void main() async {
         BlocProvider<ReviewBloc>(create: (_) => sl<ReviewBloc>()),
         BlocProvider<CallScreenBloc>(create: (_) => sl<CallScreenBloc>()),
         BlocProvider<VideoCallBloc>(create: (_) => sl<VideoCallBloc>()),
+        BlocProvider<ChatListBloc>(create: (_) => sl<ChatListBloc>()),
       ],
       child: const MyApp(),
     ),

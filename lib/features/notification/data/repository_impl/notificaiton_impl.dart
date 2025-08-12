@@ -17,21 +17,27 @@ class NotificationRepositoryImpl implements NotificationRepository {
       Query query;
       if (role == 'doctor') {
         // A doctor's "unread" count is the number of pending appointments.
-        query = _firestore.collection("appointments")
+        query = _firestore
+            .collection("appointments")
             .where("doctorId", isEqualTo: userId)
-            .where("status", isEqualTo: "pending");
-      } else { // patient
+            .where("status", isEqualTo: "pending")
+            .where("isReadByDoctor", isEqualTo: false);
+      } else {
+        // patient
         // A patient's "unread" count is the number of appointments whose
         // status has changed but they haven't seen it yet.
-        query = _firestore.collection("appointments")
+        query = _firestore
+            .collection("appointments")
             .where("patientId", isEqualTo: userId)
             .where("isReadByPatient", isEqualTo: false);
       }
-      
+
       // Map the stream of snapshots to a stream of counts
       return query.snapshots().map((snapshot) => Right(snapshot.docs.length));
     } catch (e) {
-      return Stream.value(Left(FirestoreFailure("Failed to get notification stream: $e")));
+      return Stream.value(
+        Left(FirestoreFailure("Failed to get notification stream: $e")),
+      );
     }
   }
 
@@ -43,15 +49,30 @@ class NotificationRepositoryImpl implements NotificationRepository {
     try {
       if (role == 'patient') {
         // Find all unread appointments for the patient
-        final querySnapshot = await _firestore.collection('appointments')
+        final querySnapshot = await _firestore
+            .collection('appointments')
             .where('patientId', isEqualTo: userId)
             .where('isReadByPatient', isEqualTo: false)
             .get();
-            
+
         // Use a batch to update them all at once
         final batch = _firestore.batch();
         for (var doc in querySnapshot.docs) {
           batch.update(doc.reference, {'isReadByPatient': true});
+        }
+        await batch.commit();
+      }else{
+         // Find all unread appointments for the patient
+        final querySnapshot = await _firestore
+            .collection('appointments')
+            .where('doctorId', isEqualTo: userId)
+            .where('isReadByDoctor', isEqualTo: false)
+            .get();
+
+        // Use a batch to update them all at once
+        final batch = _firestore.batch();
+        for (var doc in querySnapshot.docs) {
+          batch.update(doc.reference, {'isReadByDoctor': true});
         }
         await batch.commit();
       }
