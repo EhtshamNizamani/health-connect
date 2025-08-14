@@ -12,12 +12,14 @@ import 'package:health_connect/features/auth/presentation/auth/blocs/auth_state.
 import 'package:health_connect/features/auth/presentation/auth/screens/login_screen..dart';
 import 'package:health_connect/features/chat/presentation/blocs/chat_list/chat_list_bloc.dart';
 import 'package:health_connect/features/chat/presentation/blocs/chat_list/chat_list_event.dart';
+import 'package:health_connect/features/chat_access/bloc/chat_access_bloc.dart';
 import 'package:health_connect/features/doctor/doctor_bottom_navigation/screen/doctor_main_screen.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/bloc/doctor_profile_setup_bloc.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/screens/doctor_profile_setup_screen.dart';
 import 'package:health_connect/features/appointment/presentation/blocs/booking_bloc.dart';
 import 'package:health_connect/features/doctor/review/presantation/bloc/review_bloc.dart';
 import 'package:health_connect/features/notification/presantaion/bloc/notification_bloc.dart';
+import 'package:health_connect/features/patient/appointment/presentation/bloc/patient_appointments_bloc.dart';
 import 'package:health_connect/features/patient/dashboard/screens/dashboard_screen.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/call_screen_bloc/call_screen_bloc.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_bloc.dart';
@@ -58,6 +60,8 @@ void main() async {
         BlocProvider<CallScreenBloc>(create: (_) => sl<CallScreenBloc>()),
         BlocProvider<VideoCallBloc>(create: (_) => sl<VideoCallBloc>()),
         BlocProvider<ChatListBloc>(create: (_) => sl<ChatListBloc>()),
+        BlocProvider<ChatAccessBloc>(create: (_) => sl<ChatAccessBloc>()),
+        BlocProvider<PatientAppointmentsBloc>(create: (_) => sl<PatientAppointmentsBloc>()),
       ],
       child: const MyApp(),
     ),
