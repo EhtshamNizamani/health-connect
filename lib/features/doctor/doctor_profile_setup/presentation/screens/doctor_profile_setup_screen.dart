@@ -7,7 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:health_connect/core/constants/app_color.dart';
 import 'package:health_connect/core/shared/widgets/label_textfield.dart';
-import 'package:health_connect/features/doctor/doctor_dashboard/screen/doctor_main_screen.dart';
+import 'package:health_connect/features/doctor/doctor_bottom_navigation/screen/doctor_main_screen.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/bloc/doctor_profile_setup_bloc.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/bloc/doctor_profile_setup_event.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/bloc/doctor_profile_setup_state.dart';

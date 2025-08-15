@@ -8,6 +8,7 @@ class ChatRoomEntity extends Equatable {
   final Timestamp lastMessageTimestamp;
   final String otherUserName; // Name of the person you are chatting with
   final String otherUserPhotoUrl;
+  final int unreadCount;
 
   const ChatRoomEntity({
     required this.id,
@@ -16,6 +17,7 @@ class ChatRoomEntity extends Equatable {
     required this.lastMessageTimestamp,
     required this.otherUserName,
     required this.otherUserPhotoUrl,
+    required this.unreadCount,
   });
 
   @override

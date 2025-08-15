@@ -6,6 +6,9 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 const db = admin.firestore();
 
+// YEH LINE YAHAN HONI CHAHIYE
+const stripe = require("stripe")(functions.config().stripe.secret_key);
+
 // Define the region once to reuse it
 const europeFunctions = functions.region("europe-west1");
 
@@ -303,3 +306,210 @@ exports.cancelCall = europeFunctions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("internal", error.message);
   }
 });
+/**
+ * ==================================================================
+ * ** NAYA STRIPE PAYMENT FUNCTION (FINAL LINTING FIXES) **
+ * ==================================================================
+ */
+exports.createPayment = europeFunctions.https.onCall(async (data, context) => {
+  // 1. Check karein ki user authenticated hai ya nahi
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+        "unauthenticated",
+        "This function must be called while authenticated.", // Line todi gayi
+    );
+  }
+
+  // 2. App se aane wala data (sirf doctor ID)
+  const {doctorId} = data;
+
+  if (!doctorId) {
+    throw new functions.https.HttpsError(
+        "invalid-argument",
+        "The function requires a 'doctorId' argument.", // Line todi gayi
+    );
+  }
+
+  // Production-Ready Approach (Recommended)
+  // Hum client se amount trust nahi karenge.
+  //  Server par doctor ki fee fetch karenge.
+  let amountToChargeInPaisa;
+  try {
+    const doctorDoc = await db.collection("doctors").doc(doctorId).get();
+    if (!doctorDoc.exists) {
+      throw new functions.https.HttpsError("not-found", "Doctor not found.");
+    }
+    // Firestore se fee lein (e.g., 500)
+    const fee = doctorDoc.data().consultationFee;
+    if (!fee) {
+      throw new functions.https.HttpsError(
+          "not-found",
+          "Consultation fee for this doctor is not set.", // Line todi gayi
+      );
+    }
+    // Stripe ko paise mein convert karein
+    amountToChargeInPaisa = fee * 100;
+  } catch (error) {
+    console.error("Error fetching doctor fee:", error);
+    throw new functions.https.HttpsError(
+        "internal",
+        "Could not verify the doctor's fee.",
+    );
+  }
+
+  try {
+    // 3. Stripe Payment Intent banayein
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountToChargeInPaisa, // Securely fetched amount
+      currency: "inr", // Aapki currency (e.g., inr, usd)
+      automatic_payment_methods: {
+        enabled: true,
+      },
+      // Metadata mein extra info save kar sakte hain
+      metadata: {
+        userId: context.auth.uid,
+        doctorId: doctorId,
+      },
+    });
+
+    // 4. Client-side ko 'client_secret' return karein
+    return {
+      clientSecret: paymentIntent.client_secret,
+    };
+  } catch (error) {
+    console.error("Stripe Error:", error);
+    throw new functions.https.HttpsError(
+        "internal",
+        "An error occurred while creating the payment intent.",
+    );
+  }
+});
+
+
+/**
+ * Triggered when a new appointment document is created.
+ * Sends a notification to the DOCTOR.
+ */
+exports.onAppointmentCreated = functions
+    .region("europe-west1")
+    .firestore.document("appointments/{appointmentId}")
+    .onCreate(async (snapshot, context) => {
+      // 1. Get the data from the newly created appointment
+      const appointmentData = snapshot.data();
+
+      const patientName = appointmentData.patientName;
+      const doctorId = appointmentData.doctorId;
+      const appointmentTime = appointmentData.appointmentDateTime.toDate();
+      // Format the time for the notification body (e.g., "Aug 3 at 10:30 AM")
+      const formattedTime = new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }).format(appointmentTime);
+
+      // 2. Get the Doctor's FCM token from the 'users' collection
+      const doctorUserDoc = await db.collection("users").doc(doctorId).get();
+      if (!doctorUserDoc.exists) {
+        console.error(`Doctor user document not found for ID: ${doctorId}`);
+        return;
+      }
+      const {fcmToken} = doctorUserDoc.data();
+      if (!fcmToken) {
+        console.log(`Doctor ${doctorId} does not have an FCM token.`);
+        return;
+      }
+
+      // 3. Construct the notification message
+      const message = {
+        token: fcmToken,
+        notification: {
+          title: "New Appointment Request",
+          body:
+           `You have a new request from ${patientName} for ${formattedTime}.`,
+        },
+        data: {
+          "payload": JSON.stringify({
+            "type": "new_appointment",
+            "appointmentId": context.params.appointmentId,
+          }),
+        },
+        android: {priority: "high"},
+        apns: {payload: {aps: {"content-available": 1}}},
+      };
+
+      // 4. Send the notification
+      console.
+          log(`Sending new appointment notification to doctor: ${doctorId}`);
+      await admin.messaging().send(message);
+    });
+
+/**
+ * Triggered when an appointment document is updated.
+ * Sends a notification to the PATIENT if the status has changed.
+ */
+exports.onAppointmentUpdated = functions
+    .region("europe-west1")
+    .firestore.document("appointments/{appointmentId}")
+    .onUpdate(async (change, context) => {
+      // 1. Get the data before and after the update
+      const beforeData = change.before.data();
+      const afterData = change.after.data();
+
+      // 2. IMPORTANT: Check if the 'status' field actually changed.
+      // This prevents sending a notification for any other type of update.
+      if (beforeData.status === afterData.status) {
+        console.log("Status did not change. No notification will be sent.");
+        return;
+      }
+
+      const patientId = afterData.patientId;
+      const doctorName = afterData.doctorName;
+      const newStatus = afterData.status; // e.g., 'confirmed' or 'cancelled'
+      // Create a user-friendly message
+      let notificationBody = "";
+      if (newStatus === "confirmed") {
+        notificationBody =
+        `Your appointment with ${doctorName} has been confirmed.`;
+      } else if (newStatus === "cancelled") {
+        notificationBody = `Your appointment with ${doctorName} was cancelled.`;
+      } else {
+        // Don't send notifications for 'completed' or other statuses
+        return;
+      }
+
+      // 3. Get the Patient's FCM token
+      const patientUserDoc = await db.collection("users").doc(patientId).get();
+      if (!patientUserDoc.exists) {
+        console.error(`Patient user document not found for ID: ${patientId}`);
+        return;
+      }
+      const {fcmToken} = patientUserDoc.data();
+      if (!fcmToken) {
+        console.log(`Patient ${patientId} does not have an FCM token.`);
+        return;
+      }
+
+      // 4. Construct the notification message
+      const message = {
+        token: fcmToken,
+        notification: {
+          title: `Appointment ${newStatus.
+              charAt(0).toUpperCase() + newStatus.slice(1)}`,
+          body: notificationBody,
+        },
+        data: {
+          "payload": JSON.stringify({
+            "type": "appointment_status_update",
+            "appointmentId": context.params.appointmentId,
+          }),
+        },
+        android: {priority: "high"},
+        apns: {payload: {aps: {"content-available": 1}}},
+      };
+
+      // 5. Send the notification
+      console.log(`Sending status update to patient: ${patientId}`);
+      await admin.messaging().send(message);
+    });

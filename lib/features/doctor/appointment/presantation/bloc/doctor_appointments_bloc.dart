@@ -23,79 +23,169 @@ class DoctorAppointmentsBloc
     on<ConfirmAppointment>(_onConfirmAppointment);
     on<CancelAppointment>(_onCancelAppointment);
     on<CompletedAppointment>(_onCompletedAppointment);
-
-  }
-Future<void> _onFetchAppointments(
-  FetchDoctorAppointments event,
-  Emitter<DoctorAppointmentsState> emit,
-) async {
-  emit(DoctorAppointmentsLoading());
-  final user = await _getCurrentUserUseCase();
-  if (user == null) {
-    emit(const DoctorAppointmentsError("Doctor not logged in."));
-    return;
+    on<ClearLoadingState>(_onClearLoadingState);
+    on<MarkAsNoShow>(_onMarkAsNoShow);
   }
 
-  // Listen to the stream of appointments
-  await emit.forEach<Either<Failure, List<AppointmentEntity>>>(
-    _getAppointmentsUseCase(user.id),
-    onData: (result) {
-      return result.fold(
-        (failure) => DoctorAppointmentsError(failure.message),
-        (appointments) {
-          final now = DateTime.now();
+  Future<void> _onFetchAppointments(
+    FetchDoctorAppointments event,
+    Emitter<DoctorAppointmentsState> emit,
+  ) async {
+    print("[DoctorAppointmentsBloc] 📋 Fetching appointments...");
+    
+    // Show full screen loader only when fetching for the first time
+    if (state is! DoctorAppointmentsLoaded) {
+      emit(DoctorAppointmentsLoading());
+    }
 
-          // PENDING: New requests that need action.
-          final pending = appointments
-              .where((a) => a.status == 'pending')
-              .toList();
+    final user = await _getCurrentUserUseCase();
+    if (user == null) {
+      emit(const DoctorAppointmentsError("Doctor not logged in."));
+      return;
+    }
 
-          // UPCOMING: Appointments that are confirmed and are in the future.
-          final upcoming = appointments
-              .where((a) => a.status == 'confirmed' && a.appointmentDateTime.isAfter(now))
-              .toList();
+    // Listen to the stream of appointments
+    await emit.forEach<Either<Failure, List<AppointmentEntity>>>(
+      _getAppointmentsUseCase(user.id),
+      onData: (result) {
+        return result.fold(
+          (failure) => DoctorAppointmentsError(failure.message),
+          (appointments) {
+            print("[DoctorAppointmentsBloc] 📊 Received ${appointments.length} appointments");
+            
+            final now = DateTime.now();
 
-          final past = appointments
-              .where((a) => a.status == 'completed' || 
-                           a.status == 'cancelled' ||
-                           (a.status == 'confirmed' && a.appointmentDateTime.isBefore(now)))
-              .toList();
-          
+            final pending = appointments
+                .where((a) => a.status == 'pending')
+                .toList();
 
-          return DoctorAppointmentsLoaded(
-            pending: pending,
-            upcoming: upcoming,
-            past: past
-          );
-        },
-      );
-    },
-    onError: (error, stackTrace) => DoctorAppointmentsError(error.toString()),
-  );
-}
+            final upcoming = appointments
+                .where((a) =>
+                    a.status == 'confirmed' && a.appointmentDateTime.isAfter(now))
+                .toList();
+
+            final past = appointments
+                .where((a) =>
+                    a.status == 'completed' ||
+                    a.status == 'cancelled' ||
+                    a.status == 'no-show' ||
+                    (a.status == 'confirmed' &&
+                        a.appointmentDateTime.isBefore(now)))
+                .toList();
+
+            print("[DoctorAppointmentsBloc] 📊 Categorized: ${pending.length} pending, ${upcoming.length} upcoming, ${past.length} past");
+
+            // IMPORTANT: Preserve the updatingAppointmentId across stream updates
+            final currentUpdatingId = state is DoctorAppointmentsLoaded
+                ? (state as DoctorAppointmentsLoaded).updatingAppointmentId
+                : null;
+
+            return DoctorAppointmentsLoaded(
+              pending: pending,
+              upcoming: upcoming,
+              past: past,
+              updatingAppointmentId: currentUpdatingId,
+            );
+          },
+        );
+      },
+      onError: (error, stackTrace) {
+        print("[DoctorAppointmentsBloc] ❌ Stream error: $error");
+        return DoctorAppointmentsError(error.toString());
+      },
+    );
+  }
+
+  // --- IMPROVED HELPER FUNCTION TO HANDLE ALL STATUS UPDATES ---
+  Future<void> _handleStatusUpdate(
+    String appointmentId,
+    String newStatus,
+    Emitter<DoctorAppointmentsState> emit,
+  ) async {
+    print("[DoctorAppointmentsBloc] 🔄 Updating appointment $appointmentId to status: $newStatus");
+    
+    // 1. Ensure we are in a loaded state
+    if (state is! DoctorAppointmentsLoaded) {
+      print("[DoctorAppointmentsBloc] ⚠️ Cannot update - not in loaded state");
+      return;
+    }
+    final currentState = state as DoctorAppointmentsLoaded;
+
+    // 2. Show item-specific loader
+    print("[DoctorAppointmentsBloc] ⏳ Setting loading state for appointment: $appointmentId");
+    emit(currentState.copyWith(updatingAppointmentId: appointmentId));
+
+    // 3. Add a small delay to ensure the loading state is visible
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    // 4. Call the use case to update the status in the database
+    final result = await _updateStatusUseCase(
+      appointmentId,
+      newStatus,
+    );
+
+    // 5. Handle the result
+    result.fold(
+      (failure) {
+        print("[DoctorAppointmentsBloc] ❌ Failed to update status: ${failure.message}");
+        // Remove the loader and potentially show error
+        if (state is DoctorAppointmentsLoaded) {
+          emit((state as DoctorAppointmentsLoaded).copyWith(clearUpdatingId: true));
+        }
+      },
+      (_) {
+        print("[DoctorAppointmentsBloc] ✅ Successfully updated appointment status");
+        // Add a delay before clearing the loader to show success feedback
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (state is DoctorAppointmentsLoaded) {
+            add(ClearLoadingState()); // Use the public event
+          }
+        });
+      },
+    );
+  }
+
+  // --- EVENT HANDLERS NOW USE THE HELPER FUNCTION ---
 
   Future<void> _onConfirmAppointment(
     ConfirmAppointment event,
     Emitter<DoctorAppointmentsState> emit,
   ) async {
-    await _updateStatusUseCase(event.appointmentId, 'confirmed');
-    // After updating, re-fetch the list to show the change
-    add(FetchDoctorAppointments());
+    print("[DoctorAppointmentsBloc] ✅ Confirming appointment: ${event.appointmentId}");
+    await _handleStatusUpdate(event.appointmentId, 'confirmed', emit);
   }
 
   Future<void> _onCancelAppointment(
     CancelAppointment event,
     Emitter<DoctorAppointmentsState> emit,
   ) async {
-    await _updateStatusUseCase(event.appointmentId, 'cancelled');
-    add(FetchDoctorAppointments());
+    print("[DoctorAppointmentsBloc] ❌ Cancelling appointment: ${event.appointmentId}");
+    await _handleStatusUpdate(event.appointmentId, 'cancelled', emit);
   }
 
-   Future<void> _onCompletedAppointment(
+  // Handler for clearing loading state
+  void _onClearLoadingState(
+    ClearLoadingState event,
+    Emitter<DoctorAppointmentsState> emit,
+  ) {
+    print("[DoctorAppointmentsBloc] 🧹 Clearing loading state");
+    if (state is DoctorAppointmentsLoaded) {
+      emit((state as DoctorAppointmentsLoaded).copyWith(clearUpdatingId: true));
+    }
+  }
+
+    Future<void> _onCompletedAppointment(
     CompletedAppointment event,
     Emitter<DoctorAppointmentsState> emit,
   ) async {
-    await _updateStatusUseCase(event.appointmentId, 'completed');
-    add(FetchDoctorAppointments());
+    print("[DoctorAppointmentsBloc] ✅ Marking appointment as completed: ${event.appointmentId}");
+    await _handleStatusUpdate(event.appointmentId, 'completed', emit);
+  }
+    Future<void> _onMarkAsNoShow(
+    MarkAsNoShow event,
+    Emitter<DoctorAppointmentsState> emit,
+  ) async {
+    // Helper function ko naye status 'no-show' ke saath call karein
+    await _handleStatusUpdate(event.appointmentId, 'no-show', emit);
   }
 }

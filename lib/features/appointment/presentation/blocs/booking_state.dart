@@ -14,6 +14,9 @@ class BookingInProgress extends BookingState {}
 // When the booking is successful
 class BookingSuccess extends BookingState {}
 
+// When the booking is loading
+class BookingLoading extends BookingState {}
+
 // When the booking fails
 class BookingFailure extends BookingState {
   final String message;

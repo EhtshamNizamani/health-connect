@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:dartz/dartz.dart';
 import 'package:health_connect/core/error/failures.dart';
 import 'package:health_connect/features/appointment/data/models/appointment_model.dart';
@@ -7,10 +8,17 @@ import 'package:health_connect/features/appointment/domain/repositories/appointm
 
 class AppointmentRepositoryImpl implements AppointmentRepository {
   final FirebaseFirestore _firestore;
-  AppointmentRepositoryImpl(this._firestore);
+  final FirebaseFunctions _functions; // <-- Firebase Functions ko inject karein
+
+  AppointmentRepositoryImpl(
+    this._firestore,
+    this._functions,
+  ); // <-- Constructor update karein
 
   @override
-  Future<Either<Failure, void>> bookAppointment(AppointmentEntity appointment) async {
+  Future<Either<Failure, void>> bookAppointment(
+    AppointmentEntity appointment,
+  ) async {
     // --- STEP 1: PREPARE FOR THE LOCK ---
     final appointmentsCollection = _firestore.collection('appointments');
     final locksCollection = _firestore.collection('appointment_locks');
@@ -26,7 +34,7 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
       // This is atomic and safe from race conditions.
       await _firestore.runTransaction((transaction) async {
         final lockDoc = await transaction.get(lockRef);
-        
+
         // Check if the lock document already exists.
         if (lockDoc.exists) {
           // If it exists, someone else beat us to it. Fail the transaction.
@@ -36,7 +44,7 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
             message: 'This time slot was just booked. Please try another.',
           );
         }
-        
+
         // If the lock does not exist, create it to claim the slot.
         transaction.set(lockRef, {'createdAt': FieldValue.serverTimestamp()});
       });
@@ -49,14 +57,17 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
 
       // If everything succeeds, return success.
       return const Right(null);
-
     } on FirebaseException catch (e) {
       // Catch the specific error from the transaction if we lost the race.
-      return Left(FirestoreFailure(e.message ?? 'This slot is no longer available.'));
+      return Left(
+        FirestoreFailure(e.message ?? 'This slot is no longer available.'),
+      );
     } catch (e) {
       // Catch any other errors (e.g., creating the main appointment failed)
       // In a real app, you might want to delete the lock here if this part fails.
-      return Left(FirestoreFailure("An unknown error occurred while booking: $e"));
+      return Left(
+        FirestoreFailure("An unknown error occurred while booking: $e"),
+      );
     }
   }
 
@@ -92,8 +103,11 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
       return Left(FirestoreFailure(e.toString()));
     }
   }
+
   @override
-  Stream<Either<Failure, List<AppointmentEntity>>> getDoctorAppointments(String doctorId) {
+  Stream<Either<Failure, List<AppointmentEntity>>> getDoctorAppointments(
+    String doctorId,
+  ) {
     try {
       // Get the stream of snapshots from Firestore
       final snapshots = _firestore
@@ -111,13 +125,17 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
       });
     } catch (e) {
       // If setting up the stream fails, return a stream with a single error
-      return Stream.value(Left(FirestoreFailure("Failed to listen to appointments: $e")));
+      return Stream.value(
+        Left(FirestoreFailure("Failed to listen to appointments: $e")),
+      );
     }
   }
 
   // <<< --- NAYA STREAM-BASED METHOD FOR PATIENT ---
   @override
-  Stream<Either<Failure, List<AppointmentEntity>>> getPatientAppointments(String patientId) {
+  Stream<Either<Failure, List<AppointmentEntity>>> getPatientAppointments(
+    String patientId,
+  ) {
     try {
       final snapshots = _firestore
           .collection('appointments')
@@ -132,9 +150,12 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
         return Right<Failure, List<AppointmentEntity>>(appointments);
       });
     } catch (e) {
-      return Stream.value(Left(FirestoreFailure("Failed to listen to appointments: $e")));
+      return Stream.value(
+        Left(FirestoreFailure("Failed to listen to appointments: $e")),
+      );
     }
   }
+
   @override
   Future<Either<Failure, void>> updateAppointmentStatus(
     String appointmentId,
@@ -147,6 +168,34 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
       return const Right(null);
     } catch (e) {
       return Left(FirestoreFailure("Failed to update appointment status: $e"));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> initiatePayment({
+    required String doctorId,
+    required int amount,
+  }) async {
+    try {
+      final HttpsCallable callable = _functions.httpsCallable('createPayment');
+      final response = await callable.call<Map<String, dynamic>>({
+        'doctorId': doctorId,
+        'amount': amount,
+      });
+
+      final clientSecret = response.data['clientSecret'] as String?;
+      if (clientSecret != null) {
+        
+        return Right(clientSecret);
+      } else {
+        return Left(ServerFailure("Failed to get payment secret from server."));
+      }
+    } on FirebaseFunctionsException catch (e) {
+      return Left(
+        ServerFailure(e.message ?? 'An error occurred with our server.'),
+      );
+    } catch (e) {
+      return Left(ServerFailure("An unexpected error occurred: $e"));
     }
   }
 }

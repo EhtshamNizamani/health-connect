@@ -70,21 +70,64 @@ class ManageAvailabilityBloc
     );
     emit(ManageAvailabilityLoaded(newSchedule));
   }
-  
-  void _onTimeSlotAdded(
-    TimeSlotAdded event,
-    Emitter<ManageAvailabilityState> emit,
-  ) {
-    final newSchedule = Map<String, DailyAvailability>.from(state.schedule);
-    final daySchedule = newSchedule[event.day]!;
-    final updatedSlots = List<TimeSlot>.from(daySchedule.slots)..add(event.newSlot);
-    
-    newSchedule[event.day] = DailyAvailability(
-      isWorking: daySchedule.isWorking,
-      slots: updatedSlots,
-    );
-    emit(ManageAvailabilityLoaded(newSchedule));
+
+void _onTimeSlotAdded(
+  TimeSlotAdded event,
+  Emitter<ManageAvailabilityState> emit,
+) {
+  final newSchedule = Map<String, DailyAvailability>.from(state.schedule);
+  final daySchedule = newSchedule[event.day]!;
+  final existingSlots = daySchedule.slots;
+  final newSlot = event.newSlot;
+
+  // --- VALIDATION LOGIC START ---
+  // Helper to convert "HH:mm" to minutes from midnight for easy comparison
+  int timeToMinutes(String time) {
+    final parts = time.split(':');
+    return int.parse(parts[0]) * 60 + int.parse(parts[1]);
   }
+
+  final newStart = timeToMinutes(newSlot.startTime);
+  final newEnd = timeToMinutes(newSlot.endTime);
+
+  // Check 1: End time must be after start time
+  if (newEnd <= newStart) {
+    emit(ManageAvailabilityError(
+      state.schedule,
+      "End time must be after start time.",
+    ));
+    return; // Stop processing
+  }
+
+  // Check 2: Check for overlaps with existing slots
+  for (final existingSlot in existingSlots) {
+    final existingStart = timeToMinutes(existingSlot.startTime);
+    final existingEnd = timeToMinutes(existingSlot.endTime);
+
+    if (newStart < existingEnd && newEnd > existingStart) {
+      // Overlap found!
+      emit(ManageAvailabilityError(
+        state.schedule,
+        "This time slot overlaps with an existing one (${existingSlot.startTime} - ${existingSlot.endTime}).",
+      ));
+      return; // Stop processing
+    }
+  }
+  // --- VALIDATION LOGIC END ---
+
+  // If validation passes, add the new slot
+  final updatedSlots = List<TimeSlot>.from(existingSlots)..add(newSlot);
+  
+  // Optional: Sort the slots by start time
+  updatedSlots.sort((a, b) => timeToMinutes(a.startTime).compareTo(timeToMinutes(b.startTime)));
+
+  newSchedule[event.day] = DailyAvailability(
+    isWorking: daySchedule.isWorking,
+    slots: updatedSlots,
+  );
+  emit(ManageAvailabilityLoaded(newSchedule));
+}
+
 
   void _onTimeSlotRemoved(
     TimeSlotRemoved event,

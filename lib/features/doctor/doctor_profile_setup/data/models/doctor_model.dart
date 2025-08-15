@@ -1,4 +1,5 @@
 // lib/features/doctor_profile_setup/data/models/doctor_model.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:health_connect/core/data/model/daily_availability_model.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_profile_entity.dart';
 
@@ -31,6 +32,34 @@ class DoctorModel {
     this.reviewCount =0,
     this.totalRating=0,
   });
+
+
+  factory DoctorModel.fromSnapshot(DocumentSnapshot doc) {
+    // Get the data from the snapshot, defaulting to an empty map if null
+    final data = doc.data() as Map<String, dynamic>? ?? {};
+
+    // Logic to parse the nested weeklyAvailability map from Firestore
+    final availabilityData = data['weeklyAvailability'] as Map<String, dynamic>? ?? {};
+    final weeklyAvailability = availabilityData.map(
+      (day, dailyData) => MapEntry(day, DailyAvailabilityModel.fromMap(dailyData)),
+    );
+
+    return DoctorModel(
+      // The document ID is the UID
+      uid: doc.id, 
+      name: data['name'] as String? ?? '',
+      email: data['email'] as String? ?? '',
+      specialization: data['specialization'] as String? ?? '',
+      bio: data['bio'] as String? ?? '',
+      experience: data['experience'] as int? ?? 0,
+      photoUrl: data['photoUrl'] as String? ?? '',
+      clinicAddress: data['clinicAddress'] as String? ?? '',
+      consultationFee: data['consultationFee'] as int? ?? 0,
+      totalRating: (data['totalRating'] as num?)?.toDouble() ?? 0.0,
+      reviewCount: data['reviewCount'] as int? ?? 0,
+      weeklyAvailability: weeklyAvailability,
+    );
+  }
 
   factory DoctorModel.fromMap(Map<String, dynamic> map) {
     final availabilityData = map['weeklyAvailability'] as Map<String, dynamic>? ?? {};

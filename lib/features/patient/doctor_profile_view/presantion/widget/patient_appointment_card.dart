@@ -162,6 +162,7 @@ class PatientAppointmentCard extends StatelessWidget {
       case 'pending': return Colors.orange.shade700;
       case 'confirmed': return Colors.green.shade700;
       case 'cancelled': return theme.colorScheme.error;
+      case 'no-show': return theme.colorScheme.error.withAlpha(160);
       case 'completed': return theme.colorScheme.primary;
       default: return theme.colorScheme.outline;
     }

@@ -7,7 +7,7 @@ class GetChatRoomsUseCase {
   final ChatRepository repository;
   GetChatRoomsUseCase(this.repository);
 
-  Stream<Either<Failure, List<ChatRoomEntity>>> call() {
-    return repository.getChatRooms();
+  Stream<Either<Failure, List<ChatRoomEntity>>> call(String userId) {
+    return repository.getChatRooms(userId);
   }
 }

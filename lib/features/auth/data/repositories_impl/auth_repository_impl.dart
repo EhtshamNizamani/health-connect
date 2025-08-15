@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:health_connect/core/di/service_locator.dart';
 import 'package:health_connect/core/error/failures.dart';
-import 'package:health_connect/core/service/notification_service.dart';
+import 'package:health_connect/core/services/notification_service.dart';
 import 'package:health_connect/features/auth/data/models/json_user.dart';
 import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 import 'package:health_connect/features/auth/domain/repositories/auth_repository.dart';

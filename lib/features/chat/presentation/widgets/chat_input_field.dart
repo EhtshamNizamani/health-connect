@@ -1,5 +1,3 @@
-
-// --- Helper Widget for the input field at the bottom ---
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -19,8 +17,9 @@ import 'package:image_picker/image_picker.dart';
 class ChatInputField extends StatefulWidget {
   final String chatRoomId;
   final String receiverId;
-  final UserEntity patient; // <<<--- NEW
-  final DoctorEntity doctor; // <<<--- NEW
+  final UserEntity patient;
+  final DoctorEntity doctor;
+  final VoidCallback? onMessageSent; // Callback for when message is sent
 
   const ChatInputField({
     super.key,
@@ -28,13 +27,14 @@ class ChatInputField extends StatefulWidget {
     required this.receiverId,
     required this.doctor,
     required this.patient,
+    this.onMessageSent,
   });
 
   @override
   State<ChatInputField> createState() => _ChatInputFieldState();
 }
 
-class _ChatInputFieldState extends State<ChatInputField>  {
+class _ChatInputFieldState extends State<ChatInputField> {
   final _messageController = TextEditingController();
 
   @override
@@ -43,7 +43,6 @@ class _ChatInputFieldState extends State<ChatInputField>  {
     super.dispose();
   }
 
-  // <<<--- THE MODIFIED _sendMessage METHOD ---
   void _sendMessage() {
     final text = _messageController.text.trim();
     if (text.isEmpty) {
@@ -90,9 +89,11 @@ class _ChatInputFieldState extends State<ChatInputField>  {
     // Clear the text field and unfocus
     _messageController.clear();
     FocusScope.of(context).unfocus();
+
+    // Trigger scroll to bottom after message is sent
+    widget.onMessageSent?.call();
   }
 
-  // <<<--- END OF MODIFICATION ---
   void _showAttachmentPicker() {
     showModalBottomSheet(
       context: context,
@@ -123,7 +124,7 @@ class _ChatInputFieldState extends State<ChatInputField>  {
     );
   }
 
-  // --- NEW METHOD TO HANDLE FILE PICKING AND SENDING ---
+  // Handle file picking and sending
   Future<void> _pickAndSendFile(String type) async {
     File? file;
 
@@ -157,6 +158,9 @@ class _ChatInputFieldState extends State<ChatInputField>  {
           doctor: widget.doctor,
         ),
       );
+
+      // Trigger scroll to bottom after file message is sent
+      widget.onMessageSent?.call();
     }
   }
 
@@ -196,9 +200,7 @@ class _ChatInputFieldState extends State<ChatInputField>  {
                     fillColor: theme.scaffoldBackgroundColor,
                     // Remove all borders
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        24,
-                      ), // Makes it pill-shaped
+                      borderRadius: BorderRadius.circular(24), // Makes it pill-shaped
                       borderSide: BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(

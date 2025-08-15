@@ -58,6 +58,7 @@ class PatientAppointmentsBloc
                   (a) =>
                       a.status == 'completed' ||
                       a.status == 'cancelled' ||
+                      a.status == 'no-show' ||
                       (a.status == 'confirmed' &&
                           a.appointmentDateTime.isBefore(now)),
                 )

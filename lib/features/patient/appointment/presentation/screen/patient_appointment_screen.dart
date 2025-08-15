@@ -6,7 +6,7 @@ import 'package:health_connect/features/doctor/review/presantation/screen/review
 import '../bloc/patient_appointments_bloc.dart';
 import '../bloc/patient_appointments_event.dart';
 import '../bloc/patient_appointments_state.dart';
-import '../widgets/patient_appointment_card.dart';
+import '../../../doctor_profile_view/presantion/widget/patient_appointment_card.dart';
 
 class PatientAppointmentsScreen extends StatelessWidget {
   const PatientAppointmentsScreen({super.key});

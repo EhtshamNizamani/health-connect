@@ -7,7 +7,7 @@ import 'package:health_connect/core/error/failures.dart';
 import 'package:health_connect/features/chat/data/models/chat_room_model.dart';
 import 'package:health_connect/features/chat/data/models/message_model.dart';
 import 'package:health_connect/features/chat/domain/repositories/chat_repository.dart';
-
+import 'package:rxdart/rxdart.dart';
 import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 import 'package:health_connect/features/chat/domain/entities/chat_room_entity.dart';
 import 'package:health_connect/features/chat/domain/entities/message_entity.dart';
@@ -21,28 +21,39 @@ class FirebaseChatRepositoryImpl implements ChatRepository {
   FirebaseChatRepositoryImpl(this._firestore, this._auth, this._storage);
 
   @override
-  Stream<Either<Failure, List<ChatRoomEntity>>> getChatRooms() {
-    final currentUser = _auth.currentUser;
-    if (currentUser == null) {
-      // Return a stream that emits a single error
-      return Stream.value(Left(AuthFailure('User not authenticated.')));
-    }
-
+  Stream<Either<Failure, List<ChatRoomEntity>>> getChatRooms(String userId) {
+    print("🔥 [Repo] getChatRooms stream is being created for user: $userId");
     try {
-      // Listen to real-time changes in the 'chats' collection
-      return _firestore
+      // Create the stream from Firestore
+      final snapshots = _firestore
           .collection('chats')
-          .where('participants', arrayContains: currentUser.uid)
+          .where('participants', arrayContains: userId)
           .orderBy('lastMessageTimestamp', descending: true)
-          .snapshots()
-          .map((snapshot) {
-        final chatRooms = snapshot.docs
-            .map((doc) => ChatRoomModel.fromSnapshot(doc).toDomain())
-            .toList();
-        return Right(chatRooms);
-      });
+          .snapshots();
+
+      // Transform the stream with proper error handling
+      return snapshots
+          .map<Either<Failure, List<ChatRoomEntity>>>((snapshot) {
+            print("✅ [Repo] getChatRooms stream emitted ${snapshot.docs.length} rooms.");
+            
+            try {
+              final chatRooms = snapshot.docs
+                  .map((doc) => ChatRoomModel.fromSnapshot(doc).toDomain())
+                  .toList();
+
+              return Right(chatRooms);
+            } catch (e) {
+              print("❌ [Repo] Error processing chat rooms: $e");
+              return Left(FirestoreFailure("Error processing chat rooms: $e"));
+            }
+          })
+          .onErrorReturn(Left(FirestoreFailure("Stream error in getChatRooms")))
+          .startWith(const Right([]));
     } catch (e) {
-      return Stream.value(Left(FirestoreFailure("Failed to fetch chat rooms: $e")));
+      print("❌ [Repo] FAILED to create getChatRooms stream: $e");
+      return Stream.value(
+        Left(FirestoreFailure("Failed to fetch chat rooms: $e")),
+      );
     }
   }
 
@@ -53,88 +64,169 @@ class FirebaseChatRepositoryImpl implements ChatRepository {
           .collection('chats')
           .doc(chatRoomId)
           .collection('messages')
-          .orderBy('timestamp', descending: true) // Get latest messages first
+          .orderBy('timestamp', descending: true)
           .snapshots()
-          .map((snapshot) {
-        final messages = snapshot.docs
-            .map((doc) => MessageModel.fromSnapshot(doc).toDomain())
-            .toList();
-        return Right(messages);
-      });
+          .map<Either<Failure, List<MessageEntity>>>((snapshot) {
+            try {
+              final messages = snapshot.docs
+                  .map((doc) => MessageModel.fromSnapshot(doc).toDomain())
+                  .toList();
+              return Right(messages);
+            } catch (e) {
+              return Left(FirestoreFailure("Error processing messages: $e"));
+            }
+          })
+          .onErrorReturn(Left(FirestoreFailure("Failed to fetch messages")));
     } catch (e) {
-      return Stream.value(Left(FirestoreFailure("Failed to fetch messages: $e")));
+      return Stream.value(
+        Left(FirestoreFailure("Failed to fetch messages: $e")),
+      );
     }
   }
 
-@override
-Future<Either<Failure, void>> sendMessage({
-  required String chatRoomId,
-  required MessageEntity message,
-  required UserEntity patient,
-  required DoctorEntity doctor,
-}) async {
-  final currentUser = _auth.currentUser;
-  if (currentUser == null) return Left(AuthFailure('User not authenticated.'));
-
-  try {
-    final chatRoomRef = _firestore.collection('chats').doc(chatRoomId);
-    final messageRef = chatRoomRef.collection('messages').doc();
-    final messageModel = MessageModel.fromEntity(message);
-
-    // Run a transaction to be safe
-    await _firestore.runTransaction((transaction) async {
-      final chatRoomDoc = await transaction.get(chatRoomRef);
-
-      if (!chatRoomDoc.exists) {
-        // --- THIS IS THE FIRST MESSAGE ---
-        // Create the chat room document
-        final chatRoomData = {
-          'participants': [patient.id, doctor.uid],
-          'lastMessage': message.content,
-          'lastMessageTimestamp': message.timestamp,
-          'patientId': patient.id,
-          'doctorId': doctor.uid,
-          'patientName': patient.name,
-          'doctorName': doctor.name,
-          'patientPhotoUrl': patient.photoUrl ?? '',
-          'doctorPhotoUrl': doctor.photoUrl,
-        };
-        transaction.set(chatRoomRef, chatRoomData);
-      } else {
-        // --- THIS IS AN EXISTING CHAT ---
-        // Just update the last message details
-        transaction.update(chatRoomRef, {
-          'lastMessage': message.type == 'text' ? message.content : 'Sent an attachment',
-          'lastMessageTimestamp': message.timestamp,
-        });
-      }
-      
-      // In both cases, add the new message
-      transaction.set(messageRef, messageModel.toMap());
-    });
-
-    return const Right(null);
-  } catch (e) {
-    return Left(FirestoreFailure("Failed to send message: $e"));
-  }
-}
   @override
-  Future<Either<Failure, String>> uploadFile(File file, String chatRoomId) async {
+  Future<Either<Failure, void>> sendMessage({
+    required String chatRoomId,
+    required MessageEntity message,
+    required UserEntity patient,
+    required DoctorEntity doctor,
+  }) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      return Left(AuthFailure('User not authenticated.'));
+    }
+
+    try {
+      final chatRoomRef = _firestore.collection('chats').doc(chatRoomId);
+      final messageRef = chatRoomRef.collection('messages').doc();
+      final messageModel = MessageModel.fromEntity(message);
+
+      await _firestore.runTransaction((transaction) async {
+        final chatRoomDoc = await transaction.get(chatRoomRef);
+
+        if (!chatRoomDoc.exists) {
+          // Create the chat room document for first message
+          final chatRoomData = {
+            'participants': [patient.id, doctor.uid],
+            'lastMessage': message.content,
+            'lastMessageTimestamp': message.timestamp,
+            'patientId': patient.id,
+            'doctorId': doctor.uid,
+            'patientName': patient.name,
+            'doctorName': doctor.name,
+            'patientPhotoUrl': patient.photoUrl ?? '',
+            'doctorPhotoUrl': doctor.photoUrl,
+            'unreadCount': {
+              message.receiverId: 1,
+              message.senderId: 0,
+            },
+          };
+          transaction.set(chatRoomRef, chatRoomData);
+        } else {
+          // Update existing chat
+          transaction.update(chatRoomRef, {
+            'lastMessage': message.type == 'text'
+                ? message.content
+                : 'Sent an attachment',
+            'lastMessageTimestamp': message.timestamp,
+            'unreadCount.${message.receiverId}': FieldValue.increment(1),
+          });
+        }
+
+        // Add the new message
+        transaction.set(messageRef, messageModel.toMap());
+      });
+
+      return const Right(null);
+    } catch (e) {
+      print("❌ [Repo] Failed to send message: $e");
+      return Left(FirestoreFailure("Failed to send message: $e"));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> uploadFile(
+    File file,
+    String chatRoomId,
+  ) async {
     try {
       final currentUser = _auth.currentUser;
-      if (currentUser == null) return Left(AuthFailure('User not authenticated.'));
+      if (currentUser == null) {
+        return Left(AuthFailure('User not authenticated.'));
+      }
 
-      // Create a unique file name
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
-      final storageRef = _storage.ref().child('chat_attachments/$chatRoomId/$fileName');
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
+      final storageRef = _storage.ref().child(
+        'chat_attachments/$chatRoomId/$fileName',
+      );
 
       await storageRef.putFile(file);
       final downloadUrl = await storageRef.getDownloadURL();
-      
+
       return Right(downloadUrl);
     } catch (e) {
       return Left(StorageFailure("Failed to upload file: $e"));
     }
   }
 
+  @override
+  Stream<Either<Failure, int>> getTotalUnreadCountStream(String userId) {
+    try {
+      print("🔥 [Repo] getTotalUnreadCountStream is being created for user: $userId");
+      
+      final snapshots = _firestore
+          .collection('chats')
+          .where('participants', arrayContains: userId)
+          .snapshots();
+
+      return snapshots
+          .map<Either<Failure, int>>((snapshot) {
+            print("✅ [Repo] getTotalUnreadCount stream emitted an update.");
+            
+            try {
+              int totalUnread = 0;
+              for (var doc in snapshot.docs) {
+                final data = doc.data();
+                final unreadData = data['unreadCount'] as Map<String, dynamic>? ?? {};
+                final userUnreadCount = unreadData[userId] as int? ?? 0;
+                totalUnread += userUnreadCount;
+              }
+              
+              print("✅ [Repo] New total unread count is: $totalUnread");
+              return Right(totalUnread);
+            } catch (e) {
+              print("❌ [Repo] Error calculating unread count: $e");
+              return Left(FirestoreFailure("Error calculating unread count: $e"));
+            }
+          })
+          .onErrorReturn(Left(FirestoreFailure("Stream error in getTotalUnreadCount")))
+          .startWith(const Right(0));
+    } catch (e) {
+      print("❌ [Repo] FAILED to create getTotalUnreadCount stream: $e");
+      return Stream.value(
+        Left(FirestoreFailure("Failed to get total unread count: $e")),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> markChatRoomAsRead(
+    String chatRoomId,
+    String userId,
+  ) async {
+    try {
+      print("📖 [Repo] Marking chat room $chatRoomId as read for user $userId");
+      
+      await _firestore.collection('chats').doc(chatRoomId).update({
+        'unreadCount.$userId': 0,
+      });
+      
+      print("✅ [Repo] Successfully marked chat room as read");
+      return const Right(null);
+    } catch (e) {
+      print("❌ [Repo] Failed to mark chat room as read: $e");
+      return Left(FirestoreFailure("Failed to mark chat room as read: $e"));
+    }
+  }
 }
