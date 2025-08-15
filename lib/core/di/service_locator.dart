@@ -33,7 +33,12 @@ import 'package:health_connect/features/chat/domain/usecases/send_message_usecas
 import 'package:health_connect/features/chat/domain/usecases/upload_file_usecase.dart';
 import 'package:health_connect/features/chat/presentation/blocs/chat_list/chat_list_bloc.dart';
 import 'package:health_connect/features/chat/presentation/blocs/chat_room/chat_room_bloc.dart';
+import 'package:health_connect/features/chat_access/bloc/chat_access_bloc.dart';
 import 'package:health_connect/features/doctor/appointment/presantation/bloc/doctor_appointments_bloc.dart';
+import 'package:health_connect/features/doctor/appointment_detail/data/repository_impl/appointment_detail_repository_impl.dart';
+import 'package:health_connect/features/doctor/appointment_detail/domain/repository/appointment_detail_repository.dart';
+import 'package:health_connect/features/doctor/appointment_detail/domain/usecase/get_appointment_details_usecase.dart';
+import 'package:health_connect/features/doctor/appointment_detail/presantaion/bloc/appointment_details_bloc.dart';
 import 'package:health_connect/features/doctor/doctor_dashboard/data/repository/doctor_dashboard_repository_impl.dart';
 import 'package:health_connect/features/doctor/doctor_dashboard/domain/repository/doctor_dashboard_repository.dart';
 import 'package:health_connect/features/doctor/doctor_dashboard/domain/usecase/get_doctor_dashboard_data_usecase.dart';
@@ -47,6 +52,11 @@ import 'package:health_connect/features/doctor/doctor_profile_update/data/reposi
 import 'package:health_connect/features/doctor/doctor_profile_update/domain/repository/doctor_profile_update_repository.dart';
 import 'package:health_connect/features/doctor/doctor_profile_update/domain/usecase/doctor_profile_update_usecase.dart';
 import 'package:health_connect/features/doctor/doctor_profile_update/presantation/bloc/doctor_profile_update_bloc.dart';
+import 'package:health_connect/features/doctor/edit_appointment_summary/data/repository_impl/edit_appointment_summary_repository_impl.dart';
+import 'package:health_connect/features/doctor/edit_appointment_summary/domain/repository/edit_appointment_summary_repository.dart';
+import 'package:health_connect/features/doctor/edit_appointment_summary/domain/usecase/edit_appointment_summary.dart';
+import 'package:health_connect/features/doctor/edit_appointment_summary/domain/usecase/upload_files_usecase.dart';
+import 'package:health_connect/features/doctor/edit_appointment_summary/presantation/bloc/edit_summary_bloc.dart';
 import 'package:health_connect/features/doctor/manage_availability/data/repository/firebase_%20manage_availability_repository_impl.dart';
 import 'package:health_connect/features/doctor/manage_availability/domain/repository/manage_availability_repository.dart';
 import 'package:health_connect/features/doctor/manage_availability/domain/usecase/save_doctor_availability_usecase.dart';
@@ -88,6 +98,7 @@ import 'package:health_connect/features/video_call/domain/usecase/initiate_call_
 import 'package:health_connect/features/video_call/domain/usecase/manage_call_usecase.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/call_screen_bloc/call_screen_bloc.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> setupLocator() async {
@@ -105,7 +116,7 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<FirebaseFunctions>(
     () => FirebaseFunctions.instanceFor(region: "europe-west1"),
   );
-  
+
   //service
   sl.registerLazySingleton(() => NotificationService());
   sl.registerLazySingleton(() => StripePaymentService());
@@ -148,9 +159,14 @@ Future<void> setupLocator() async {
   );
   sl.registerLazySingleton<NotificationRepository>(
     () => NotificationRepositoryImpl(sl()),
-  );  sl.registerLazySingleton<DoctorDashboardRepository>(
+  );
+  sl.registerLazySingleton<DoctorDashboardRepository>(
     () => DoctorDashboardRepositoryImpl(sl()),
   );
+  sl.registerLazySingleton<AppointmentDetailRepository>(
+    () => AppointmentDetailRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<EditAppointmentSummaryRepository>(() => EditAppointmentSummaryRepositoryImpl(sl(), sl()));
 
   // UseCase
   sl.registerLazySingleton<LoginUsecase>(() => LoginUsecase(sl()));
@@ -187,7 +203,7 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<UpdateAppointmentsStatusUseCase>(
     () => UpdateAppointmentsStatusUseCase(sl()),
   );
-    sl.registerLazySingleton<MarkChatRoomAsReadOptimisticUseCase>(
+  sl.registerLazySingleton<MarkChatRoomAsReadOptimisticUseCase>(
     () => MarkChatRoomAsReadOptimisticUseCase(sl()),
   );
   sl.registerLazySingleton<GetDoctorAppointmentsUseCase>(
@@ -215,7 +231,7 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<SendMessageUseCase>(() => SendMessageUseCase(sl()));
   sl.registerLazySingleton(() => UploadFileUseCase(sl()));
   sl.registerLazySingleton(() => InitiateCallUseCase(sl()));
-  sl.registerLazySingleton(() => InitiatePaymentUseCase(sl())); 
+  sl.registerLazySingleton(() => InitiatePaymentUseCase(sl()));
   sl.registerLazySingleton(() => ManageCallUseCase(sl(), sl()));
   sl.registerLazySingleton(() => GetUnreadCountUseCase(sl()));
   sl.registerLazySingleton(() => MarkNotificationsAsReadUseCase(sl()));
@@ -223,6 +239,9 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton(() => GetTotalUnreadCountUseCase(sl()));
   sl.registerLazySingleton(() => MarkChatRoomAsReadUseCase(sl()));
   sl.registerLazySingleton(() => ChatRoomOptimisticUpdater(sl()));
+  sl.registerLazySingleton(() => GetAppointmentDetailsUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateAppointmentSummaryUseCase(sl()));
+  sl.registerLazySingleton(() => UploadFilesUseCase(sl()));
 
   // Bloc - CHANGED: AuthBloc as LazySingleton instead of Factory
   sl.registerLazySingleton<AuthBloc>(
@@ -235,12 +254,12 @@ Future<void> setupLocator() async {
       sl(),
     ),
   );
-  
+
   // NotificationBloc also as LazySingleton to ensure same AuthBloc instance
   sl.registerLazySingleton<NotificationBloc>(
     () => NotificationBloc(sl(), sl(), sl<AuthBloc>(), sl()),
   );
-  
+
   sl.registerFactory(() => DoctorProfileSetupBloc(sl(), sl()));
   sl.registerFactory(() => DoctorListBloc(sl<GetDoctorsUseCase>()));
   sl.registerFactory(
@@ -252,16 +271,28 @@ Future<void> setupLocator() async {
       sl<SaveDoctorAvailabilityUseCase>(),
     ),
   );
-  sl.registerFactory(() => BookingBloc(sl(),sl(),sl()));
+  sl.registerFactory(() => BookingBloc(sl(), sl(), sl()));
   sl.registerFactory(() => DoctorAppointmentsBloc(sl(), sl(), sl()));
   sl.registerFactory(() => PatientAppointmentsBloc(sl(), sl(), sl()));
   sl.registerFactory(() => ReviewBloc(sl(), sl()));
   sl.registerFactory(() => DoctorProfileUpdateBloc(sl(), sl()));
-  sl.registerFactory(() => ChatListBloc(sl(),sl(),sl(),sl(),sl(),sl()));
+  sl.registerFactory(() => ChatListBloc(sl(), sl(), sl(), sl(), sl(), sl()));
   sl.registerFactory(() => ChatRoomBloc(sl(), sl(), sl()));
   sl.registerFactory(() => CallScreenBloc(sl(), sl()));
   sl.registerFactory(() => VideoCallBloc(sl(), sl(), sl(), sl()));
-  sl.registerFactory(() => DoctorDashboardBloc(sl(),  sl()));
+  sl.registerFactory(() => DoctorDashboardBloc(sl(), sl()));
+  sl.registerFactory(() => AppointmentDetailBloc(sl()));
+
+  sl.registerFactory<ChatAccessBloc>(
+    () => ChatAccessBloc(
+      sl<GetPatientAppointmentsUseCase>(),
+      sl<GetDoctorAppointmentsUseCase>(),
+      // sl<GetCurrentUserUseCase>(),
+    ),
+  );
+  sl.registerFactory(() => EditSummaryBloc(updateSummaryUseCase: sl(), uploadFilesUseCase: sl()));
+
+
 
   // Theme Cubit
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit());

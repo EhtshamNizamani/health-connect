@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:health_connect/features/appointment/domain/entities/appointment_entity.dart';
+import 'package:health_connect/features/doctor/appointment_detail/presantaion/screens/appoiontment_details_screen.dart';
+import 'package:health_connect/features/patient/appointment/presentation/screen/patient_appointment_screen.dart';
 import 'package:intl/intl.dart';
 
 class AppointmentCard extends StatelessWidget {
@@ -25,66 +27,70 @@ class AppointmentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
-      elevation: 2,
-      shadowColor: theme.shadowColor.withOpacity(0.1),
-      margin: const EdgeInsets.only(bottom: 16.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- Top Section (Patient Info & Status) ---
-            Row(
-              children: [
-                // Use patient's photo if available, otherwise initials
-                CircleAvatar(
-                  radius: 25,
-                  backgroundImage: appointment.doctorPhotoUrl.isNotEmpty
-                      ? CachedNetworkImageProvider(appointment.doctorPhotoUrl)
-                      : null,
-                  child: appointment.doctorPhotoUrl.isEmpty
-                      ? Text(
-                          appointment.patientName.isNotEmpty
-                              ? appointment.patientName
-                                    .substring(0, 1)
-                                    .toUpperCase()
-                              : '?',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        )
-                      : null,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        appointment.patientName,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        DateFormat(
-                          'EEE, MMM d, yyyy • hh:mm a',
-                        ).format(appointment.appointmentDateTime),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.outline,
-                        ),
-                      ),
-                    ],
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context)=> AppointmentDetailScreen(appointmentId: appointment.id,))),
+      child: Card(
+        
+        elevation: 2,
+        shadowColor: theme.shadowColor.withOpacity(0.1),
+        margin: const EdgeInsets.only(bottom: 16.0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // --- Top Section (Patient Info & Status) ---
+              Row(
+                children: [
+                  // Use patient's photo if available, otherwise initials
+                  CircleAvatar(
+                    radius: 25,
+                    backgroundImage: appointment.doctorPhotoUrl.isNotEmpty
+                        ? CachedNetworkImageProvider(appointment.doctorPhotoUrl)
+                        : null,
+                    child: appointment.doctorPhotoUrl.isEmpty
+                        ? Text(
+                            appointment.patientName.isNotEmpty
+                                ? appointment.patientName
+                                      .substring(0, 1)
+                                      .toUpperCase()
+                                : '?',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          )
+                        : null,
                   ),
-                ),
-                _buildStatusChip(appointment.status, theme),
-              ],
-            ),
-
-            // --- Smart Action Area ---
-            _buildActionArea(context),
-          ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          appointment.patientName,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          DateFormat(
+                            'EEE, MMM d, yyyy • hh:mm a',
+                          ).format(appointment.appointmentDateTime),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.outline,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _buildStatusChip(appointment.status, theme),
+                ],
+              ),
+      
+              // --- Smart Action Area ---
+              _buildActionArea(context),
+            ],
+          ),
         ),
       ),
     );

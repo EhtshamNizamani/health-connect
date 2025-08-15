@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:health_connect/features/doctor/review/domain/entity/review_entity.dart';
 import 'package:health_connect/features/doctor/review/domain/usecase/get_doctor_review_usecase.dart';
 import 'package:health_connect/features/doctor/review/domain/usecase/submit_review_usecase.dart';
 import 'package:health_connect/features/doctor/review/presantation/bloc/review_event.dart';
