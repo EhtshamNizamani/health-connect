@@ -65,6 +65,14 @@ import 'package:health_connect/features/appointment/data/repositories/appointmen
 import 'package:health_connect/features/appointment/domain/repositories/appointment_repository.dart';
 import 'package:health_connect/features/appointment/domain/usecases/book_appointment_usecase.dart';
 import 'package:health_connect/features/appointment/presentation/blocs/booking_bloc.dart';
+import 'package:health_connect/features/doctor/patient_details/data/patient_details_repository_impl/patient_detail_repository_impl.dart';
+import 'package:health_connect/features/doctor/patient_details/domain/repository/patient_details_repository.dart';
+import 'package:health_connect/features/doctor/patient_details/domain/usecases/get_patient_details_usecase.dart';
+import 'package:health_connect/features/doctor/patient_details/presantation/bloc/patient_details_bloc.dart';
+import 'package:health_connect/features/doctor/patient_records/data/repository_impl/patient_records_repository_impl.dart';
+import 'package:health_connect/features/doctor/patient_records/domain/repository/patient_records_repository.dart';
+import 'package:health_connect/features/doctor/patient_records/domain/usecase/get_patients_for_doctor_usecase.dart';
+import 'package:health_connect/features/doctor/patient_records/presentation/bloc/patient_records_bloc.dart';
 import 'package:health_connect/features/doctor/review/data/repository/review_repository_impl.dart';
 import 'package:health_connect/features/doctor/review/domain/repository/review_repository.dart';
 import 'package:health_connect/features/doctor/review/domain/usecase/get_doctor_review_usecase.dart';
@@ -167,7 +175,9 @@ Future<void> setupLocator() async {
     () => AppointmentDetailRepositoryImpl(sl()),
   );
   sl.registerLazySingleton<EditAppointmentSummaryRepository>(() => EditAppointmentSummaryRepositoryImpl(sl(), sl()));
-
+  sl.registerLazySingleton<PatientRecordsRepository>(() => PatientRecordsRepositoryImpl(sl()));
+  sl.registerLazySingleton<PatientDetailRepository>(() => PatientDetailRepositoryImpl(sl(), sl()));
+  
   // UseCase
   sl.registerLazySingleton<LoginUsecase>(() => LoginUsecase(sl()));
   sl.registerLazySingleton<RegisterUsecase>(() => RegisterUsecase(sl()));
@@ -242,6 +252,7 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton(() => GetAppointmentDetailsUseCase(sl()));
   sl.registerLazySingleton(() => UpdateAppointmentSummaryUseCase(sl()));
   sl.registerLazySingleton(() => UploadFilesUseCase(sl()));
+  sl.registerLazySingleton(() => GetPatientDetailsUseCase(sl()));
 
   // Bloc - CHANGED: AuthBloc as LazySingleton instead of Factory
   sl.registerLazySingleton<AuthBloc>(
@@ -254,8 +265,8 @@ Future<void> setupLocator() async {
       sl(),
     ),
   );
+  sl.registerLazySingleton(() => GetPatientsForDoctorUseCase(sl()));
 
-  // NotificationBloc also as LazySingleton to ensure same AuthBloc instance
   sl.registerLazySingleton<NotificationBloc>(
     () => NotificationBloc(sl(), sl(), sl<AuthBloc>(), sl()),
   );
@@ -287,12 +298,11 @@ Future<void> setupLocator() async {
     () => ChatAccessBloc(
       sl<GetPatientAppointmentsUseCase>(),
       sl<GetDoctorAppointmentsUseCase>(),
-      // sl<GetCurrentUserUseCase>(),
     ),
   );
   sl.registerFactory(() => EditSummaryBloc(updateSummaryUseCase: sl(), uploadFilesUseCase: sl()));
-
-
+  sl.registerFactory(() => PatientRecordsBloc(sl(), sl()));
+  sl.registerFactory(() => PatientDetailBloc(sl()));
 
   // Theme Cubit
   sl.registerLazySingleton<ThemeCubit>(() => ThemeCubit());

@@ -10,6 +10,7 @@ import 'package:health_connect/features/doctor/doctor_dashboard/domain/entities/
 import 'package:health_connect/features/doctor/doctor_dashboard/presantation/bloc/doctor_dashboard_bloc.dart';
 import 'package:health_connect/features/doctor/manage_availability/presantation/screen/manage_availability_screen.dart';
 import 'package:health_connect/features/doctor/doctor_bottom_navigation/cubit/doctor_nav_cubit.dart';
+import 'package:health_connect/features/doctor/patient_records/presentation/screen/patient_list_screen.dart';
 import 'package:health_connect/features/notification/presantaion/bloc/notification_bloc.dart';
 import 'package:intl/intl.dart'; 
 import 'package:shimmer/shimmer.dart';
@@ -306,10 +307,7 @@ class _QuickActionsGridState extends State<_QuickActionsGrid> {
         _ActionCard(
           title: "Patient Records",
           icon: CupertinoIcons.person_3_fill,
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("This feature is coming soon!")),
-            );
+          onTap: () {Navigator.of(context).push(MaterialPageRoute(builder: (context)=> PatientListScreen()));
           },
         ),
       ],
