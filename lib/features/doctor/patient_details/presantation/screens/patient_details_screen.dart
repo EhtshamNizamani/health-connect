@@ -174,9 +174,8 @@ class _PatientHeader extends StatelessWidget {
                 style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
-              // TODO: Add age and gender to your UserEntity
-              Text(
-                "32M", // Placeholder
+             Text(
+                "${patient.age ?? ''}${patient.age != null && patient.gender != null ? ', ' : ''}${patient.gender ?? ''}",
                 style: theme.textTheme.titleMedium?.copyWith(color: Colors.grey.shade600),
               ),
             ],
@@ -345,7 +344,6 @@ class _AppointmentCard extends StatelessWidget {
     );
   }
 }
-
 class _SnapshotCard extends StatelessWidget {
   final UserEntity patient;
   const _SnapshotCard({required this.patient});
@@ -359,10 +357,16 @@ class _SnapshotCard extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // TODO: Add allergies and chronicConditions to your UserEntity
-            _InfoRow(title: "Allergies", value: "None Reported"),
+            // <<< --- THE FINAL CHANGE ---
+            _InfoRow(
+              title: "Allergies",
+              value: patient.allergies?.isNotEmpty == true ? patient.allergies! : "None Reported",
+            ),
             const Divider(height: 24),
-            _InfoRow(title: "Chronic Conditions", value: "None Reported"),
+            _InfoRow(
+              title: "Chronic Conditions",
+              value: patient.chronicConditions?.isNotEmpty == true ? patient.chronicConditions! : "None Reported",
+            ),
           ],
         ),
       ),

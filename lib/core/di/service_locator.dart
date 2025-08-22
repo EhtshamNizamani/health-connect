@@ -93,6 +93,9 @@ import 'package:health_connect/features/patient/doctor_profile_view/domain/repos
 import 'package:health_connect/features/patient/doctor_profile_view/domain/usecase/get_available_slots_usecase.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/domain/usecase/get_doctor_by_id_usecase.dart';
 import 'package:health_connect/features/patient/doctor_profile_view/presantion/bloc/doctor_profile_view_bloc.dart';
+import 'package:health_connect/features/patient/medical_info/data/repository_impl/update_patient_medical_info_repository_impl.dart';
+import 'package:health_connect/features/patient/medical_info/domain/repository/update_patient_medical_info_repository.dart';
+import 'package:health_connect/features/patient/medical_info/presentation/bloc/update_medical_info_bloc_bloc.dart';
 import 'package:health_connect/features/video_call/data/repository/call_engine_repository_impl.dart.dart';
 import 'package:health_connect/features/video_call/data/repository/calling_repository_impl.dart';
 import 'package:health_connect/features/video_call/data/repository/video_call_repository_impl.dart';
@@ -253,6 +256,7 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton(() => UpdateAppointmentSummaryUseCase(sl()));
   sl.registerLazySingleton(() => UploadFilesUseCase(sl()));
   sl.registerLazySingleton(() => GetPatientDetailsUseCase(sl()));
+  sl.registerLazySingleton<UpdatePatientMedicalInfoRepository>(() => UpdatePatientMedicalInfoRepositoryImpl(sl(), sl()));
 
   // Bloc - CHANGED: AuthBloc as LazySingleton instead of Factory
   sl.registerLazySingleton<AuthBloc>(
@@ -293,6 +297,7 @@ Future<void> setupLocator() async {
   sl.registerFactory(() => VideoCallBloc(sl(), sl(), sl(), sl()));
   sl.registerFactory(() => DoctorDashboardBloc(sl(), sl()));
   sl.registerFactory(() => AppointmentDetailBloc(sl()));
+  sl.registerFactory(() => UpdateMedicalInfoBloc(sl(), sl()));
 
   sl.registerFactory<ChatAccessBloc>(
     () => ChatAccessBloc(

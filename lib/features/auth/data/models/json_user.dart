@@ -6,14 +6,24 @@ class UserModel {
   final String name;
   final String email;
   final String role;
-  final String? photoUrl; // <<<--- NEW FIELD ADDED
+  final String? photoUrl;
+
+  // <<< --- NEW FIELDS ---
+  final String? allergies;
+  final String? chronicConditions;
+  final String? age;
+  final String? gender;
 
   const UserModel({
     required this.id,
     required this.name,
     required this.email,
     required this.role,
-    this.photoUrl, // <<<--- ADDED TO CONSTRUCTOR
+    this.photoUrl,
+    this.allergies,
+    this.chronicConditions,
+    this.age,
+    this.gender,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, String userId) {
@@ -22,11 +32,14 @@ class UserModel {
       name: map['name'] as String? ?? '',
       email: map['email'] as String? ?? '',
       role: map['role'] as String? ?? 'patient',
-      photoUrl: map['photoUrl'] as String?, // <<<--- LOGIC ADDED
+      photoUrl: map['photoUrl'] as String?,
+      allergies: map['allergies'] as String?,
+      chronicConditions: map['chronicConditions'] as String?,
+      age: map['age'] as String?,
+      gender: map['gender'] as String?,
     );
   }
 
-  // A factory to create from a DocumentSnapshot is often more convenient
   factory UserModel.fromSnapshot(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return UserModel(
@@ -35,6 +48,10 @@ class UserModel {
       email: data['email'] as String? ?? '',
       role: data['role'] as String? ?? 'patient',
       photoUrl: data['photoUrl'] as String?,
+      allergies: data['allergies'] as String?,
+      chronicConditions: data['chronicConditions'] as String?,
+      age: data['age'] as String?,
+      gender: data['gender'] as String?,
     );
   }
 
@@ -43,21 +60,28 @@ class UserModel {
       'name': name,
       'email': email,
       'role': role,
-      'photoUrl': photoUrl, // <<<--- FIELD ADDED TO MAP
+      'photoUrl': photoUrl,
+      'allergies': allergies,
+      'chronicConditions': chronicConditions,
+      'age': age,
+      'gender': gender,
     };
   }
-  
+
   UserEntity toDomain() {
     return UserEntity(
       id: id,
       name: name,
       email: email,
       role: role,
-      photoUrl: photoUrl, // <<<--- FIELD ADDED
+      photoUrl: photoUrl,
+      allergies: allergies,
+      chronicConditions: chronicConditions,
+      age: age,
+      gender: gender,
     );
   }
 
-  // A new factory to create a Model from an Entity
   factory UserModel.fromEntity(UserEntity entity) {
     return UserModel(
       id: entity.id,
@@ -65,6 +89,10 @@ class UserModel {
       email: entity.email,
       role: entity.role,
       photoUrl: entity.photoUrl,
+      allergies: entity.allergies,
+      chronicConditions: entity.chronicConditions,
+      age: entity.age,
+      gender: entity.gender,
     );
   }
 }
