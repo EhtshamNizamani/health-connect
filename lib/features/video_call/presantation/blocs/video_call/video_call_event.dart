@@ -8,21 +8,24 @@ abstract class VideoCallEvent extends Equatable {
   @override
   List<Object?> get props => [];
 }
-
-// Original VideoCall Events
 class StartCall extends VideoCallEvent {
   final String receiverId;
-  final String callerName;
   final String callId;
+  // Saari zaroori entities yahan pass honi chahiye
+  final UserEntity currentUser;
+  final DoctorEntity doctor;
+  final UserEntity patient;
 
   const StartCall({
     required this.receiverId,
-    required this.callerName,
     required this.callId,
+    required this.currentUser,
+    required this.doctor,
+    required this.patient,
   });
 
   @override
-  List<Object> get props => [receiverId, callerName, callId];
+  List<Object> get props => [receiverId, callId, currentUser, doctor, patient];
 }
 
 class AcceptCall extends VideoCallEvent {

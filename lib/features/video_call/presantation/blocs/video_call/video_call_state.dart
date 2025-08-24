@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
+import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_profile_entity.dart';
 import 'package:health_connect/features/video_call/domain/entity/video_call_enitity.dart';
 
 abstract class VideoCallState extends Equatable {
@@ -15,37 +17,49 @@ class VideoCallInitiating extends VideoCallState {}
 class VideoCallLoading extends VideoCallState {}
 
 // Success states
-class VideoCallInitiatedSuccess extends VideoCallState {}
 
-// Active calling state (merged from CallingScreenActive)
+class NavigateToCallingScreen extends VideoCallState {
+  final String callId;
+  final UserEntity currentUser;
+  final DoctorEntity doctor;
+  final UserEntity patient;
+
+  const NavigateToCallingScreen({
+    required this.callId,
+    required this.currentUser,
+    required this.doctor,
+    required this.patient,
+  });
+  
+  @override
+  List<Object> get props => [callId, currentUser, doctor, patient];
+}
+
+// YEH STATE UI BUILD KARTI HAI (CallingScreen ka UI)
 class VideoCallActive extends VideoCallState {
   final VideoCallEntity callEntity;
   final bool shouldStartAnimations;
-  final bool shouldNavigateToCall;
 
   const VideoCallActive({
     required this.callEntity,
     this.shouldStartAnimations = false,
-    this.shouldNavigateToCall = false,
   });
 
   @override
-  List<Object> get props => [callEntity, shouldStartAnimations, shouldNavigateToCall];
+  List<Object> get props => [callEntity, shouldStartAnimations];
 
   VideoCallActive copyWith({
     VideoCallEntity? callEntity,
     bool? shouldStartAnimations,
-    bool? shouldNavigateToCall,
   }) {
     return VideoCallActive(
       callEntity: callEntity ?? this.callEntity,
       shouldStartAnimations: shouldStartAnimations ?? this.shouldStartAnimations,
-      shouldNavigateToCall: shouldNavigateToCall ?? this.shouldNavigateToCall,
     );
   }
 }
 
-// Navigation state
+
 class VideoCallNavigateToCall extends VideoCallState {
   final String callId;
   final String currentUserId;

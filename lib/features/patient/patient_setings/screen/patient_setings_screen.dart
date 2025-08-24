@@ -271,7 +271,7 @@ class _ProfileHeader extends StatelessWidget {
                     ? CachedNetworkImageProvider(user.photoUrl!)
                     : null,
                 child: (user.photoUrl == null || user.photoUrl!.isEmpty)
-                    ? Icon(Icons.person, size: 30, color: theme.colorScheme.primary)
+                    ? Icon(Icons.person, size: 30, color: theme.colorScheme.onSecondary)
                     : null,
               ),
               const SizedBox(width: 16),
@@ -289,7 +289,7 @@ class _ProfileHeader extends StatelessWidget {
                     Text(
                       'Tap to edit your profile',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.outline,
+                        color: theme.colorScheme.secondaryContainer,
                       ),
                     ),
                   ],
