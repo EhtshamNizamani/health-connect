@@ -4,31 +4,37 @@ import 'package:health_connect/core/constants/app_color.dart';
 
 final ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
-  primaryColor: AppColors.accent, // Using the vibrant accent color
-  scaffoldBackgroundColor: AppColors.text, // The dark maroon is our background
+  primaryColor: AppColors.primaryDark,
+  scaffoldBackgroundColor: AppColors.backgroundDark,
 
   colorScheme: const ColorScheme.dark(
-    primary: AppColors.accent,            // Use the bright magenta as primary in dark mode
-    onPrimary: AppColors.white,           // Text on the bright accent color
-    secondary: AppColors.primary,         // The main pink can be a secondary color
+    primary: AppColors.primaryDark,       // Deep teal for dark mode
+    onPrimary: AppColors.white,           // Text/icons on primary
+    secondary: AppColors.accent,          // Accent teal
     onSecondary: AppColors.white,
-    surface: Color(0xFF5D3A3A),           // A slightly lighter maroon for cards
-    onSurface: AppColors.white,           // Main text color in dark mode
-    background: AppColors.text,
-    onBackground: AppColors.white,
-    outline: AppColors.primaryDark,       // Dusky pink for borders
+    surface: AppColors.surfaceDark,       // Dark grey for cards
+    onSurface: AppColors.textDark,        // Light text on dark
+    background: AppColors.backgroundDark,
+    onBackground: AppColors.textDark,
+    outline: AppColors.primaryDark,       // Borders subtle in dark
     error: AppColors.error,
     onError: AppColors.white,
+    secondaryContainer: AppColors.linkDark,
+
   ),
 
-  appBarTheme: AppBarTheme(
-    backgroundColor: const Color(0xFF5D3A3A), // Dark card color for app bar
-    titleTextStyle: const TextStyle(color: AppColors.white, fontSize: 18, fontWeight: FontWeight.w600),
-    iconTheme: const IconThemeData(color: AppColors.white),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: AppColors.surfaceDark,
+    titleTextStyle: TextStyle(
+      color: AppColors.white,
+      fontSize: 18,
+      fontWeight: FontWeight.w600,
+    ),
+    iconTheme: IconThemeData(color: AppColors.white),
   ),
   
   textTheme: const TextTheme(
-    bodyLarge: TextStyle(color: AppColors.white),
-    bodyMedium: TextStyle(color: AppColors.lightPink), // Lighter pink for secondary text
+    bodyLarge: TextStyle(color: AppColors.textDark),
+    bodyMedium: TextStyle(color: AppColors.accent), // Secondary highlight text
   ),
 );

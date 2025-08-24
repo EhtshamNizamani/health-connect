@@ -13,6 +13,7 @@ import 'package:health_connect/features/auth/presentation/auth/screens/login_scr
 import 'package:health_connect/features/chat/presentation/blocs/chat_list/chat_list_bloc.dart';
 import 'package:health_connect/features/chat/presentation/blocs/chat_list/chat_list_event.dart';
 import 'package:health_connect/features/chat_access/bloc/chat_access_bloc.dart';
+import 'package:health_connect/features/doctor/appointment/presantation/bloc/doctor_appointments_bloc.dart';
 import 'package:health_connect/features/doctor/doctor_bottom_navigation/screen/doctor_main_screen.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/bloc/doctor_profile_setup_bloc.dart';
 import 'package:health_connect/features/doctor/doctor_profile_setup/presentation/screens/doctor_profile_setup_screen.dart';
@@ -62,6 +63,7 @@ void main() async {
         BlocProvider<ChatListBloc>(create: (_) => sl<ChatListBloc>()),
         BlocProvider<ChatAccessBloc>(create: (_) => sl<ChatAccessBloc>()),
         BlocProvider<PatientAppointmentsBloc>(create: (_) => sl<PatientAppointmentsBloc>()),
+        BlocProvider<DoctorAppointmentsBloc>(create: (_) => sl<DoctorAppointmentsBloc>()),
       ],
       child: const MyApp(),
     ),

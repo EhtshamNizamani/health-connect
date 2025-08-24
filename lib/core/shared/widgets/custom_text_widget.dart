@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:health_connect/core/constants/app_color.dart';
 
 class CustomTextWidget extends StatelessWidget {
   final String? text;
@@ -38,10 +37,13 @@ class CustomTextWidget extends StatelessWidget {
       style: GoogleFonts.inter(
         fontSize: fontSize?.sp ?? 14.sp,
         fontWeight: fontWeight ?? FontWeight.w500,
-        color: color ?? AppColors.text,
+        // 👇 If no custom color provided → take theme color
+        color: color ?? Theme.of(context).colorScheme.secondaryContainer
+,
         letterSpacing: letterSpacing ?? 0.25,
-        decoration:
-            isUnderline == true ? TextDecoration.underline : TextDecoration.none,
+        decoration: isUnderline == true
+            ? TextDecoration.underline
+            : TextDecoration.none,
       ),
     );
   }

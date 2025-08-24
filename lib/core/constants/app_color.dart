@@ -1,22 +1,29 @@
-// lib/core/constants/app_color.dart
-
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // === Primary & Accent Colors from Your New Pink Palette ===
-  static const Color primary = Color(0xFFCC6282);    // The main, confident pink for buttons, app bars.
-  static const Color accent = Color(0xFFBE3C63);     // The stronger magenta for highlights and important actions.
-  static const Color primaryDark = Color(0xFF98485A);  // A deeper, dusky pink for gradients or dark theme elements.
+  // === Primary & Accent (Same names, diff values in themes) ===
+  static const Color primaryLight = Color.fromARGB(255, 0, 134, 118); // Teal Green (calm, medical)
+  static const Color accentLight = Color(0xFF26A69A);  // Lighter teal highlight
+  static const Color primaryDark = Color.fromARGB(255, 1, 115, 96);  // Deep teal for dark mode
+  
+  static const Color primary = primaryLight; // alias (easy swap if needed)
+  static const Color accent = accentLight;
 
-  // === Neutral & Background Colors from Your New Palette ===
-  static const Color text = Color(0xFF471F28);       // A very dark, rich maroon. A fantastic replacement for pure black.
-  static const Color backgroundLight = Color(0xFFE4BAC1); // A very light, dusty rose for the light theme's background.
-  static const Color surface = Color(0xFFFFFFFF);     // Pure white for card backgrounds to make them pop.
-  static const Color lightPink = Color(0xFFE5A3BB);   // A soft pink for borders, dividers, or disabled states.
+  // === Neutral & Backgrounds ===
+  static const Color backgroundLight = Color(0xFFF5F7FA); // Almost white, light bluish grey
+  static const Color backgroundDark = Color(0xFF121212);  // Material dark base
+  
+  static const Color surfaceLight = Color(0xFFFFFFFF); // white cards
+  static const Color surfaceDark = Color(0xFF1E1E1E);  // dark grey cards
 
-  // === Standard Semantic Colors (Ye a-ch-chhe hain, inhein rakh sakte hain) ===
-  static const Color white = Color(0xFFFFFFFF);
-  static const Color black = Color(0xFF000000);
+  // === Text Colors ===
+  static const Color textLight = Color(0xFF212121); // Dark grey for light mode
+  static const Color textDark = Color(0xFFE0E0E0);  // Light grey for dark mode
+  static const Color linkLight = Color(0xFF26A69A); // Teal accent for light theme
+  static const Color linkDark = Color(0xFF4DD0E1);  // Teal accent for dark theme
+  // === Semantic (keep same for both) ===
   static const Color error = Color(0xFFFF3B30);
   static const Color success = Color(0xFF34C759);
+  static const Color white = Color(0xFFFFFFFF);
+  static const Color black = Color(0xFF000000);
 }
