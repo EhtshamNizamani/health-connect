@@ -45,23 +45,37 @@ class VideoCallBloc extends Bloc<VideoCallEvent, VideoCallState> {
     _callingSequenceTimer?.cancel();
     return super.close();
   }
-
-  // Original VideoCall methods
-  Future<void> _onStartCall(
-    StartCall event,
-    Emitter<VideoCallState> emit,
-  ) async {
-    emit(VideoCallInitiating());
-    final result = await _initiateCallUseCase(
+  
+Future<void> _onStartCall(StartCall event, Emitter<VideoCallState> emit) async {
+  emit(VideoCallInitiating());
+ final result = await _initiateCallUseCase(
       receiverId: event.receiverId,
-      callerName: event.callerName,
+      callerName: event.currentUser.name,
       callId: event.callId,
-    );
-    result.fold(
-      (failure) => emit(VideoCallFailure(failure.message)),
-      (_) => emit(VideoCallInitiatedSuccess()),
-    );
-  }
+    );  
+  result.fold(
+    (failure) => emit(VideoCallFailure(failure.message)),
+    (_) {
+      // --- THE CLEAN FLOW ---
+      // 1. Pehle Navigation state emit karo
+      emit(NavigateToCallingScreen(
+        callId: event.callId,
+        currentUser: event.currentUser,
+        doctor: event.doctor,
+        patient: event.patient,
+      ));
+      
+      // 2. Phir InitializeCalling event fire karo taaki CallingScreen ke paas
+      //    UI build karne ke liye data ho
+      add(InitializeCalling(
+        callId: event.callId,
+        currentUser: event.currentUser,
+        doctor: event.doctor,
+        patient: event.patient,
+      ));
+    },
+  );
+}
 
   Future<void> _onAcceptCall(
     AcceptCall event,

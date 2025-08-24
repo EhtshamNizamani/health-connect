@@ -52,7 +52,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
     WidgetsBinding.instance.addObserver(this);
     _markChatAsRead();
     _previousMessageCount = 0;
-    
+
     // Periodically refresh chat access to handle real-time status changes
     _startPeriodicAccessCheck();
   }
@@ -100,7 +100,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
   void _refreshChatAccess() {
     final chatAccessBloc = context.read<ChatAccessBloc>();
     final authState = context.read<AuthBloc>().state;
-    
+
     // Determine current user type
     UserType currentUserType;
     if (authState is AuthenticatedPatient) {
@@ -111,12 +111,14 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
       print("Warning: Unknown user type in chat access refresh");
       return;
     }
-    
-    chatAccessBloc.add(RefreshChatAccess(
-      patientId: widget.patient.id,
-      doctorId: widget.doctor.uid,
-      currentUserType: currentUserType,
-    ));
+
+    chatAccessBloc.add(
+      RefreshChatAccess(
+        patientId: widget.patient.id,
+        doctorId: widget.doctor.uid,
+        currentUserType: currentUserType,
+      ),
+    );
   }
 
   void _scrollToBottom({bool animate = false}) {
@@ -210,14 +212,19 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                             return IconButton(
                               icon: const Icon(Icons.videocam_outlined),
                               onPressed: () {
-                                final currentUser = context.read<AuthBloc>().state.user;
+                                final currentUser = context
+                                    .read<AuthBloc>()
+                                    .state
+                                    .user;
                                 if (currentUser != null) {
                                   print("Dispatching StartCall event...");
                                   context.read<VideoCallBloc>().add(
                                     StartCall(
                                       receiverId: widget.receiverId,
-                                      callerName: currentUser.name,
+                                      currentUser: currentUser,
                                       callId: widget.chatRoomId,
+                                      doctor: widget.doctor,
+                                      patient: widget.patient,
                                     ),
                                   );
                                 }
@@ -234,7 +241,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
               body: BlocListener<VideoCallBloc, VideoCallState>(
                 listener: (context, state) {
                   print("VideoCallBloc Listener received state: $state");
-                  if (state is VideoCallInitiatedSuccess) {
+                  if (state is NavigateToCallingScreen) {
                     final currentUser = context.read<AuthBloc>().state.user;
                     if (currentUser != null) {
                       Navigator.push(
@@ -251,9 +258,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                     }
                   }
                   if (state is VideoCallFailure) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(state.message)),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(state.message)));
                   }
                 },
                 child: BlocListener<ChatAccessBloc, ChatAccessState>(
@@ -297,22 +304,28 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                           return const SizedBox.shrink();
                         },
                       ),
-                      
+
                       Expanded(
                         child: BlocListener<ChatRoomBloc, ChatRoomState>(
                           listener: (context, state) {
                             if (state is ChatRoomLoaded &&
                                 _isScreenVisible &&
                                 state.messages.isNotEmpty) {
-                              Future.delayed(const Duration(milliseconds: 500), () {
-                                _markChatAsRead();
-                              });
+                              Future.delayed(
+                                const Duration(milliseconds: 500),
+                                () {
+                                  _markChatAsRead();
+                                },
+                              );
                             }
-                            
+
                             if (state is ChatRoomLoaded) {
                               final currentMessageCount = state.messages.length;
-                              if (currentMessageCount > _previousMessageCount && _isScreenVisible) {
-                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (currentMessageCount > _previousMessageCount &&
+                                  _isScreenVisible) {
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
                                   _scrollToBottom(animate: true);
                                 });
                               }
@@ -321,15 +334,20 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                           },
                           child: BlocBuilder<ChatRoomBloc, ChatRoomState>(
                             builder: (context, state) {
-                              if (state is ChatRoomLoading || state is ChatRoomInitial) {
-                                return const Center(child: CircularProgressIndicator());
+                              if (state is ChatRoomLoading ||
+                                  state is ChatRoomInitial) {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
                               }
                               if (state is ChatRoomError) {
                                 return Center(child: Text(state.message));
                               }
                               if (state is ChatRoomLoaded) {
                                 if (state.messages.isEmpty) {
-                                  return const Center(child: Text("No messages yet. Say hello!"));
+                                  return const Center(
+                                    child: Text("No messages yet. Say hello!"),
+                                  );
                                 }
                                 return ListView.builder(
                                   controller: _scrollController,
@@ -338,7 +356,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                                   itemCount: state.messages.length,
                                   itemBuilder: (context, index) {
                                     final message = state.messages[index];
-                                    final bool isMe = message.senderId == currentUserId;
+                                    final bool isMe =
+                                        message.senderId == currentUserId;
                                     return MessageBubble(
                                       key: ValueKey(message.id),
                                       message: message,
@@ -347,12 +366,14 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                                   },
                                 );
                               }
-                              return const Center(child: Text("Something went wrong"));
+                              return const Center(
+                                child: Text("Something went wrong"),
+                              );
                             },
                           ),
                         ),
                       ),
-                      
+
                       // Chat Input - conditional based on access
                       BlocBuilder<ChatAccessBloc, ChatAccessState>(
                         builder: (context, chatAccessState) {
@@ -362,10 +383,11 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                               receiverId: widget.receiverId,
                               doctor: widget.doctor,
                               patient: widget.patient,
-                              onMessageSent: () => _scrollToBottom(animate: true),
+                              onMessageSent: () =>
+                                  _scrollToBottom(animate: true),
                             );
                           }
-                          
+
                           if (chatAccessState is ChatAccessDenied) {
                             return Container(
                               padding: const EdgeInsets.all(16),
@@ -395,7 +417,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                               ),
                             );
                           }
-                          
+
                           // Show loading state
                           return Container(
                             padding: const EdgeInsets.all(16),
