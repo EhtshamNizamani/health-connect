@@ -37,6 +37,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       // Add an AppBar for back navigation
       appBar: AppBar(
+        scrolledUnderElevation:0,
+          
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: BackButton(color: theme.colorScheme.onBackground),

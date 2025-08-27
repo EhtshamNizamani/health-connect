@@ -11,6 +11,7 @@ import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.d
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_event.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_state.dart';
 import 'package:health_connect/features/patient/appointment/presentation/screen/patient_appointment_screen.dart';
+import 'package:health_connect/features/patient/profile/presantation/screen/update_patient_profile.dart';
 import 'package:image_picker/image_picker.dart';
 
 class PatientSettingsScreen extends StatelessWidget {
@@ -82,6 +83,17 @@ class PatientSettingsScreen extends StatelessWidget {
                 onTap: () {
                   Navigator.push(context, MaterialPageRoute(
                     builder: (context) => const PatientAppointmentsScreen(),
+                  ));
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.edit, color: theme.colorScheme.primary),
+                title: const Text('Update Profile'),
+                subtitle: const Text('Update your medical profile'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (context) =>  EditProfileScreen(),
                   ));
                 },
               ),

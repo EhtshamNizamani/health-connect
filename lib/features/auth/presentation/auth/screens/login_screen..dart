@@ -46,129 +46,133 @@ class _LoginScreenState extends State<LoginScreen> {
               }
             },
             builder: (context, state) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 80.h),
-
-                  // CustomTextWidget should ideally use theme.textTheme by default
-                  const CustomTextWidget(
-                    text: "Welcome Back!",
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  SizedBox(height: 8.h),
-                  CustomTextWidget(
-                    text: "Please login to your account",
-                    fontSize: 14,
-                    // Use a secondary text color from the theme
-                    color: theme.textTheme.bodyMedium?.color,
-                  ),
-
-                  SizedBox(height: 32.h),
-
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        // Assume CustomTextField is also theme-aware
-                        CustomTextField(
-                          controller: emailController,
-                          hintText: 'Email',
-                          keyboardType: TextInputType.emailAddress,
-                          validator: FormValidator.validateEmail,
-                        ),
-                        SizedBox(height: 16.h),
-                        CustomTextField(
-                          controller: passwordController,
-                          hintText: 'Password',
-                          isObscure: true, // Passwords should be obscured
-                          maxLines: 1,
-                          validator: FormValidator.validatePassword,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: CustomTextButton(
-                      buttonName: "Forgot Password?",
-                      onPressed: () {},
-                      // The text color should come from the theme's primary color
-                      textColor: theme.colorScheme.primary,
-                    ),
-                  ),
-
-                  SizedBox(height: 16.h),
-
-                  CustomButton(
-                    // These properties should be handled by CustomButton's internal logic
-                    // based on its theme. Let's assume it uses theme.colorScheme.onPrimary for text.
-                    text: 'Login',
-                    isLoading: state is AuthLoading,
-                    onTap: () {
-                      if (state is AuthLoading) return;
-                      if (_formKey.currentState!.validate()) {
-                        final email = emailController.text.trim();
-                        final password = passwordController.text.trim();
-                        context.read<AuthBloc>().add(
-                              LoginRequested(email: email, password: password),
-                            );
-                      }
-                    },
-                  ),
-
-                  SizedBox(height: 24.h),
-
-                  Center(
-                    child: CustomTextWidget(
-                      text: "OR",
-                      fontSize: 14,
-                      color: theme.textTheme.bodyMedium?.color,
-                    ),
-                  ),
-
-                  SizedBox(height: 16.h),
-
-                  // This is an outlined/secondary button
-                  CustomButton(
-                    text: 'Login with Google',
-                    // textColor should be handled by CustomButton's theme
-                    onTap: () {
-                      // TODO: Implement Google Sign-In
-                    },
-                  ),
-
-                  const Spacer(),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+              return SizedBox(
+                height: MediaQuery.of(context).size.height * 1,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // This widget should use the default text color from the theme
-                       CustomTextWidget(
-                        text: "Don't have an account? ",
-                        fontSize: 14,
-                    color: theme.textTheme.bodyMedium?.color,
-
+                      SizedBox(height: 80.h),
+                          
+                      // CustomTextWidget should ideally use theme.textTheme by default
+                      const CustomTextWidget(
+                        text: "Welcome Back!",
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
                       ),
-                      CustomTextButton(
-                        buttonName: "Sign Up",
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const RegisterScreen(),
+                      SizedBox(height: 8.h),
+                      CustomTextWidget(
+                        text: "Please login to your account",
+                        fontSize: 14,
+                        // Use a secondary text color from the theme
+                        color: theme.textTheme.bodyMedium?.color,
+                      ),
+                          
+                      SizedBox(height: 32.h),
+                          
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            // Assume CustomTextField is also theme-aware
+                            CustomTextField(
+                              controller: emailController,
+                              hintText: 'Email',
+                              keyboardType: TextInputType.emailAddress,
+                              validator: FormValidator.validateEmail,
                             ),
-                          );
+                            SizedBox(height: 16.h),
+                            CustomTextField(
+                              controller: passwordController,
+                              hintText: 'Password',
+                              isObscure: true, // Passwords should be obscured
+                              maxLines: 1,
+                              validator: FormValidator.validatePassword,
+                            ),
+                          ],
+                        ),
+                      ),
+                          
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: CustomTextButton(
+                          buttonName: "Forgot Password?",
+                          onPressed: () {},
+                          // The text color should come from the theme's primary color
+                          textColor: theme.colorScheme.primary,
+                        ),
+                      ),
+                          
+                      SizedBox(height: 16.h),
+                          
+                      CustomButton(
+                        // These properties should be handled by CustomButton's internal logic
+                        // based on its theme. Let's assume it uses theme.colorScheme.onPrimary for text.
+                        text: 'Login',
+                        isLoading: state is AuthLoading,
+                        onTap: () {
+                          if (state is AuthLoading) return;
+                          if (_formKey.currentState!.validate()) {
+                            final email = emailController.text.trim();
+                            final password = passwordController.text.trim();
+                            context.read<AuthBloc>().add(
+                                  LoginRequested(email: email, password: password),
+                                );
+                          }
                         },
-                        // The text color should come from the theme's primary/accent color
-                        textColor: theme.colorScheme.primary,
+                      ),
+                          
+                      SizedBox(height: 24.h),
+                          
+                      Center(
+                        child: CustomTextWidget(
+                          text: "OR",
+                          fontSize: 14,
+                          color: theme.textTheme.bodyMedium?.color,
+                        ),
+                      ),
+                          
+                      SizedBox(height: 16.h),
+                          
+                      // This is an outlined/secondary button
+                      CustomButton(
+                        text: 'Login with Google',
+                        // textColor should be handled by CustomButton's theme
+                        onTap: () {
+                          // TODO: Implement Google Sign-In
+                        },
+                      ),
+                          
+                      SizedBox(height: 36.h),
+                          
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // This widget should use the default text color from the theme
+                           CustomTextWidget(
+                            text: "Don't have an account? ",
+                            fontSize: 14,
+                        color: theme.textTheme.bodyMedium?.color,
+                          
+                          ),
+                          CustomTextButton(
+                            buttonName: "Sign Up",
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const RegisterScreen(),
+                                ),
+                              );
+                            },
+                            // The text color should come from the theme's primary/accent color
+                            textColor: theme.colorScheme.primary,
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  SizedBox(height: 20.h),
-                ],
+                ),
               );
             },
           ),

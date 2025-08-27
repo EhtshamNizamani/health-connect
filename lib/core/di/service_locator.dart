@@ -96,6 +96,9 @@ import 'package:health_connect/features/patient/doctor_profile_view/presantion/b
 import 'package:health_connect/features/patient/medical_info/data/repository_impl/update_patient_medical_info_repository_impl.dart';
 import 'package:health_connect/features/patient/medical_info/domain/repository/update_patient_medical_info_repository.dart';
 import 'package:health_connect/features/patient/medical_info/presentation/bloc/update_medical_info_bloc_bloc.dart';
+import 'package:health_connect/features/patient/profile/data/repositories_impl/patient_profile_repository_impl.dart';
+import 'package:health_connect/features/patient/profile/domain/uscecases/update_patient_profile_usecase.dart';
+import 'package:health_connect/features/patient/profile/presantation/bloc/patient_profile_bloc.dart';
 import 'package:health_connect/features/video_call/data/repository/call_engine_repository_impl.dart.dart';
 import 'package:health_connect/features/video_call/data/repository/calling_repository_impl.dart';
 import 'package:health_connect/features/video_call/data/repository/video_call_repository_impl.dart';
@@ -109,6 +112,7 @@ import 'package:health_connect/features/video_call/domain/usecase/initiate_call_
 import 'package:health_connect/features/video_call/domain/usecase/manage_call_usecase.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/call_screen_bloc/call_screen_bloc.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_bloc.dart';
+import 'package:health_connect/features/patient/profile/domain/repositories/patient_profile_repository.dart';
 
 final sl = GetIt.instance;
 
@@ -177,10 +181,22 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton<AppointmentDetailRepository>(
     () => AppointmentDetailRepositoryImpl(sl()),
   );
-  sl.registerLazySingleton<EditAppointmentSummaryRepository>(() => EditAppointmentSummaryRepositoryImpl(sl(), sl()));
-  sl.registerLazySingleton<PatientRecordsRepository>(() => PatientRecordsRepositoryImpl(sl()));
-  sl.registerLazySingleton<PatientDetailRepository>(() => PatientDetailRepositoryImpl(sl(), sl()));
-  
+  sl.registerLazySingleton<EditAppointmentSummaryRepository>(
+    () => EditAppointmentSummaryRepositoryImpl(sl(), sl()),
+  );
+  sl.registerLazySingleton<PatientRecordsRepository>(
+    () => PatientRecordsRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<PatientDetailRepository>(
+    () => PatientDetailRepositoryImpl(sl(), sl()),
+  );
+  sl.registerLazySingleton<UpdatePatientMedicalInfoRepository>(
+    () => UpdatePatientMedicalInfoRepositoryImpl(sl(), sl()),
+  );
+  sl.registerLazySingleton<PatientProfileRepository>(
+    () => PatientProfileRepositoryImpl(sl(), sl()),
+  );
+
   // UseCase
   sl.registerLazySingleton<LoginUsecase>(() => LoginUsecase(sl()));
   sl.registerLazySingleton<RegisterUsecase>(() => RegisterUsecase(sl()));
@@ -256,7 +272,7 @@ Future<void> setupLocator() async {
   sl.registerLazySingleton(() => UpdateAppointmentSummaryUseCase(sl()));
   sl.registerLazySingleton(() => UploadFilesUseCase(sl()));
   sl.registerLazySingleton(() => GetPatientDetailsUseCase(sl()));
-  sl.registerLazySingleton<UpdatePatientMedicalInfoRepository>(() => UpdatePatientMedicalInfoRepositoryImpl(sl(), sl()));
+  sl.registerLazySingleton(() => UpdatePatientProfileUseCase(sl()));
 
   // Bloc - CHANGED: AuthBloc as LazySingleton instead of Factory
   sl.registerLazySingleton<AuthBloc>(
@@ -270,6 +286,7 @@ Future<void> setupLocator() async {
     ),
   );
   sl.registerLazySingleton(() => GetPatientsForDoctorUseCase(sl()));
+  sl.registerFactory(() => PatientProfileBloc(sl(), sl()));
 
   sl.registerLazySingleton<NotificationBloc>(
     () => NotificationBloc(sl(), sl(), sl<AuthBloc>(), sl()),
@@ -305,7 +322,9 @@ Future<void> setupLocator() async {
       sl<GetDoctorAppointmentsUseCase>(),
     ),
   );
-  sl.registerFactory(() => EditSummaryBloc(updateSummaryUseCase: sl(), uploadFilesUseCase: sl()));
+  sl.registerFactory(
+    () => EditSummaryBloc(updateSummaryUseCase: sl(), uploadFilesUseCase: sl()),
+  );
   sl.registerFactory(() => PatientRecordsBloc(sl(), sl()));
   sl.registerFactory(() => PatientDetailBloc(sl()));
 
