@@ -12,9 +12,11 @@ class CustomTextField extends StatelessWidget {
   final bool isReadOnly;
   final int maxLines;
   final int? maxLength;
-  final bool isObscure; // Added for password fields
-  final Widget? suffixIcon; // Added for things like password visibility toggle
+  final bool isObscure;
+  final Widget? suffixIcon;
+  final IconData? prefixIcon; // <<< --- NAYI, OPTIONAL PROPERTY ---
   final String? labelText;
+
   const CustomTextField({
     super.key,
     required this.hintText,
@@ -27,24 +29,21 @@ class CustomTextField extends StatelessWidget {
     this.maxLength,
     this.isObscure = false,
     this.suffixIcon,
+    this.prefixIcon, // <<< --- CONSTRUCTOR MEIN ADD KIYA ---
     this.labelText,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Get the current theme from the context
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Define a base text style using GoogleFonts and merge it with theme styles
     final textStyle = GoogleFonts.inter(
-      // Use the theme's default text color
       color: colorScheme.onSurface,
       fontWeight: FontWeight.w500,
     );
     
     final hintStyle = GoogleFonts.inter(
-      // Use a less prominent color for hints
       color: colorScheme.onSurface.withOpacity(0.5),
     );
 
@@ -58,21 +57,27 @@ class CustomTextField extends StatelessWidget {
       maxLength: maxLength,
       obscureText: isObscure,
       style: textStyle.copyWith(fontSize: 14.sp),
-      cursorColor: colorScheme.primary, // Use theme's primary color
+      cursorColor: colorScheme.primary,
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
         hintStyle: hintStyle.copyWith(fontSize: 14.sp),
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         filled: true,
-        // The background of the text field should be the card/surface color
         fillColor: colorScheme.surface,
         suffixIcon: suffixIcon,
         
-        // Define a common border style to avoid repetition
+        // <<< --- NAYA LOGIC YAHAN HAI ---
+        // Agar prefixIcon diya gaya hai, to use dikhao.
+        prefixIcon: prefixIcon != null
+            ? Icon(
+                prefixIcon,
+                color: colorScheme.onSurface.withOpacity(0.6), // Icon ko thoda aacha look dein
+              )
+            : null,
+        
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.r), // A slightly larger radius looks more modern
-          // Use the theme's outline color for the border
+          borderRadius: BorderRadius.circular(12.r),
           borderSide: BorderSide(color: colorScheme.outline.withOpacity(0.7)),
         ),
         enabledBorder: OutlineInputBorder(
@@ -81,12 +86,10 @@ class CustomTextField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          // Use the primary color for the border when focused
           borderSide: BorderSide(color: colorScheme.primary, width: 2.0),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          // Use the error color for the border on validation error
           borderSide: BorderSide(color: colorScheme.error, width: 1.0),
         ),
         focusedErrorBorder: OutlineInputBorder(
