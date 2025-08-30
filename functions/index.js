@@ -513,3 +513,73 @@ exports.onAppointmentUpdated = functions
       console.log(`Sending status update to patient: ${patientId}`);
       await admin.messaging().send(message);
     });
+
+/**
+ * ==================================================================
+ *  CLEANS UP EXPIRED PENDING APPOINTMENTS (SCHEDULED FUNCTION)
+ * ==================================================================
+ * This function runs automatically on a schedule (e.g., every 6 hours).
+ * It finds all appointments that are still 'pending' but their time has passed,
+ * and updates their status to 'expired'.
+ */
+exports.cleanupExpiredAppointments = functions
+    // Choose the region that is closest to your users
+    //  or where your database is.
+    .region("europe-west1")
+    // Set the schedule. 'every 6 hours' is a good balance.
+    // You can also use specific cron job
+    //  syntax like '0 4 * * *' for 4 AM every day.
+    .pubsub.schedule("every 6 hours")
+    .onRun(async (context) => {
+      // Get the current time.
+      const now = admin.firestore.Timestamp.now();
+      console.log(`Running cleanup job at: ${now.toDate()
+          .toISOString()}`);
+
+      // 1. Create a query to find all "stale" pending appointments.
+      // A stale appointment is one where:
+      // - The status is 'pending'
+      // - The appointmentDateTime is in the past
+      const staleAppointmentsQuery = db.collection("appointments")
+          .where("status", "==", "pending")
+          .where("appointmentDateTime", "<", now);
+
+      try {
+        const querySnapshot = await staleAppointmentsQuery.get();
+
+        if (querySnapshot.empty) {
+          console.log("No expired pending appointments found. Job finished.");
+          return null; // Exit the function gracefully.
+        }
+
+        console
+            .log(`Found ${querySnapshot.size} expired appointments to update.`);
+
+        // 2. Use a "Batched Write"
+        //  to update all found documents at once.
+        // This is much more efficient and
+        //  cheaper than updating them one by one.
+        const batch = db.batch();
+
+        querySnapshot.forEach((doc) => {
+          // For each found document, add an
+          //  'update' operation to the batch.
+          const docRef = db.collection("appointments").doc(doc.id);
+          batch.update(docRef, {status: "expired"});
+          // Change status to 'expired'
+        });
+
+        // 3. Commit the batch to the database.
+        await batch.commit();
+
+        console.log(
+            `Successfully updated
+            ${querySnapshot.size} appointments to 'expired'.`,
+        );
+        return null; // Job completed successfully.
+      } catch (error) {
+        console.error("Error cleaning up expired appointments:", error);
+        // Throwing an error here can help with monitoring in Google Cloud.
+        throw new Error("Failed to cleanup expired appointments.");
+      }
+    });
