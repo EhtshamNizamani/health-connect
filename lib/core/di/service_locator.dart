@@ -9,6 +9,7 @@ import 'package:health_connect/core/services/notification_service.dart';
 import 'package:health_connect/core/services/sound_service.dart';
 import 'package:health_connect/core/services/stripe_payment_service.dart';
 import 'package:health_connect/core/themes/theme_manager.dart';
+import 'package:health_connect/features/appointment/domain/usecases/get_appointments_between_usecase.dart';
 import 'package:health_connect/features/appointment/domain/usecases/get_doctor_appointments_usecase.dart';
 import 'package:health_connect/features/appointment/domain/usecases/get_patient_appointments_usecase.dart';
 import 'package:health_connect/features/appointment/domain/usecases/initiate_payment.dart';
@@ -286,6 +287,9 @@ Future<void> setupLocator() async {
     ),
   );
   sl.registerLazySingleton(() => GetPatientsForDoctorUseCase(sl()));
+  sl.registerLazySingleton(() => GetAppointmentsBetweenUseCase(sl()));
+  
+  
   sl.registerFactory(() => PatientProfileBloc(sl(), sl()));
 
   sl.registerLazySingleton<NotificationBloc>(
@@ -318,8 +322,7 @@ Future<void> setupLocator() async {
 
   sl.registerFactory<ChatAccessBloc>(
     () => ChatAccessBloc(
-      sl<GetPatientAppointmentsUseCase>(),
-      sl<GetDoctorAppointmentsUseCase>(),
+      sl<GetAppointmentsBetweenUseCase>(),
     ),
   );
   sl.registerFactory(

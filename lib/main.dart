@@ -24,6 +24,8 @@ import 'package:health_connect/features/patient/appointment/presentation/bloc/pa
 import 'package:health_connect/features/patient/dashboard/screens/dashboard_screen.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/call_screen_bloc/call_screen_bloc.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'core/di/service_locator.dart';
 import 'features/auth/presentation/auth/blocs/auth_bloc.dart';
@@ -32,6 +34,10 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+    // --- HYDRATED BLOC SETUP ---
+  HydratedBloc.storage = await HydratedStorage.build(
+    storageDirectory: HydratedStorageDirectory((await getTemporaryDirectory()).path),
+  );
   await Firebase.initializeApp();
   await FirebaseAppCheck.instance.activate(
     androidProvider: AndroidProvider.debug,
