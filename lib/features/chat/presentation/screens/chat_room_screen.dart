@@ -52,9 +52,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
     WidgetsBinding.instance.addObserver(this);
     _markChatAsRead();
     _previousMessageCount = 0;
-
-    // Periodically refresh chat access to handle real-time status changes
-    _startPeriodicAccessCheck();
   }
 
   @override
@@ -72,7 +69,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
         _isScreenVisible = true;
         _markChatAsRead();
         // Refresh access when app comes back to foreground
-        _refreshChatAccess();
         break;
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
@@ -87,39 +83,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
     }
   }
 
-  void _startPeriodicAccessCheck() {
-    // Check access every 30 seconds
-    Future.delayed(const Duration(seconds: 30), () {
-      if (mounted) {
-        _refreshChatAccess();
-        _startPeriodicAccessCheck(); // Continue the cycle
-      }
-    });
-  }
 
-  void _refreshChatAccess() {
-    final chatAccessBloc = context.read<ChatAccessBloc>();
-    final authState = context.read<AuthBloc>().state;
-
-    // Determine current user type
-    UserType currentUserType;
-    if (authState is AuthenticatedPatient) {
-      currentUserType = UserType.patient;
-    } else if (authState is AuthenticatedDoctorProfileExists) {
-      currentUserType = UserType.doctor;
-    } else {
-      print("Warning: Unknown user type in chat access refresh");
-      return;
-    }
-
-    chatAccessBloc.add(
-      RefreshChatAccess(
-        patientId: widget.patient.id,
-        doctorId: widget.doctor.uid,
-        currentUserType: currentUserType,
-      ),
-    );
-  }
 
   void _scrollToBottom({bool animate = false}) {
     if (_scrollController.hasClients) {
@@ -181,6 +145,19 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
                 sl<ChatRoomBloc>()..add(SubscribeToMessages(widget.chatRoomId)),
           ),
           BlocProvider(create: (context) => sl<VideoCallBloc>()),
+           BlocProvider(
+          create: (context) {
+            final authState = context.read<AuthBloc>().state;
+
+            // BLoC create karo aur foran access check karne ke liye event bhejo
+            return sl<ChatAccessBloc>()..add(
+              CheckChatAccess(
+                patientId: widget.patient.id,
+                doctorId: widget.doctor.uid,
+              ),
+            );
+          },
+        ),
         ],
         child: Builder(
           builder: (context) {
