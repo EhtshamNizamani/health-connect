@@ -59,6 +59,7 @@ class PatientAppointmentsBloc
                       a.status == 'completed' ||
                       a.status == 'cancelled' ||
                       a.status == 'no-show' ||
+                      a.status == 'expired' ||
                       (a.status == 'confirmed' &&
                           a.appointmentDateTime.isBefore(now)),
                 )

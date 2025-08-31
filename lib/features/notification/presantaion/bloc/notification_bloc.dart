@@ -6,11 +6,13 @@ import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
 import 'package:health_connect/features/notification/domain/usecase/get_unread_count_usecase.dart';
 import 'package:health_connect/features/notification/domain/usecase/mark_notification_as_read_usecase.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 
 part 'notification_event.dart';
 part 'notification_state.dart';
 
-class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
+class NotificationBloc extends HydratedBloc<NotificationEvent, NotificationState> 
+{
   final GetUnreadCountUseCase _getUnreadCountUseCase;
   final MarkNotificationsAsReadUseCase _markNotificationsAsReadUseCase;
   final AuthBloc _authBloc;
@@ -132,5 +134,19 @@ final SoundService _soundService;
     _authSubscription?.cancel();
     _countSubscription?.cancel();
     return super.close();
+  }
+
+    // Yeh batata hai ki state ko notebook mein kaise likhna hai
+  @override
+  Map<String, dynamic>? toJson(NotificationState state) {
+    // Sirf unreadCount ko save karein
+    return {'unreadCount': state.unreadCount};
+  }
+  
+  // Yeh batata hai ki notebook se state ko wapas kaise padhna hai
+  @override
+  NotificationState? fromJson(Map<String, dynamic> json) {
+    // Padhe hue count se nayi state banayein
+    return NotificationState(unreadCount: json['unreadCount'] as int? ?? 0);
   }
 }

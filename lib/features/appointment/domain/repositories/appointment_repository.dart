@@ -20,4 +20,9 @@ abstract class AppointmentRepository {
     required String doctorId,
     required int amount,
   });
+
+   Future<Either<Failure, List<AppointmentEntity>>> getAppointmentsBetween(
+    String patientId,
+    String doctorId,
+  );
 }

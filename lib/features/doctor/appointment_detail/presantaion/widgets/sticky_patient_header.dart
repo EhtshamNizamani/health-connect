@@ -37,7 +37,7 @@ class StickyPatientHeader extends StatelessWidget {
       flexibleSpace: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           final double maxExtent = 220.0;
-          final double minExtent = kToolbarHeight + topPadding + 8;
+          final double minExtent = kToolbarHeight + topPadding;
           final double shrinkOffset = (maxExtent - constraints.maxHeight).clamp(
             0,
             maxExtent,
@@ -64,7 +64,7 @@ class StickyPatientHeader extends StatelessWidget {
           // Calculate avatar Y position - move from bottom to top
           final double avatarCenterY = 120; // Center Y in expanded state
           final double avatarTopY =
-              topPadding + 12 + (avatarSize / 2); // Top Y in collapsed state
+              topPadding + 18 + (avatarSize / 2); // Top Y in collapsed state
           final double avatarY = avatarCenterY * (1 - t) + avatarTopY * t;
 
           return Stack(
@@ -113,7 +113,7 @@ class StickyPatientHeader extends StatelessWidget {
                 left:
                     avatarX -
                     (avatarSize / 2), // Center the avatar on its position
-                top: avatarY - (avatarSize / 2),
+                top: avatarY - (avatarSize / 1.6),
                 child: CircleAvatar(
                   radius: avatarSize / 2,
                   backgroundImage: patientImageUrl.isNotEmpty
@@ -138,7 +138,7 @@ class StickyPatientHeader extends StatelessWidget {
               GestureDetector(
                 onTap: onBackPressed ?? () => Navigator.of(context).pop(),
                 child: Padding(
-                  padding: EdgeInsetsGeometry.only(top: minExtent / 1.8),
+                  padding: EdgeInsetsGeometry.only(top: minExtent / 2.1,left: 12),
                   child: Container(
                     width: 32,
                     height: 32,
@@ -157,7 +157,7 @@ class StickyPatientHeader extends StatelessWidget {
               if (t > 0.2)
                 Positioned(
                   left: 16,
-                  top: minExtent / 1.8,
+                  top: minExtent / 2.1,
 
                   child: Row(
                     children: [
@@ -183,7 +183,7 @@ class StickyPatientHeader extends StatelessWidget {
                 ),
               if (t > 0.2)
                 Positioned(
-                  top: minExtent / 1.8,
+                  top: minExtent / 2.1,
 
                   right: 0,
                   child: Transform.scale(

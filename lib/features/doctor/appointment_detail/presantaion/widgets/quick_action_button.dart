@@ -2,14 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/utils/create_chat_room_id.dart';
+import 'package:health_connect/core/utils/create_doctor_enitity.dart';
+import 'package:health_connect/core/utils/open_chat_screen.dart';
 import 'package:health_connect/features/appointment/domain/entities/appointment_entity.dart';
 import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
-import 'package:health_connect/features/chat/presentation/screens/chat_room_screen.dart';
 import 'package:health_connect/features/doctor/appointment/presantation/bloc/doctor_appointments_bloc.dart';
 import 'package:health_connect/features/doctor/appointment/presantation/bloc/doctor_appointments_event.dart';
 import 'package:health_connect/features/doctor/appointment_detail/presantaion/widgets/action_button.dart';
-import 'package:health_connect/features/doctor/doctor_profile_setup/domain/entity/doctor_profile_entity.dart';
 import 'package:health_connect/features/doctor/edit_appointment_summary/presantation/screen/edit_appointment_summary_screen.dart';
 import 'package:health_connect/features/doctor/patient_details/presantation/screens/patient_details_screen.dart';
 import 'package:health_connect/features/video_call/presantation/blocs/video_call/video_call_bloc.dart';
@@ -19,12 +19,15 @@ class QuickActionButtons extends StatelessWidget {
   final String status;
   final AppointmentEntity appointment;
   final UserEntity patient;
+  final bool isUpdating; 
 
   const QuickActionButtons({
     super.key,
     required this.appointment,
     required this.patient,
     required this.status,
+    required this.isUpdating,
+
   });
 
   @override
@@ -58,7 +61,12 @@ class QuickActionButtons extends StatelessWidget {
   }
 
   /// Builds the "Confirm" and "Reject" buttons for 'pending' status.
-  List<Widget> _buildPendingActions(BuildContext context) {
+      List<Widget> _buildPendingActions(BuildContext context) {
+    // Agar update ho raha hai, to ek loader dikhao
+    if (isUpdating) {
+      return [const Expanded(child: Center(child: CircularProgressIndicator()))];
+    }
+    
     return [
       Expanded(
         child: ActionButton(
@@ -98,7 +106,7 @@ class QuickActionButtons extends StatelessWidget {
         child: ActionButton(
           icon: CupertinoIcons.chat_bubble_2,
           label: "Open Chat",
-          onTap: () => _onOpenChat(context),
+          onTap: () => onOpenChat(context, patient),
         ),
       ),
     ];
@@ -144,7 +152,7 @@ class QuickActionButtons extends StatelessWidget {
     if (currentUser == null || currentUser.role != 'doctor') return;
 
     final chatRoomId = createChatRoomId(currentUser.id, patient.id);
-    final doctorEntity = _createDoctorEntity(currentUser);
+    final doctorEntity = createDoctorEntity(currentUser);
 
     context.read<VideoCallBloc>().add(
           StartCall(
@@ -157,43 +165,4 @@ class QuickActionButtons extends StatelessWidget {
         );
   }
 
-  /// Gathers all necessary data and navigates to the [ChatRoomScreen].
-  void _onOpenChat(BuildContext context) {
-    final currentUser = context.read<AuthBloc>().state.user;
-    if (currentUser == null) return;
-
-    final chatRoomId = createChatRoomId(currentUser.id, patient.id);
-    final doctorEntity = _createDoctorEntity(currentUser);
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ChatRoomScreen(
-          chatRoomId: chatRoomId,
-          chatPartnerName: patient.name,
-          receiverId: patient.id,
-          doctor: doctorEntity,
-          patient: patient,
-        ),
-      ),
-    );
-  }
-
-  /// Creates a [DoctorEntity] from a [UserEntity] to pass to other screens.
-  DoctorEntity _createDoctorEntity(UserEntity currentUser) {
-    // This is a placeholder conversion. A better approach would be a factory
-    // constructor or having the full DoctorEntity in the AuthBloc state.
-    return DoctorEntity(
-      uid: currentUser.id,
-      name: currentUser.name,
-      email: currentUser.email,
-      photoUrl: currentUser.photoUrl ?? '',
-      specialization: '',
-      bio: '',
-      experience: 0,
-      clinicAddress: '',
-      consultationFee: 0,
-      weeklyAvailability: {},
-    );
-  }
 }

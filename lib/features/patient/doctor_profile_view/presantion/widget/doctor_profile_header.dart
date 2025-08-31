@@ -207,7 +207,6 @@ class _ConditionalChatButton extends StatelessWidget {
               ..add(CheckChatAccess(
                 patientId: patient.id,
                 doctorId: doctor.uid,
-                currentUserType: UserType.patient,
               )),
             child: ChatRoomScreen(
               chatRoomId: chatRoomId,

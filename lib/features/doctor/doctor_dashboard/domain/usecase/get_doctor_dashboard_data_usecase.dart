@@ -35,12 +35,13 @@ class GetDoctorDashboardDataUseCase implements UseCase<Stream<Either<Failure, Do
             return appt.appointmentDateTime.isAfter(startOfToday) &&
                    appt.appointmentDateTime.isBefore(endOfToday) &&
                    appt.status != 'cancelled' &&
-                   appt.status != 'no-show';
+                   appt.status != 'no-show'&&
+                   appt.status != 'pending';
           }).toList();
           final todaysAppointmentsCount = todaysAppointments.length;
 
           final totalPendingRequestsCount = allAppointments
-              .where((appt) => appt.status == 'pending')
+              .where((appt) => appt.status == 'pending' && appt.appointmentDateTime.isAfter(now))
               .length;
 
           final upcomingToday = todaysAppointments

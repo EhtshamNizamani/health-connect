@@ -64,6 +64,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await result.fold((l) async => emit(AuthFailure(message: l.message)), (
         user,
       ) async {
+        print("user.toString() ${user.toString()}");
         // Agar login successful hai, to user ko handle karo
         await handleAuthentication(user, emit);
       });
@@ -147,7 +148,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
     );
   });
+    on<AuthUserUpdated>((event, emit) async {
+      print("AuthBloc: Force updating user data in state.");
+      // We already have the updated user, just need to figure out which
+      // specific Authenticated state to emit. We can reuse the handleAuthentication logic.
+      await handleAuthentication(event.updatedUser, emit);
+    });
   }
+  
   //   @override
   // void onTransition(Transition<AuthEvent, AuthState> transition) {
   //   super.onTransition(transition);

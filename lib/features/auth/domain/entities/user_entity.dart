@@ -37,8 +37,27 @@ class UserEntity extends Equatable {
   @override
   List<Object?> get props => [id, name, email, role, photoUrl, age, allergies, chronicConditions, gender]; // <<<--- ADDED TO PROPS
 
-  // @override
-  // String toString() {
-  //   return 'UserEntity(id: $id, name: $name, email: $email, role: $role, photoUrl: $photoUrl)';
-  // }
+ UserEntity copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? role,
+    String? photoUrl,
+    String? allergies,
+    String? chronicConditions,
+    String? age,
+    String? gender,
+  }) {
+    return UserEntity(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      role: role ?? this.role,
+      photoUrl: photoUrl ?? this.photoUrl,
+      allergies: allergies ?? this.allergies,
+      chronicConditions: chronicConditions ?? this.chronicConditions,
+      age: age ?? this.age,
+      gender: gender ?? this.gender,
+    );
+  }
 }

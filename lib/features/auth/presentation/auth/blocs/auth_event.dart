@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
+import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 
 abstract class AuthEvent extends Equatable {}
 
@@ -52,4 +53,13 @@ class UpdateUserProfile extends AuthEvent {
 class LogoutRequested extends AuthEvent {
   @override
   List<Object?> get props => [];
+}
+
+class AuthUserUpdated extends AuthEvent {
+  final UserEntity updatedUser;
+
+  AuthUserUpdated(this.updatedUser);
+  
+  @override
+  List<Object?> get props => [updatedUser];
 }

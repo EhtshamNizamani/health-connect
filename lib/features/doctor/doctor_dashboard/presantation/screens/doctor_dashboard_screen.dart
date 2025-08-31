@@ -6,6 +6,8 @@ import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.d
 import 'package:health_connect/features/chat/presentation/blocs/chat_list/chat_list_bloc.dart';
 import 'package:health_connect/features/chat/presentation/blocs/chat_list/chat_list_event.dart';
 import 'package:health_connect/features/chat/presentation/blocs/chat_list/chat_list_state.dart';
+import 'package:health_connect/features/doctor/appointment/presantation/bloc/doctor_appointments_bloc.dart';
+import 'package:health_connect/features/doctor/appointment_detail/presantaion/screens/appoiontment_details_screen.dart';
 import 'package:health_connect/features/doctor/doctor_dashboard/domain/entities/doctor_dashboard_entity.dart';
 import 'package:health_connect/features/doctor/doctor_dashboard/presantation/bloc/doctor_dashboard_bloc.dart';
 import 'package:health_connect/features/doctor/manage_availability/presantation/screen/manage_availability_screen.dart';
@@ -344,7 +346,21 @@ class _TodaysAgendaList extends StatelessWidget {
             subtitle: Text(appointment.status, style: TextStyle(color: _getStatusColor(appointment.status, Theme.of(context)))),
             trailing: Text(DateFormat('hh:mm a').format(appointment.appointmentDateTime),
                 style: TextStyle(color: Theme.of(context).colorScheme.primary)),
-            onTap: () {},
+            onTap: () {
+            // <<< --- BILKUL WAHI LOGIC YAHAN BHI LAGEGA ---
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (newContext) {
+                  // Dashboard screen ke context se DoctorAppointmentsBloc
+                  // ko dhoondo aur use aage AppointmentDetailScreen ko pass karo.
+                  return BlocProvider.value(
+                    value: BlocProvider.of<DoctorAppointmentsBloc>(context),
+                    child: AppointmentDetailScreen(
+                      appointmentId: appointment.id,
+                    ),
+                  );
+                },));},
           );
         },
       ),

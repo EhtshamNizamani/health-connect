@@ -58,11 +58,14 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
       // If everything succeeds, return success.
       return const Right(null);
     } on FirebaseException catch (e) {
+      print("FirebaseExceptionFirebaseException $e");
+
       // Catch the specific error from the transaction if we lost the race.
       return Left(
         FirestoreFailure(e.message ?? 'This slot is no longer available.'),
       );
     } catch (e) {
+      print("eeee $e");
       // Catch any other errors (e.g., creating the main appointment failed)
       // In a real app, you might want to delete the lock here if this part fails.
       return Left(
@@ -185,7 +188,6 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
 
       final clientSecret = response.data['clientSecret'] as String?;
       if (clientSecret != null) {
-        
         return Right(clientSecret);
       } else {
         return Left(ServerFailure("Failed to get payment secret from server."));
@@ -196,6 +198,31 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
       );
     } catch (e) {
       return Left(ServerFailure("An unexpected error occurred: $e"));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<AppointmentEntity>>> getAppointmentsBetween(
+    String patientId,
+    String doctorId,
+  ) async {
+    try {
+      // Yeh query seedhe zaroori data laayegi
+      final querySnapshot = await _firestore
+          .collection('appointments')
+          .where('patientId', isEqualTo: patientId)
+          .where('doctorId', isEqualTo: doctorId)
+          // Optional: Aap yahan bhi status se filter kar sakte hain taaki aur kam data aaye
+          .where('status', whereIn: ['pending', 'confirmed', 'completed'])
+          .get();
+
+      final appointments = querySnapshot.docs
+          .map((doc) => AppointmentModel.fromSnapshot(doc).toDomain())
+          .toList();
+
+      return Right(appointments);
+    } catch (e) {
+      return Left(FirestoreFailure(e.toString()));
     }
   }
 }

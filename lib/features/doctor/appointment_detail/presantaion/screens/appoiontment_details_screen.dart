@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/di/service_locator.dart';
 import 'package:health_connect/features/doctor/appointment/presantation/bloc/doctor_appointments_bloc.dart';
+import 'package:health_connect/features/doctor/appointment/presantation/bloc/doctor_appointments_state.dart';
 import 'package:health_connect/features/doctor/appointment_detail/presantaion/bloc/appointment_details_bloc.dart';
 import 'package:health_connect/features/doctor/appointment_detail/presantaion/bloc/appointment_details_event.dart';
 import 'package:health_connect/features/doctor/appointment_detail/presantaion/bloc/appointment_details_state.dart';
@@ -26,16 +27,31 @@ class AppointmentDetailScreen extends StatelessWidget {
       providers: [
         // 1. Creates a new BLoC instance specifically for this screen's details.
         BlocProvider(
-          create: (context) => sl<AppointmentDetailBloc>()..add(FetchAppointmentDetails(appointmentId)),
+          create: (context) =>
+              sl<AppointmentDetailBloc>()
+                ..add(FetchAppointmentDetails(appointmentId)),
         ),
         // 2. Provides access to the already existing (global) VideoCallBloc.
-        BlocProvider.value(
-          value: BlocProvider.of<VideoCallBloc>(context),
-        ),
+        BlocProvider.value(value: BlocProvider.of<VideoCallBloc>(context)),
         // 3. Provides access to the already existing (global) DoctorAppointmentsBloc.
         BlocProvider.value(
           value: BlocProvider.of<DoctorAppointmentsBloc>(context),
         ),
+                    BlocListener<DoctorAppointmentsBloc, DoctorAppointmentsState>(
+              listenWhen: (previous, current) {
+                // Listen only when the update for THIS specific appointment is done.
+                if (previous is DoctorAppointmentsLoaded && current is DoctorAppointmentsLoaded) {
+                  return previous.updatingAppointmentId == appointmentId && current.updatingAppointmentId == null;
+                }
+                return false;
+              },
+              listener: (context, state) {
+                // When the update is complete, tell the detail BLoC to silently refresh.
+                print("✅ Status updated for $appointmentId. Triggering detail refresh.");
+                context.read<AppointmentDetailBloc>().add(FetchAppointmentDetails(appointmentId));
+              },
+            ),
+
       ],
       child: Scaffold(
         // The BlocListener now wraps the body, listening for video call navigation events.
@@ -63,7 +79,8 @@ class AppointmentDetailScreen extends StatelessWidget {
           child: BlocBuilder<AppointmentDetailBloc, AppointmentDetailState>(
             builder: (context, state) {
               // State 1: Loading -> Show a full-screen skeleton UI
-              if (state is AppointmentDetailLoading || state is AppointmentDetailInitial) {
+              if (state is AppointmentDetailLoading ||
+                  state is AppointmentDetailInitial) {
                 return const _AppointmentDetailSkeleton();
               }
 
@@ -83,49 +100,67 @@ class AppointmentDetailScreen extends StatelessWidget {
                 final appointment = details.appointment;
                 final patient = details.patient;
 
-                return CustomScrollView(
-                  slivers: [
-                    // Pass real data to the sticky header
-                    StickyPatientHeader(
-                      patientName: patient.name,
-                      // Combine age and gender if they exist
-                      patientAgeGender: _formatAgeGender(patient.age, patient.gender),
-                      appointmentTime: appointment.appointmentDateTime,
-                      appointmentStatus: appointment.status,
-                      patientImageUrl: patient.photoUrl ?? '',
-                    ),
-
-                    // Main Content Area
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SectionTitle(title: "Quick Actions"),
-                            const SizedBox(height: 16),
-                            // Pass all required data to the buttons widget
-                            QuickActionButtons(
-                              status: appointment.status,
-                              appointment: appointment,
-                              patient: patient,
-                            ),
-                            const SizedBox(height: 32),
-                            const SectionTitle(title: "Patient Snapshot"),
-                            const SizedBox(height: 16),
-                            PatientSnapshotCard(patient: patient),
-                            const SizedBox(height: 32),
-                            SectionTitle(title: "Recent Visits", onViewAll: () {}),
-                            const SizedBox(height: 16),
-                            RecentVisitsList(visits: details.recentVisits),
-                          ],
+                return BlocBuilder<DoctorAppointmentsBloc, DoctorAppointmentsState>(
+                  builder: (context, appointmentsState) {
+                         bool isUpdating = false;
+                    if (appointmentsState is DoctorAppointmentsLoaded) {
+                      isUpdating = appointmentsState.updatingAppointmentId == appointment.id;
+                    }
+                    return CustomScrollView(
+                      slivers: [
+                        // Pass real data to the sticky header
+                        StickyPatientHeader(
+                          patientName: patient.name,
+                          // Combine age and gender if they exist
+                          patientAgeGender: _formatAgeGender(
+                            patient.age,
+                            patient.gender,
+                          ),
+                          appointmentTime: appointment.appointmentDateTime,
+                          appointmentStatus: appointment.status,
+                          patientImageUrl: patient.photoUrl ?? '',
                         ),
-                      ),
-                    ),
-                  ],
+
+                        // Main Content Area
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SectionTitle(title: "Quick Actions"),
+                                const SizedBox(height: 16),
+                                // Pass all required data to the buttons widget
+                                QuickActionButtons(
+                                  status: appointment.status,
+                                  appointment: appointment,
+                                  patient: patient,
+                                  isUpdating: isUpdating,
+                                ),
+                                const SizedBox(height: 32),
+                                const SectionTitle(title: "Patient Snapshot"),
+                                const SizedBox(height: 16),
+                                PatientSnapshotCard(
+                                  patient: patient,
+                                  appointment: appointment,
+                                ),
+                                const SizedBox(height: 32),
+                                SectionTitle(
+                                  title: "Recent Visits",
+                                  onViewAll: () {},
+                                ),
+                                const SizedBox(height: 16),
+                                RecentVisitsList(visits: details.recentVisits),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 );
               }
-              
+
               // Fallback for any other unhandled state
               return const SizedBox.shrink();
             },
@@ -142,7 +177,6 @@ class AppointmentDetailScreen extends StatelessWidget {
     return parts.join(', ');
   }
 }
-
 
 // --- A SKELETON WIDGET FOR THE LOADING STATE ---
 class _AppointmentDetailSkeleton extends StatelessWidget {
@@ -178,7 +212,7 @@ class _AppointmentDetailSkeleton extends StatelessWidget {
                   _buildSkeletonBlock(height: 20, width: 180),
                   const SizedBox(height: 16),
                   _buildSkeletonBlock(height: 150),
-                   const SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
                   // Skeleton for Recent Visits
                   _buildSkeletonBlock(height: 20, width: 120),

@@ -3,9 +3,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/di/service_locator.dart';
+import 'package:health_connect/core/utils/create_chat_room_id.dart';
 import 'package:health_connect/core/utils/next_upcoming_appointment.dart';
+import 'package:health_connect/core/utils/open_chat_screen.dart';
 import 'package:health_connect/features/appointment/domain/entities/appointment_entity.dart';
 import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
+import 'package:health_connect/features/auth/presentation/auth/blocs/auth_state.dart';
+import 'package:health_connect/features/chat/presentation/screens/chat_room_screen.dart';
 import 'package:health_connect/features/doctor/appointment_detail/presantaion/screens/appoiontment_details_screen.dart';
 import 'package:health_connect/features/doctor/patient_details/presantation/bloc/patient_details_bloc.dart';
 import 'package:health_connect/features/doctor/patient_details/presantation/bloc/patient_details_event.dart';
@@ -184,8 +188,7 @@ class _PatientHeader extends StatelessWidget {
           IconButton(
             icon: const Icon(CupertinoIcons.chat_bubble_2, size: 28),
             onPressed: () {
-              // TODO: Navigate to chat screen with this patient
-            },
+              onOpenChat(context, patient);            },
             color: theme.colorScheme.primary,
           )
         ],

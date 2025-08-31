@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:health_connect/core/di/service_locator.dart';
 import 'package:health_connect/core/shared/widgets/notification_badge_icon.dart';
 import 'package:health_connect/features/chat/presentation/screens/chat_list_screen.dart';
+import 'package:health_connect/features/doctor/appointment/presantation/bloc/doctor_appointments_bloc.dart';
+import 'package:health_connect/features/doctor/appointment/presantation/bloc/doctor_appointments_event.dart';
 import 'package:health_connect/features/doctor/appointment/presantation/screen/doctor_appointments_screen.dart';
 import 'package:health_connect/features/doctor/doctor_bottom_navigation/cubit/doctor_nav_cubit.dart';
 import 'package:health_connect/features/doctor/doctor_dashboard/presantation/screens/doctor_dashboard_screen.dart';
@@ -25,8 +28,18 @@ class DoctorMainScreen extends StatelessWidget {
     // Get the current theme from the context
     final theme = Theme.of(context);
 
-    return BlocProvider(
-      create: (_) => DoctorBottomNavCubit(),
+    return MultiBlocProvider(
+      providers: [
+        // Yeh BLoC Bottom Navigation ko control karta hai
+        BlocProvider(create: (_) => DoctorBottomNavCubit()),
+        
+        // Yeh BLoC poore "doctor" section ke liye appointment data manage karta hai.
+        // Ise yahin create karna behtar hai.
+        BlocProvider(
+          create: (context) => sl<DoctorAppointmentsBloc>()..add(FetchDoctorAppointments()),
+          // lazy: false is not strictly needed here as it's fetched immediately
+        ),
+      ],
       child: BlocBuilder<DoctorBottomNavCubit, int>(
         builder: (context, currentIndex) {
           return Scaffold(
@@ -82,12 +95,9 @@ class DoctorMainScreen extends StatelessWidget {
                   label: 'Chat',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(
-                    Icons.settings_outlined,
-                    size: 24.r,
-                  ), 
+                  icon: Icon(Icons.settings_outlined, size: 24.r),
                   activeIcon: Icon(Icons.settings, size: 24.r),
-                  label: 'Settings', 
+                  label: 'Settings',
                 ),
               ],
             ),
