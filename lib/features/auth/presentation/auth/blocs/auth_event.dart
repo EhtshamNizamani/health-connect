@@ -17,7 +17,6 @@ class LoginRequested extends AuthEvent {
   LoginRequested({required this.email, required this.password, });
   
   @override
-  // TODO: implement props
   List<Object?> get props => [email,password];
 }
 

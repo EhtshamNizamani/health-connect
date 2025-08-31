@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/di/service_locator.dart';
 import 'package:health_connect/features/auth/domain/entities/user_entity.dart';
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
-import 'package:health_connect/features/auth/presentation/auth/blocs/auth_state.dart';
 import 'package:health_connect/features/chat/presentation/blocs/chat_room/chat_room_bloc.dart';
 import 'package:health_connect/features/chat/presentation/blocs/chat_room/chat_room_event.dart';
 import 'package:health_connect/features/chat/presentation/blocs/chat_room/chat_room_state.dart';
@@ -147,7 +146,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen>
           BlocProvider(create: (context) => sl<VideoCallBloc>()),
            BlocProvider(
           create: (context) {
-            final authState = context.read<AuthBloc>().state;
 
             // BLoC create karo aur foran access check karne ke liye event bhejo
             return sl<ChatAccessBloc>()..add(

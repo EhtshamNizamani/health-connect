@@ -22,7 +22,7 @@ class CustomTextButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextButton(
       style: ButtonStyle(
-        padding: MaterialStateProperty.all(EdgeInsets.all(4.w)),
+        padding: WidgetStateProperty.all(EdgeInsets.all(4.w)),
       ),
       onPressed: onPressed,
       child: Text(

@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/features/appointment/domain/entities/appointment_entity.dart';
 import 'package:health_connect/features/doctor/appointment/presantation/bloc/doctor_appointments_bloc.dart';
 import 'package:health_connect/features/doctor/appointment_detail/presantaion/screens/appoiontment_details_screen.dart';
-import 'package:health_connect/features/patient/appointment/presentation/screen/patient_appointment_screen.dart';
 import 'package:intl/intl.dart';
 
 class AppointmentCard extends StatelessWidget {

@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/di/service_locator.dart';
-import 'package:health_connect/features/doctor/appointment_detail/presantaion/screens/appoiontment_details_screen.dart';
 import 'package:health_connect/features/doctor/patient_details/presantation/screens/patient_details_screen.dart';
 import 'package:health_connect/features/doctor/patient_records/domain/entity/patient_record_entity.dart';
 import 'package:health_connect/features/doctor/patient_records/presentation/bloc/patient_records_bloc.dart';

@@ -1,5 +1,3 @@
-  import 'package:dartz/dartz.dart' as patient;
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:health_connect/core/utils/create_chat_room_id.dart';
