@@ -31,4 +31,9 @@ abstract class ChatRepository {
     String chatRoomId,
     String userId,
   );
+    Future<Either<Failure, String>> ensureChatRoomExists(
+    String chatRoomId,
+    UserEntity patient,
+    DoctorEntity doctor,
+  );
 }

@@ -26,6 +26,7 @@ import 'package:health_connect/features/auth/domain/usecases/update_user_profile
 import 'package:health_connect/features/auth/presentation/auth/blocs/auth_bloc.dart';
 import 'package:health_connect/features/chat/data/repositories/firebase_chat_repository_impl.dart';
 import 'package:health_connect/features/chat/domain/repositories/chat_repository.dart';
+import 'package:health_connect/features/chat/domain/usecases/ensure_chat_room_exists_usecase.dart';
 import 'package:health_connect/features/chat/domain/usecases/get_chat_rooms_usecase.dart';
 import 'package:health_connect/features/chat/domain/usecases/get_messages_usecase.dart';
 import 'package:health_connect/features/chat/domain/usecases/get_total_unread_count_usecase.dart';
@@ -288,6 +289,7 @@ Future<void> setupLocator() async {
   );
   sl.registerLazySingleton(() => GetPatientsForDoctorUseCase(sl()));
   sl.registerLazySingleton(() => GetAppointmentsBetweenUseCase(sl()));
+  sl.registerLazySingleton(() => EnsureChatRoomExistsUseCase(sl()));
   
   
   sl.registerFactory(() => PatientProfileBloc(sl(), sl()));
@@ -313,7 +315,7 @@ Future<void> setupLocator() async {
   sl.registerFactory(() => ReviewBloc(sl(), sl()));
   sl.registerFactory(() => DoctorProfileUpdateBloc(sl(), sl()));
   sl.registerFactory(() => ChatListBloc(sl(), sl(), sl(), sl(), sl(), sl()));
-  sl.registerFactory(() => ChatRoomBloc(sl(), sl(), sl()));
+  sl.registerFactory(() => ChatRoomBloc(sl(), sl(), sl(),sl()));
   sl.registerFactory(() => CallScreenBloc(sl(), sl()));
   sl.registerFactory(() => VideoCallBloc(sl(), sl(), sl(), sl()));
   sl.registerFactory(() => DoctorDashboardBloc(sl(), sl()));

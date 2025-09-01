@@ -16,8 +16,6 @@ class SubmitDoctorProfile extends DoctorProfileSetupEvent {
   final int experience;
   final String clinicAddress;
   final int consultationFee;
-  final String startTime;
-  final String endTime;
   final File? photoFile;
 
   SubmitDoctorProfile({
@@ -28,8 +26,6 @@ class SubmitDoctorProfile extends DoctorProfileSetupEvent {
     required this.experience,
     required this.clinicAddress,
     required this.consultationFee,
-    required this.startTime,
-    required this.endTime,
     required this.photoFile,
   });
 
@@ -42,8 +38,6 @@ class SubmitDoctorProfile extends DoctorProfileSetupEvent {
         experience,
         clinicAddress,
         consultationFee,
-        startTime,
-        endTime,
         photoFile,
       ];
 }
@@ -59,8 +53,6 @@ class UpdateDoctorProfile extends DoctorProfileSetupEvent{
   final String clinicAddress;
   final int consultationFee;
   final String existingPhotoUrl;
-  final String startTime;
-  final String endTime;
   final File? photoFile;
   final File? newPhotoFile;
   UpdateDoctorProfile({
@@ -73,8 +65,6 @@ class UpdateDoctorProfile extends DoctorProfileSetupEvent{
     required this.clinicAddress,
     required this.consultationFee,
     required this.existingPhotoUrl,
-    required this.startTime,
-    required this.endTime,
     required this.photoFile,
     required this.newPhotoFile,
   });
@@ -90,8 +80,6 @@ class UpdateDoctorProfile extends DoctorProfileSetupEvent{
         clinicAddress,
         consultationFee,
         existingPhotoUrl,
-        startTime,
-        endTime,
         photoFile,
         newPhotoFile,
       ];

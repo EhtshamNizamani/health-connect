@@ -28,9 +28,12 @@ Future<Either<Failure, void>> saveDoctorProfile(
     }
 
     // 2. Image Upload Logic (if an image is provided)
-    String photoUrl = ''; // Start with an empty URL for a new profile
+  String photoUrl = doctor.photoUrl; // Start with the existing URL
     if (imageFile != null) {
-      final ref = storage.ref().child('doctor_profiles/$uid.jpg');
+      // <<< --- PATH KO YAHAN THEEK KAREIN ---
+      // Filename ko simple rakhein, jaise 'profile.jpg'
+      final fileName = 'profile.jpg';
+      final ref = storage.ref().child('doctor_profiles/$uid/$fileName'); // Path is now doctor_profiles/{userId}/profile.jpg
       await ref.putFile(imageFile);
       photoUrl = await ref.getDownloadURL();
     }

@@ -18,7 +18,7 @@ class FirebaseManageAvailabilityRepositoryImpl
   ) async {
     try {
       final uid = _firebaseAuth.currentUser?.uid;
-      if (uid == null) return Left(ServerFailure("..."));
+      if (uid == null) return Left(ServerFailure("User not authenticated"));
 
       // 1. Convert the Map of Entities to a Map of Maps
       final availabilityMapForFirestore = weeklyAvailability.map((day, dailyEntity) {

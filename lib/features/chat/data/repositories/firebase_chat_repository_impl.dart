@@ -34,8 +34,10 @@ class FirebaseChatRepositoryImpl implements ChatRepository {
       // Transform the stream with proper error handling
       return snapshots
           .map<Either<Failure, List<ChatRoomEntity>>>((snapshot) {
-            print("✅ [Repo] getChatRooms stream emitted ${snapshot.docs.length} rooms.");
-            
+            print(
+              "✅ [Repo] getChatRooms stream emitted ${snapshot.docs.length} rooms.",
+            );
+
             try {
               final chatRooms = snapshot.docs
                   .map((doc) => ChatRoomModel.fromSnapshot(doc).toDomain())
@@ -116,10 +118,7 @@ class FirebaseChatRepositoryImpl implements ChatRepository {
             'doctorName': doctor.name,
             'patientPhotoUrl': patient.photoUrl ?? '',
             'doctorPhotoUrl': doctor.photoUrl,
-            'unreadCount': {
-              message.receiverId: 1,
-              message.senderId: 0,
-            },
+            'unreadCount': {message.receiverId: 1, message.senderId: 0},
           };
           transaction.set(chatRoomRef, chatRoomData);
         } else {
@@ -173,8 +172,10 @@ class FirebaseChatRepositoryImpl implements ChatRepository {
   @override
   Stream<Either<Failure, int>> getTotalUnreadCountStream(String userId) {
     try {
-      print("🔥 [Repo] getTotalUnreadCountStream is being created for user: $userId");
-      
+      print(
+        "🔥 [Repo] getTotalUnreadCountStream is being created for user: $userId",
+      );
+
       final snapshots = _firestore
           .collection('chats')
           .where('participants', arrayContains: userId)
@@ -183,24 +184,29 @@ class FirebaseChatRepositoryImpl implements ChatRepository {
       return snapshots
           .map<Either<Failure, int>>((snapshot) {
             print("✅ [Repo] getTotalUnreadCount stream emitted an update.");
-            
+
             try {
               int totalUnread = 0;
               for (var doc in snapshot.docs) {
                 final data = doc.data();
-                final unreadData = data['unreadCount'] as Map<String, dynamic>? ?? {};
+                final unreadData =
+                    data['unreadCount'] as Map<String, dynamic>? ?? {};
                 final userUnreadCount = unreadData[userId] as int? ?? 0;
                 totalUnread += userUnreadCount;
               }
-              
+
               print("✅ [Repo] New total unread count is: $totalUnread");
               return Right(totalUnread);
             } catch (e) {
               print("❌ [Repo] Error calculating unread count: $e");
-              return Left(FirestoreFailure("Error calculating unread count: $e"));
+              return Left(
+                FirestoreFailure("Error calculating unread count: $e"),
+              );
             }
           })
-          .onErrorReturn(Left(FirestoreFailure("Stream error in getTotalUnreadCount")))
+          .onErrorReturn(
+            Left(FirestoreFailure("Stream error in getTotalUnreadCount")),
+          )
           .startWith(const Right(0));
     } catch (e) {
       print("❌ [Repo] FAILED to create getTotalUnreadCount stream: $e");
@@ -217,16 +223,57 @@ class FirebaseChatRepositoryImpl implements ChatRepository {
   ) async {
     try {
       print("📖 [Repo] Marking chat room $chatRoomId as read for user $userId");
-      
+
       await _firestore.collection('chats').doc(chatRoomId).update({
         'unreadCount.$userId': 0,
       });
-      
+
       print("✅ [Repo] Successfully marked chat room as read");
       return const Right(null);
     } catch (e) {
       print("❌ [Repo] Failed to mark chat room as read: $e");
       return Left(FirestoreFailure("Failed to mark chat room as read: $e"));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> ensureChatRoomExists(
+    String chatRoomId,
+    UserEntity patient,
+    DoctorEntity doctor,
+  ) async {
+    try {
+      final chatRoomSnapshot = await _firestore
+          .collection('chats')
+          .doc(chatRoomId)
+          .get();
+      print("🤝 [Repo] Chat room does not exist. Creating it now: $chatRoomId");
+
+      if (!chatRoomSnapshot.exists) {
+        // Chat room nahi hai, to abhi banayein
+        print(
+          "🤝 [Repo] Chat room does not exist. Creating it now: $chatRoomId",
+        );
+        final chatRoomData = {
+          'participants': [patient.id, doctor.uid],
+          'lastMessage': 'Chat started.', // Initial message
+          'lastMessageTimestamp': FieldValue.serverTimestamp(),
+          'patientId': patient.id,
+          'doctorId': doctor.uid,
+          'patientName': patient.name,
+          'doctorName': doctor.name,
+          'patientPhotoUrl': patient.photoUrl ?? '',
+          'doctorPhotoUrl': doctor.photoUrl,
+          'unreadCount': {patient.id: 0, doctor.uid: 0},
+        };
+        await _firestore.collection('chats').doc(chatRoomId).set(chatRoomData);
+      } else {
+        print("👍 [Repo] Chat room already exists: $chatRoomId");
+      }
+
+      return Right(chatRoomId);
+    } catch (e) {
+      return Left(FirestoreFailure("Failed to ensure chat room exists: $e"));
     }
   }
 }

@@ -28,34 +28,24 @@ class _DoctorProfileSetupScreenState extends State<DoctorProfileSetupScreen> {
   final experienceController = TextEditingController();
   final clinicAddressController = TextEditingController();
   final consultationFeeController = TextEditingController();
-  TimeOfDay? startTime;
-  TimeOfDay? endTime;
   File? pickedImage;
 
   Future<void> pickImage() async {
+      print("Picked image path:");
+try{
+
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 70);
+    
     if (picked != null) {
       setState(() {
         pickedImage = File(picked.path);
       });
     }
+} catch (e) {
+  print("Error picking image: $e");
+}
   }
 
-  Future<void> pickTime({required bool isStart}) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        if (isStart) {
-          startTime = picked;
-        } else {
-          endTime = picked;
-        }
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +71,7 @@ class _DoctorProfileSetupScreenState extends State<DoctorProfileSetupScreen> {
           }
         },
         builder: (context, state) {
+          print("pickedImage: $pickedImage");
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -137,26 +128,6 @@ class _DoctorProfileSetupScreenState extends State<DoctorProfileSetupScreen> {
                   hintText: "Write a short bio...",
                   maxLines: 4,
                 ),
-                const SizedBox(height: 16),
-                const Text("Set Available Timings", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: CustomButton(
-                        text: startTime != null ? "Start: ${startTime!.format(context)}" : "Select Start Time",
-                        onTap: () => pickTime(isStart: true),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: CustomButton(
-                        text: endTime != null ? "End: ${endTime!.format(context)}" : "Select End Time",
-                        onTap: () => pickTime(isStart: false),
-                      ),
-                    ),
-                  ],
-                ),
                 const SizedBox(height: 32),
                 CustomButton(
                   text: "Save Profile",
@@ -164,8 +135,7 @@ class _DoctorProfileSetupScreenState extends State<DoctorProfileSetupScreen> {
                   onTap: () {
                     if (nameController.text.isEmpty ||
                         specializationController.text.isEmpty ||
-                        startTime == null ||
-                        endTime == null ||
+                   
                         pickedImage == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(backgroundColor: AppColors.error, content: Text("Please fill all mandatory fields and pick an image.")),
@@ -173,8 +143,6 @@ class _DoctorProfileSetupScreenState extends State<DoctorProfileSetupScreen> {
                       return;
                     }
 
-                    final String startTimeString = startTime!.format(context);
-                    final String endTimeString = endTime!.format(context);
 
                     // Assume the email comes from the currently authenticated user
                     // In a real app, you might fetch this from FirebaseAuth.instance.currentUser.email
@@ -189,8 +157,6 @@ class _DoctorProfileSetupScreenState extends State<DoctorProfileSetupScreen> {
                             experience: int.tryParse(experienceController.text) ?? 0,
                             consultationFee: int.tryParse(consultationFeeController.text) ?? 0,
                             clinicAddress: clinicAddressController.text,
-                            startTime: startTimeString,
-                            endTime: endTimeString,
                             photoFile: pickedImage,
                           ),
                         );
